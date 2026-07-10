@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Daftar Negara Fiksi UFN</title>
+
+  <link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+<!--
+  =====================================================================
+  DAFTAR NEGARA FIKSI UFN
+  Aplikasi single-file: HTML + CSS + JavaScript (tanpa framework)
+  Backend: Firebase Firestore (realtime, via onSnapshot)
+  Desain: Material Design 3 - Dark Mode Premium
+  =====================================================================
+-->
+
+<style>
+
+
+  .bg{
+    position: fixed;
+    inset: 0;
+    background:#0F172A center/cover no-repeat;
+    z-index: -1;
+}
+
+.content{
+    position: relative;
+}
+  /* =====================================================================
+     1. RESET & VARIABEL DASAR (DESIGN TOKENS)
+     ===================================================================== */
+  :root{
+    /* --- Warna dasar --- */
+    --color-bg:            #0F172A;   /* biru tua utama (background) */
+    --color-bg-elevated:   #0F172A;   /* sedikit lebih terang, untuk header */
+    --color-surface:       #1B2942;   /* permukaan card */
+    --color-surface-hi:    #0F172A;   /* permukaan card saat hover/terbuka */
+    --color-outline:       #0F172A;   /* garis tepi tipis */
+    --color-scrim:         rgba(6, 11, 25, 0.72); /* overlay modal */
+
+    /* --- Warna teks --- */
+    --color-text-primary:   #E7ECF7;
+    --color-text-secondary: #98A6C3;
+    --color-text-disabled:  #5C6C8C;
+
+    /* --- Warna aksen (emas premium, gaya MD3 "tertiary") --- */
+    --color-gold:        #F2B84B;
+    --color-gold-hi:      #FFCB66;
+    --color-gold-dim:     #B8873A;
+    --color-gold-on:      #241705;   /* teks di atas emas */
+
+    /* --- Warna status --- */
+    --color-danger:  #F2755A;
+    --color-success: #4ADE80;
+
+    /* --- Radius & bayangan (MD3-ish) --- */
+    --radius-card: 20px;
+    --radius-sheet: 28px;
+    --radius-pill: 999px;
+    --shadow-1: 0 1px 2px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.24);
+    --shadow-2: 0 4px 8px rgba(0,0,0,0.28), 0 2px 4px rgba(0,0,0,0.22);
+    --shadow-3: 0 10px 24px rgba(0,0,0,0.38), 0 4px 8px rgba(0,0,0,0.24);
+    --shadow-gold: 0 8px 20px rgba(242, 184, 75, 0.35);
+
+    /* --- Kurva animasi (emphasized easing MD3) --- */
+    --ease-standard: cubic-bezier(0.2, 0.0, 0, 1.0);
+    --ease-emphasized: cubic-bezier(0.3, 0.0, 0.1, 1.0);
+    --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+
+    /* --- Durasi --- */
+    --dur-fast: 220ms;
+    --dur-medium: 360ms;
+    --dur-slow: 480ms;
+
+    /* --- Tipografi --- */
+    --font-display: "Segoe UI", "Roboto", system-ui, -apple-system, sans-serif;
+    --font-body:    "Segoe UI", "Roboto", system-ui, -apple-system, sans-serif;
+  }
+
+  *, *::before, *::after{
+    box-sizing: border-box;
+  }
+
+  html, body{
+    margin: 0;
+    padding: 0;
+    height: 110%;
+    background:#1B2942;
+  }
+
+  body{
+    background: radial-gradient(circle at 15% -10%, #16213A 0%, var(--color-bg) 45%, #090E1C 100%);
+    color: var(--color-text-primary);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scrollbar halus (opsional, hanya kosmetik desktop) */
+  ::-webkit-scrollbar{ width: 10px; }
+  ::-webkit-scrollbar-track{ background: transparent; }
+  ::-webkit-scrollbar-thumb{
+    background: var(--color-outline);
+    border-radius: var(--radius-pill);
+  }
+  ::-webkit-scrollbar-thumb:hover{ background: var(--color-gold-dim); }
+
+  button{
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: inherit;
+  }
+
+  input{
+    font-family: inherit;
+    color: inherit;
+  }
+
+  /* Fokus keyboard tetap terlihat (aksesibilitas) */
+  button:focus-visible,
+  input:focus-visible,
+  [tabindex]:focus-visible{
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+
+  /* Menghormati preferensi reduced motion pengguna */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+
+  /* =====================================================================
+     2. LAYOUT UTAMA
+     ===================================================================== */
+  .app-shell{
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 20px 140px;
+    position: relative;
+  }
+
+  /* =====================================================================
+     3. HEADER
+     ===================================================================== */
+  .app-header{
+    padding-top: 36px;
+    padding-bottom: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: linear-gradient(180deg, var(--color-bg) 55%, rgba(15,23,42,0.0) 100%);
+    backdrop-filter: blur(6px);
+  }
+
+  .app-header__eyebrow{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--color-gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .app-header__eyebrow::before{
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-gold);
+    box-shadow: 0 0 8px 2px rgba(242,184,75,0.6);
+  }
+
+  .app-header__title{
+    font-family: var(--font-display);
+    font-size: clamp(26px, 6vw, 34px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 18px;
+    line-height: 1.15;
+    background: linear-gradient(180deg, #F5F7FC 0%, #C8D2E8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* --- Search bar --- */
+  .search-bar{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-outline);
+    border-radius: var(--radius-pill);
+    padding: 13px 18px;
+    transition: border-color var(--dur-medium) var(--ease-standard),
+                box-shadow var(--dur-medium) var(--ease-standard),
+                background-color var(--dur-medium) var(--ease-standard);
+  }
+
+  .search-bar:focus-within{
+    border-color: var(--color-gold-dim);
+    background: var(--color-surface-hi);
+    box-shadow: 0 0 0 4px rgba(242, 184, 75, 0.12);
+  }
+
+  .search-bar__icon{
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: var(--color-text-secondary);
+    transition: color var(--dur-medium) var(--ease-standard),
+                transform var(--dur-medium) var(--ease-emphasized);
+  }
+
+  .search-bar:focus-within .search-bar__icon{
+    color: var(--color-gold);
+    transform: scale(1.08) rotate(-6deg);
+  }
+
+  .search-bar__input{
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    color: var(--color-text-primary);
+  }
+
+  .search-bar__input::placeholder{
+    color: var(--color-text-disabled);
+  }
+
+  .search-bar__clear{
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    opacity: 0;
+    transform: scale(0.6);
+    pointer-events: none;
+    transition: opacity var(--dur-fast) var(--ease-standard),
+                transform var(--dur-fast) var(--ease-emphasized),
+                background-color var(--dur-fast) var(--ease-standard);
+  }
+
+  .search-bar__clear.is-visible{
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  .search-bar__clear:hover{
+    background: rgba(255,255,255,0.08);
+  }
+
+  /* =====================================================================
+     4. DAFTAR NEGARA (LIST + CARD)
+     ===================================================================== */
+  .country-list{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 8px;
+  }
+
+  .country-card{
+    background: var(--color-surface);
+    border: 1px solid var(--color-outline);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    box-shadow: var(--shadow-1);
+    transition: box-shadow var(--dur-medium) var(--ease-standard),
+                border-color var(--dur-medium) var(--ease-standard),
+                transform var(--dur-fast) var(--ease-standard),
+                background-color var(--dur-medium) var(--ease-standard);
+    /* Animasi masuk saat card baru dirender */
+    animation: card-enter var(--dur-slow) var(--ease-decelerate) both;
+  }
+
+  @keyframes card-enter{
+    from{
+      opacity: 0;
+      transform: translateY(14px) scale(0.98);
+    }
+    to{
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .country-card:hover{
+    border-color: var(--color-gold-dim);
+    box-shadow: var(--shadow-2);
+  }
+
+  .country-card:active{
+    transform: scale(0.995);
+  }
+
+  .country-card.is-open{
+    background: var(--color-surface-hi);
+    box-shadow: var(--shadow-3);
+    border-color: var(--color-gold-dim);
+  }
+
+  .country-card__head{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 20px;
+    text-align: left;
+  }
+
+  .country-card__name{
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.01em;
+  }
+
+  .country-card__chevron{
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.04);
+    transition: background-color var(--dur-medium) var(--ease-standard),
+                transform var(--dur-medium) var(--ease-emphasized);
+  }
+
+  .country-card.is-open .country-card__chevron{
+    background: var(--color-gold);
+    transform: rotate(180deg);
+  }
+
+  .country-card__chevron svg{
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-secondary);
+    transition: color var(--dur-medium) var(--ease-standard);
+  }
+
+  .country-card.is-open .country-card__chevron svg{
+    color: var(--color-gold-on);
+  }
+
+  /* --- Panel deskripsi (accordion) ---
+     Menggunakan grid-template-rows 0fr -> 1fr agar transisi height
+     benar-benar halus tanpa perlu mengukur scrollHeight lewat JS. */
+  .country-card__body{
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--dur-medium) var(--ease-emphasized);
+  }
+
+  .country-card.is-open .country-card__body{
+    grid-template-rows: 1fr;
+  }
+
+  .country-card__body-inner{
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .country-card__desc{
+    margin: 0;
+    padding: 0 20px 20px;
+    color: var(--color-text-secondary);
+    font-size: 14.5px;
+    line-height: 1.65;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity var(--dur-medium) var(--ease-standard) 60ms,
+                transform var(--dur-medium) var(--ease-standard) 60ms;
+  }
+
+  .country-card.is-open .country-card__desc{
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .country-card__meta{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 20px 20px;
+    font-size: 12px;
+    color: var(--color-text-disabled);
+    opacity: 0;
+    transition: opacity var(--dur-medium) var(--ease-standard) 100ms;
+  }
+
+  .country-card.is-open .country-card__meta{
+    opacity: 1;
+  }
+
+  /* =====================================================================
+     5. SKELETON LOADING
+     ===================================================================== */
+  .skeleton-card{
+    height: 62px;
+    border-radius: var(--radius-card);
+    background: linear-gradient(100deg,
+      var(--color-surface) 30%,
+      var(--color-surface-hi) 50%,
+      var(--color-surface) 70%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+    border: 1px solid var(--color-outline);
+  }
+
+  @keyframes skeleton-shimmer{
+    0%{ background-position: 160% 0; }
+    100%{ background-position: -60% 0; }
+  }
+
+  /* =====================================================================
+     6. EMPTY STATE
+     ===================================================================== */
+  .empty-state{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 72px 20px;
+    color: var(--color-text-secondary);
+    animation: fade-in var(--dur-slow) var(--ease-decelerate) both;
+  }
+
+  @keyframes fade-in{
+    from{ opacity: 0; transform: translateY(8px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+
+  .empty-state__icon{
+    font-size: 46px;
+    margin-bottom: 14px;
+    filter: grayscale(0.2);
+  }
+
+  .empty-state__title{
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 4px;
+  }
+
+  .empty-state__subtitle{
+    font-size: 13.5px;
+    margin: 0;
+    color: var(--color-text-disabled);
+  }
+
+  /* Disembunyikan secara default; ditampilkan lewat JS lewat kelas .is-visible */
+  .empty-state,
+  .skeleton-wrap{
+    display: none;
+  }
+  .empty-state.is-visible{ display: flex; }
+  .skeleton-wrap.is-visible{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .country-list.is-hidden{ display: none; }
+
+  /* =====================================================================
+     7. FLOATING ACTION BUTTON (FAB)
+     ===================================================================== */
+  .fab{
+    position: fixed;
+    right: 22px;
+    bottom: 28px;
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(155deg, var(--color-gold-hi) 0%, var(--color-gold) 55%, var(--color-gold-dim) 100%);
+    color: var(--color-gold-on);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-gold), var(--shadow-3);
+    overflow: hidden;
+    z-index: 30;
+    transition: transform var(--dur-medium) var(--ease-emphasized),
+                box-shadow var(--dur-medium) var(--ease-standard);
+  }
+
+  .fab:hover{
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 12px 26px rgba(242,184,75,0.45), var(--shadow-3);
+  }
+
+  .fab:active{
+    transform: translateY(-1px) scale(0.96);
+  }
+
+  .fab__icon{
+    width: 26px;
+    height: 26px;
+    position: relative;
+    z-index: 2;
+    transition: transform var(--dur-medium) var(--ease-emphasized);
+  }
+
+  .fab.is-modal-open .fab__icon{
+    transform: rotate(135deg);
+  }
+
+  /* Efek ripple material saat FAB ditekan */
+  .fab__ripple{
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(36, 23, 5, 0.35);
+    transform: scale(0);
+    pointer-events: none;
+    animation: ripple-anim 620ms var(--ease-standard);
+  }
+
+  @keyframes ripple-anim{
+    to{
+      transform: scale(3.6);
+      opacity: 0;
+    }
+  }
+
+  /* =====================================================================
+     8. MODAL / POPUP TAMBAH NEGARA
+     ===================================================================== */
+  .modal-scrim{
+    position: fixed;
+    inset: 0;
+    background: var(--color-scrim);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-medium) var(--ease-standard);
+  }
+
+  @media (min-width: 640px){
+    .modal-scrim{
+      align-items: center;
+    }
+  }
+
+  .modal-scrim.is-visible{
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-sheet{
+    width: 100%;
+    max-width: 460px;
+    background: var(--color-bg-elevated);
+    border: 1px solid var(--color-outline);
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    padding: 26px 24px calc(24px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -12px 40px rgba(0,0,0,0.5);
+    transform: translateY(28px) scale(0.98);
+    opacity: 0;
+    transition: transform var(--dur-medium) var(--ease-emphasized),
+                opacity var(--dur-medium) var(--ease-standard);
+  }
+
+  @media (min-width: 640px){
+    .modal-sheet{
+      border-radius: var(--radius-sheet);
+      transform: translateY(10px) scale(0.96);
+    }
+  }
+
+  .modal-scrim.is-visible .modal-sheet{
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .modal-sheet__handle{
+    width: 40px;
+    height: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--color-outline);
+    margin: 0 auto 18px;
+  }
+
+  @media (min-width: 640px){
+    .modal-sheet__handle{ display: none; }
+  }
+
+  .modal-sheet__title{
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    color: var(--color-text-primary);
+  }
+
+  .modal-sheet__subtitle{
+    font-size: 13.5px;
+    color: var(--color-text-secondary);
+    margin: 0 0 22px;
+  }
+
+  .field{
+    margin-bottom: 18px;
+  }
+
+  .field__label{
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .field__control{
+    width: 100%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-outline);
+    border-radius: 14px;
+    padding: 13px 16px;
+    font-size: 15px;
+    color: var(--color-text-primary);
+    outline: none;
+    resize: vertical;
+    transition: border-color var(--dur-medium) var(--ease-standard),
+                box-shadow var(--dur-medium) var(--ease-standard),
+                background-color var(--dur-medium) var(--ease-standard);
+  }
+
+  .field__control::placeholder{
+    color: var(--color-text-disabled);
+  }
+
+  .field__control:focus{
+    border-color: var(--color-gold-dim);
+    background: var(--color-surface-hi);
+    box-shadow: 0 0 0 4px rgba(242, 184, 75, 0.12);
+  }
+
+  .field__error{
+    font-size: 12px;
+    color: var(--color-danger);
+    margin-top: 6px;
+    min-height: 14px;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity var(--dur-fast) var(--ease-standard),
+                transform var(--dur-fast) var(--ease-standard);
+  }
+
+  .field__error.is-visible{
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .modal-sheet__actions{
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .btn{
+    padding: 12px 22px;
+    border-radius: var(--radius-pill);
+    font-size: 14.5px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform var(--dur-fast) var(--ease-standard),
+                background-color var(--dur-medium) var(--ease-standard),
+                box-shadow var(--dur-medium) var(--ease-standard),
+                opacity var(--dur-fast) var(--ease-standard);
+  }
+
+  .btn:active{ transform: scale(0.96); }
+
+  .btn--ghost{
+    background: transparent;
+    color: var(--color-text-secondary);
+  }
+
+  .btn--ghost:hover{
+    background: rgba(255,255,255,0.06);
+    color: var(--color-text-primary);
+  }
+
+  .btn--primary{
+    background: linear-gradient(155deg, var(--color-gold-hi), var(--color-gold));
+    color: var(--color-gold-on);
+    box-shadow: var(--shadow-gold);
+  }
+
+  .btn--primary:hover{
+    box-shadow: 0 10px 24px rgba(242,184,75,0.45);
+  }
+
+  .btn--primary:disabled{
+    opacity: 0.55;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  .btn__spinner{
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 2px solid rgba(36,23,5,0.35);
+    border-top-color: var(--color-gold-on);
+    animation: spin 700ms linear infinite;
+    display: none;
+  }
+
+  .btn--primary.is-loading .btn__spinner{ display: inline-block; }
+  .btn--primary.is-loading .btn__label{ opacity: 0.7; }
+
+  @keyframes spin{
+    to{ transform: rotate(360deg); }
+  }
+
+  /* =====================================================================
+     9. TOAST
+     ===================================================================== */
+  .toast-stack{
+    position: fixed;
+    left: 50%;
+    bottom: 26px;
+    transform: translateX(-50%);
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    width: min(92%, 420px);
+    pointer-events: none;
+  }
+
+  .toast{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #17253F;
+    border: 1px solid var(--color-outline);
+    color: var(--color-text-primary);
+    padding: 13px 18px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: var(--shadow-3);
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+    transition: opacity var(--dur-medium) var(--ease-decelerate),
+                transform var(--dur-medium) var(--ease-decelerate);
+    width: 100%;
+    justify-content: center;
+  }
+
+  .toast.is-visible{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .toast--success .toast__dot{ background: var(--color-success); }
+  .toast--error .toast__dot{ background: var(--color-danger); }
+
+  .toast__dot{
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 8px 1px currentColor;
+  }
+
+  /* =====================================================================
+     10. UTILITAS & RESPONSIVE
+     ===================================================================== */
+  .sr-only{
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 420px){
+    .app-shell{ padding: 0 14px 130px; }
+    .app-header{ padding-top: 24px; }
+  }
+
+  @media (min-width: 900px){
+    .app-shell{ max-width: 820px; }
+    .app-header__title{ font-size: 38px; }
+  }
+
+  .header{
+    height:60px;
+    background:transparent;
+    color:white;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    padding:0 15px;
+    position:relative;
+}
+
+.menu-btn{
+    font-size:28px;
+    cursor:pointer;
+    user-select:none;
+}
+
+.menu{
+    position:absolute;
+    top:55px;
+    right:10px;
+    background:#333;
+    border-radius:8px;
+    min-width:180px;
+    display:none;
+    overflow:hidden;
+    box-shadow:0 5px 15px rgba(0,0,0,.3);
+}
+
+.menu a{
+    display:block;
+    color:white;
+    text-decoration:none;
+    padding:12px 16px;
+}
+
+.menu a:hover{
+    background:transparent;
+}
+
+.lemari{
+  background:#111038;
+  border-radius:20px;
+  border:1px solid #ffb114;
+  display:flex;
+  flex-direction: row;
+  gap:10px;
+  margin-top:5px;
+}
+  
+.enve{
+  width:50px;
+  border-radius:20px;
+  border:1px solid #a4a900;
+  background:#1B2942;
+  padding:3px;
+  margin:2px;
+
+  display:flex;
+  justify-content:center; /* Tengah horizontal */
+  align-items:center;     /* Tengah vertikal */
+}
+
+.enve i{
+  font-size:22px;
+  line-height:1;
+}
+  
+.enve a{
+    color:white;
+    margin-left:px;
+    font-size:15px
+}
+
+.online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
+  
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-left:125px;
+  margin-top:2px;
+}
+</style>
+</head>
+<body>
+
+  <!-- =====================================================================
+       STRUKTUR HALAMAN
+       ===================================================================== -->
+
+  <div class="bg"></div>
+  <div class="app-shell">
+    
+
+    <!-- ================= HEADER ================= -->
+    <header class="app-header">
+      <span class="app-header__eyebrow">DATATABASE:Rifqy.//Luminux.com</span>
+      <h1 class="app-header__title">DAFTAR NEGARA FIKSI UFN</h1>
+
+      <div class="search-bar" id="searchBar">
+        <svg class="search-bar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          id="searchInput"
+          class="search-bar__input"
+          type="text"
+          placeholder="Cari nama negara..."
+          autocomplete="off"
+          aria-label="Cari negara"
+        >
+        <button class="search-bar__clear" id="searchClear" type="button" aria-label="Hapus pencarian">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
+
+    </header>
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <main>
+
+      <!-- Skeleton loading, tampil saat data pertama kali diambil -->
+      <div class="skeleton-wrap" id="skeletonWrap">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+
+      <!-- Empty state, tampil bila koleksi Firestore kosong -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-state__icon">📁</div>
+        <p class="empty-state__title">Belum ada negara.</p>
+        <p class="empty-state__subtitle">Tekan tombol + untuk menambahkan negara pertama.</p>
+      </div>
+
+      <!-- Daftar card negara -->
+      <div class="country-list is-hidden" id="countryList"></div>
+
+    </main>
+  </div>
+
+  <!-- ================= FLOATING ACTION BUTTON ================= -->
+  <button class="fab" id="fabAdd" type="button" aria-label="Tambah negara baru" aria-haspopup="dialog">
+    <svg class="fab__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </button>
+
+
+  <!-- ================= MODAL TAMBAH NEGARA ================= -->
+  <div class="modal-scrim" id="modalScrim" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-sheet">
+      <div class="modal-sheet__handle"></div>
+      <h2 class="modal-sheet__title" id="modalTitle">Tambah Negara</h2>
+      <p class="modal-sheet__subtitle">Lengkapi data negara fiksi baru untuk UFN.</p>
+
+      <form id="addCountryForm" novalidate>
+        <div class="field">
+          <label class="field__label" for="inputName">Nama Negara</label>
+          <input
+            class="field__control"
+            id="inputName"
+            name="name"
+            type="text"
+            placeholder="Contoh: Republik Zenthoria"
+            maxlength="80"
+            autocomplete="off"
+          >
+          <div class="field__error" id="errorName">Nama negara wajib diisi.</div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="inputDesc">Deskripsi</label>
+          <textarea
+            class="field__control"
+            id="inputDesc"
+            name="description"
+            rows="4"
+            placeholder="Ceritakan sejarah, budaya, atau ciri khas negara ini..."
+            maxlength="1000"
+          ></textarea>
+          <div class="field__error" id="errorDesc">Deskripsi wajib diisi.</div>
+        </div>
+
+        <div class="modal-sheet__actions">
+          <button type="button" class="btn btn--ghost" id="btnCancel">Batal</button>
+          <button type="submit" class="btn btn--primary" id="btnSave">
+            <span class="btn__spinner"></span>
+            <span class="btn__label">Simpan</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= TOAST CONTAINER ================= -->
+  <div class="toast-stack" id="toastStack"></div>
+
+  <!-- =====================================================================
+       FIREBASE SDK (CDN, versi modular terbaru)
+       ===================================================================== -->
+  <script type="module">
+
+function toggleMenu(){
+    const menu = document.getElementById("menu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+
+document.addEventListener("click", function(e){
+    const menu = document.getElementById("menu");
+    const btn = document.querySelector(".menu-btn");
+
+    if(!menu.contains(e.target) && !btn.contains(e.target)){
+        menu.style.display = "none";
+    }
+});
+    
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      onSnapshot,
+      query,
+      orderBy,
+      serverTimestamp,
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+    getDatabase,
+    ref,
+    set,
+    onValue,
+    onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    /* =====================================================================
+       1. KONFIGURASI FIREBASE
+       Ganti nilai-nilai di bawah ini dengan konfigurasi project
+       Firebase Anda sendiri (Firebase Console > Project Settings).
+       ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+
+    // Inisialisasi Firebase & Firestore
+const app = initializeApp(firebaseConfig);
+
+const firestore = getFirestore(app);
+const realtimeDb = getDatabase(app);
+
+const userId = crypto.randomUUID();
+
+const userRef = ref(realtimeDb, "online/" + userId);
+
+set(userRef, true);
+
+onDisconnect(userRef).remove();
+
+onValue(ref(realtimeDb, "online"), (snapshot) => {
+    const data = snapshot.val() || {};
+    document.getElementById("onlineCount").textContent =
+        Object.keys(data).length;
+});
+const countriesRef = collection(firestore, "countries");
+    /* =====================================================================
+       2. STATE APLIKASI (MODUL STATE)
+       ===================================================================== */
+    const AppState = {
+      allCountries: [],   // seluruh data dari Firestore (belum difilter)
+      searchTerm: "",     // kata kunci pencarian saat ini
+      openCardId: null,   // id card yang sedang terbuka (accordion)
+      isFirstLoad: true,  // untuk mengontrol tampilan skeleton
+    };
+
+    /* =====================================================================
+       3. REFERENSI ELEMEN DOM
+       ===================================================================== */
+    const DOM = {
+      countryList:   document.getElementById("countryList"),
+      skeletonWrap:  document.getElementById("skeletonWrap"),
+      emptyState:    document.getElementById("emptyState"),
+      searchInput:   document.getElementById("searchInput"),
+      searchClear:   document.getElementById("searchClear"),
+      fabAdd:        document.getElementById("fabAdd"),
+      modalScrim:    document.getElementById("modalScrim"),
+      addForm:       document.getElementById("addCountryForm"),
+      inputName:     document.getElementById("inputName"),
+      inputDesc:     document.getElementById("inputDesc"),
+      errorName:     document.getElementById("errorName"),
+      errorDesc:     document.getElementById("errorDesc"),
+      btnCancel:     document.getElementById("btnCancel"),
+      btnSave:       document.getElementById("btnSave"),
+      toastStack:    document.getElementById("toastStack"),
+    };
+
+    /* =====================================================================
+       4. UTILITAS UMUM
+       ===================================================================== */
+
+    /** Mencegah XSS sederhana saat menyisipkan teks user ke dalam HTML. */
+    function escapeHtml(str){
+      const div = document.createElement("div");
+      div.textContent = str ?? "";
+      return div.innerHTML;
+    }
+
+    /** Debounce generik untuk input pencarian real-time. */
+    function debounce(fn, delay = 180){
+      let timerId;
+      return (...args) => {
+        clearTimeout(timerId);
+        timerId = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    /** Format Firestore Timestamp -> teks tanggal singkat berbahasa Indonesia. */
+    function formatDate(timestamp){
+      if (!timestamp || typeof timestamp.toDate !== "function") return "";
+      const date = timestamp.toDate();
+      return new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(date);
+    }
+
+    /* =====================================================================
+       5. MODUL TOAST
+       ===================================================================== */
+    const Toast = {
+      show(message, type = "success", duration = 2800){
+        const el = document.createElement("div");
+        el.className = `toast toast--${type}`;
+        el.setAttribute("role", "status");
+        el.innerHTML = `<span class="toast__dot"></span><span>${escapeHtml(message)}</span>`;
+        DOM.toastStack.appendChild(el);
+
+        // Trigger transisi masuk pada frame berikutnya
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => el.classList.add("is-visible"));
+        });
+
+        setTimeout(() => {
+          el.classList.remove("is-visible");
+          el.addEventListener("transitionend", () => el.remove(), { once: true });
+        }, duration);
+      },
+    };
+
+    /* =====================================================================
+       6. MODUL RENDER DAFTAR NEGARA
+       ===================================================================== */
+    const CountryRenderer = {
+
+      /** Menentukan tampilan mana yang aktif: skeleton / empty / list. */
+      updateViewState(filteredList){
+        const hasAnyData = AppState.allCountries.length > 0;
+
+        DOM.skeletonWrap.classList.toggle("is-visible", AppState.isFirstLoad);
+        DOM.emptyState.classList.toggle("is-visible", !AppState.isFirstLoad && !hasAnyData);
+        DOM.countryList.classList.toggle("is-hidden", AppState.isFirstLoad || !hasAnyData);
+
+        // Pesan berbeda ketika hasil pencarian kosong tapi data ada
+        if (!AppState.isFirstLoad && hasAnyData && filteredList.length === 0){
+          DOM.emptyState.classList.add("is-visible");
+          DOM.emptyState.querySelector(".empty-state__title").textContent =
+            "Negara tidak ditemukan.";
+          DOM.emptyState.querySelector(".empty-state__subtitle").textContent =
+            `Tidak ada hasil untuk "${AppState.searchTerm}".`;
+          DOM.countryList.classList.add("is-hidden");
+        } else if (!AppState.isFirstLoad && hasAnyData) {
+          DOM.emptyState.querySelector(".empty-state__title").textContent =
+            "Belum ada negara.";
+          DOM.emptyState.querySelector(".empty-state__subtitle").textContent =
+            "Tekan tombol + untuk menambahkan negara pertama.";
+        }
+      },
+
+      /** Membuat markup HTML untuk satu card negara. */
+      buildCardMarkup(country){
+        const isOpen = AppState.openCardId === country.id;
+        return `
+          <article class="country-card ${isOpen ? "is-open" : ""}" data-id="${country.id}">
+            <button class="country-card__head" type="button" aria-expanded="${isOpen}">
+              <span class="country-card__name">${escapeHtml(country.name)}</span>
+              <span class="country-card__chevron">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </button>
+            <div class="country-card__body">
+              <div class="country-card__body-inner">
+                <p class="country-card__desc">${escapeHtml(country.description)}</p>
+                <div class="country-card__meta">🗓️ Ditambahkan ${formatDate(country.createdAt)}</div>
+              </div>
+            </div>
+          </article>
+        `;
+      },
+
+      /** Merender seluruh daftar (dipanggil ulang setiap ada perubahan data / pencarian). */
+      render(){
+        const term = AppState.searchTerm.trim().toLowerCase();
+        const filtered = term
+          ? AppState.allCountries.filter(c => c.name.toLowerCase().includes(term))
+          : AppState.allCountries;
+
+        this.updateViewState(filtered);
+
+        DOM.countryList.innerHTML = filtered.map(this.buildCardMarkup).join("");
+      },
+    };
+
+    /* =====================================================================
+       7. MODUL ACCORDION (BUKA / TUTUP CARD)
+       ===================================================================== */
+    const Accordion = {
+      init(){
+        // Event delegation: satu listener untuk semua card, termasuk yang baru dirender
+        DOM.countryList.addEventListener("click", (event) => {
+          const head = event.target.closest(".country-card__head");
+          if (!head) return;
+
+          const card = head.closest(".country-card");
+          const id = card?.dataset.id;
+          if (!id) return;
+
+          this.toggle(id);
+        });
+      },
+
+      toggle(id){
+        AppState.openCardId = AppState.openCardId === id ? null : id;
+        this.syncDOM();
+      },
+
+      /** Menyinkronkan kelas .is-open tanpa perlu render ulang seluruh list,
+       *  supaya animasi accordion tetap mulus. */
+      syncDOM(){
+        const cards = DOM.countryList.querySelectorAll(".country-card");
+        cards.forEach((card) => {
+          const isOpen = card.dataset.id === AppState.openCardId;
+          card.classList.toggle("is-open", isOpen);
+          const head = card.querySelector(".country-card__head");
+          if (head) head.setAttribute("aria-expanded", String(isOpen));
+        });
+      },
+    };
+
+    /* =====================================================================
+       8. MODUL PENCARIAN REAL-TIME
+       ===================================================================== */
+    const Search = {
+      init(){
+        const handleInput = debounce((value) => {
+          AppState.searchTerm = value;
+          CountryRenderer.render();
+        }, 150);
+
+        DOM.searchInput.addEventListener("input", (event) => {
+          const value = event.target.value;
+          DOM.searchClear.classList.toggle("is-visible", value.length > 0);
+          handleInput(value);
+        });
+
+        DOM.searchClear.addEventListener("click", () => {
+          DOM.searchInput.value = "";
+          DOM.searchClear.classList.remove("is-visible");
+          AppState.searchTerm = "";
+          CountryRenderer.render();
+          DOM.searchInput.focus();
+        });
+      },
+    };
+
+    /* =====================================================================
+       9. MODUL MODAL TAMBAH NEGARA
+       ===================================================================== */
+    const AddCountryModal = {
+      init(){
+        DOM.fabAdd.addEventListener("click", (event) => {
+          this.spawnRipple(event);
+          this.open();
+        });
+        DOM.btnCancel.addEventListener("click", () => this.close());
+        DOM.modalScrim.addEventListener("click", (event) => {
+          if (event.target === DOM.modalScrim) this.close();
+        });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && DOM.modalScrim.classList.contains("is-visible")){
+            this.close();
+          }
+        });
+        DOM.addForm.addEventListener("submit", (event) => this.handleSubmit(event));
+
+        // Menghapus pesan error saat user mulai mengetik ulang
+        DOM.inputName.addEventListener("input", () => this.clearFieldError("name"));
+        DOM.inputDesc.addEventListener("input", () => this.clearFieldError("description"));
+      },
+
+      /** Efek ripple material di dalam FAB saat ditekan. */
+      spawnRipple(event){
+        const fab = DOM.fabAdd;
+        const rect = fab.getBoundingClientRect();
+        const ripple = document.createElement("span");
+        const size = Math.max(rect.width, rect.height);
+
+        ripple.className = "fab__ripple";
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${(event.clientX ?? rect.left + rect.width / 2) - rect.left - size / 2}px`;
+        ripple.style.top = `${(event.clientY ?? rect.top + rect.height / 2) - rect.top - size / 2}px`;
+
+        fab.appendChild(ripple);
+        ripple.addEventListener("animationend", () => ripple.remove(), { once: true });
+      },
+
+      open(){
+        DOM.modalScrim.classList.add("is-visible");
+        DOM.fabAdd.classList.add("is-modal-open");
+        document.body.style.overflow = "hidden";
+        setTimeout(() => DOM.inputName.focus(), 260);
+      },
+
+      close(){
+        DOM.modalScrim.classList.remove("is-visible");
+        DOM.fabAdd.classList.remove("is-modal-open");
+        document.body.style.overflow = "";
+        this.resetForm();
+      },
+
+      resetForm(){
+        DOM.addForm.reset();
+        this.clearFieldError("name");
+        this.clearFieldError("description");
+      },
+
+      clearFieldError(field){
+        const errorEl = field === "name" ? DOM.errorName : DOM.errorDesc;
+        const inputEl = field === "name" ? DOM.inputName : DOM.inputDesc;
+        errorEl.classList.remove("is-visible");
+        inputEl.style.borderColor = "";
+      },
+
+      showFieldError(field, message){
+        const errorEl = field === "name" ? DOM.errorName : DOM.errorDesc;
+        const inputEl = field === "name" ? DOM.inputName : DOM.inputDesc;
+        errorEl.textContent = message;
+        errorEl.classList.add("is-visible");
+        inputEl.style.borderColor = "var(--color-danger)";
+      },
+
+      /** Validasi sederhana sebelum data dikirim ke Firestore. */
+      validate(name, description){
+        let isValid = true;
+
+        if (!name.trim()){
+          this.showFieldError("name", "Nama negara wajib diisi.");
+          isValid = false;
+        } else if (name.trim().length < 2){
+          this.showFieldError("name", "Nama negara terlalu pendek.");
+          isValid = false;
+        }
+
+        if (!description.trim()){
+          this.showFieldError("description", "Deskripsi wajib diisi.");
+          isValid = false;
+        } else if (description.trim().length < 5){
+          this.showFieldError("description", "Deskripsi terlalu pendek.");
+          isValid = false;
+        }
+
+        return isValid;
+      },
+
+      setSaving(isSaving){
+        DOM.btnSave.disabled = isSaving;
+        DOM.btnSave.classList.toggle("is-loading", isSaving);
+      },
+
+      async handleSubmit(event){
+        event.preventDefault();
+
+        const name = DOM.inputName.value;
+        const description = DOM.inputDesc.value;
+
+        if (!this.validate(name, description)) return;
+
+        this.setSaving(true);
+        try {
+          await addDoc(countriesRef, {
+            name: name.trim(),
+            description: description.trim(),
+            createdAt: serverTimestamp(),
+          });
+
+          // onSnapshot akan otomatis merender card baru, jadi di sini
+          // kita cukup menutup modal & menampilkan toast sukses.
+          this.close();
+          Toast.show("Negara berhasil ditambahkan", "success");
+        } catch (error) {
+          console.error("Gagal menambahkan negara:", error);
+          Toast.show("Gagal menambahkan negara. Coba lagi.", "error");
+        } finally {
+          this.setSaving(false);
+        }
+      },
+    };
+
+    /* =====================================================================
+       10. MODUL SINKRONISASI FIRESTORE (REALTIME)
+       ===================================================================== */
+    const FirestoreSync = {
+      start(){
+        const q = query(countriesRef, orderBy("createdAt", "desc"));
+
+        onSnapshot(
+          q,
+          (snapshot) => {
+            AppState.allCountries = snapshot.docs.map((docSnap) => ({
+              id: docSnap.id,
+              ...docSnap.data(),
+            }));
+            AppState.isFirstLoad = false;
+            CountryRenderer.render();
+            Accordion.syncDOM();
+          },
+          (error) => {
+            console.error("Gagal memuat data dari Firestore:", error);
+            AppState.isFirstLoad = false;
+            CountryRenderer.render();
+            Toast.show("Gagal memuat data negara.", "error");
+          }
+        );
+      },
+    };
+
+    /* =====================================================================
+       11. INISIALISASI APLIKASI
+       ===================================================================== */
+    function initApp(){
+      Search.init();
+      Accordion.init();
+      AddCountryModal.init();
+      CountryRenderer.render(); // render awal (skeleton state)
+      FirestoreSync.start();
+    }
+
+    document.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>

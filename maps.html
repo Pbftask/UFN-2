@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Peta Interaktif — Realtime</title>
+
+<!--
+  =====================================================================
+  APLIKASI PETA INTERAKTIF (mirip Google Maps, tanpa aset/data Google)
+  ---------------------------------------------------------------------
+  - HTML + CSS + JavaScript murni (tanpa framework)
+  - Firebase Firestore untuk penyimpanan & sinkronisasi realtime
+  - Gambar peta sendiri: "map-day.png" dan "map-night.png"
+    (letakkan kedua file gambar ini di folder yang sama dengan index.html)
+  =====================================================================
+-->
+
+<style>
+
+  .marker[data-type="provinsi"] .marker-pin,
+.marker[data-type="provinsi"] .ping{
+    display:none;
+}
+
+.marker[data-type="provinsi"]{
+    transform:translate(-50%,-50%) scale(var(--inv,1));
+}
+
+.marker[data-type="provinsi"] .marker-label{
+    margin-top:0;
+}
+
+  .marker.hide-label .marker-label{
+    display:none;
+}
+  /* ===================================================================
+     0. RESET & VARIABEL DESAIN (DESIGN TOKENS)
+     =================================================================== */
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overscroll-behavior:none; }
+
+  :root{
+    /* -- Palet mode siang -- */
+    --bg:            #eef1f6;
+    --panel:         rgba(255,255,255,0.86);
+    --panel-solid:   #ffffff;
+    --text:          #1c2130;
+    --text-soft:     #5c6476;
+    --border:        rgba(15,23,42,0.09);
+    --accent:        #4f46e5;   /* indigo — marker negara */
+    --accent-2:      #f59e0b;   /* amber  — marker provinsi */
+    --accent-ink:    #ffffff;
+    --shadow:        0 10px 30px rgba(20,25,40,0.14), 0 2px 8px rgba(20,25,40,0.08);
+    --shadow-sm:     0 4px 14px rgba(20,25,40,0.14);
+    --radius-lg:     20px;
+    --radius-md:     14px;
+    --radius-sm:     10px;
+    --font:          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --dur:           .55s;
+  }
+  body.night{
+    --bg:            #080b14;
+    --panel:         rgba(19,23,38,0.86);
+    --panel-solid:   #131626;
+    --text:          #eef1fb;
+    --text-soft:     #9aa2ba;
+    --border:        rgba(255,255,255,0.08);
+    --accent:        #818cf8;
+    --accent-2:      #fbbf24;
+    --accent-ink:    #0b0e1a;
+    --shadow:        0 10px 34px rgba(0,0,0,0.6), 0 2px 10px rgba(0,0,0,0.45);
+    --shadow-sm:     0 4px 16px rgba(0,0,0,0.5);
+  }
+
+  body{
+    font-family:var(--font);
+    background:var(--bg);
+    color:var(--text);
+    height:100vh;
+    width:100vw;
+    overflow:hidden;
+    transition:background var(--dur) ease, color var(--dur) ease;
+  }
+
+  /* ===================================================================
+     1. VIEWPORT & LAPISAN PETA
+     =================================================================== */
+  #viewport{
+    position:absolute; inset:0;
+    overflow:hidden;
+    cursor:grab;
+    touch-action:none; /* semua gesture ditangani manual (pan/pinch) */
+  }
+  #viewport.dragging{ cursor:grabbing; }
+  #viewport.add-mode{ cursor:copy; }
+
+  #mapLayer{
+    position:absolute;
+    top:0; left:0;
+    transform-origin:0 0;
+    will-change:transform;
+  }
+  .map-image{
+    position:absolute; top:0; left:0;
+    display:block;
+    -webkit-user-drag:none;
+    user-select:none;
+    pointer-events:none;
+    transition:opacity .8s ease;
+  }
+  #imgNight{ opacity:0; }
+  body.night #imgDay{ opacity:0; }
+  body.night #imgNight{ opacity:1; }
+
+  #markersLayer{ position:absolute; top:0; left:0; }
+
+  /* ===================================================================
+     2. MARKER
+     =================================================================== */
+  .marker{
+    position:absolute;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transform:translate(-50%,-100%);
+    cursor:pointer;
+    user-select:none;
+    z-index:5;
+  }
+  .marker-pin{
+    width:26px; height:26px;
+    border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);
+    box-shadow:var(--shadow-sm);
+    border:2px solid rgba(255,255,255,0.85);
+    position:relative;
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .marker-pin::after{ /* titik inti pin */
+    content:"";
+    position:absolute; inset:6px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.9);
+  }
+  .marker[data-type="negara"] .marker-pin{ background:var(--accent); }
+  .marker[data-type="provinsi"] .marker-pin{ background:var(--accent-2); }
+
+  .marker-label{
+    margin-top:4px;
+    padding:3px 9px;
+    font-size:12px;
+    font-weight:600;
+    white-space:nowrap;
+    color:var(--text);
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:999px;
+    box-shadow:var(--shadow-sm);
+    backdrop-filter:blur(6px);
+    pointer-events:none;
+  }
+  .marker:hover .marker-pin{ transform:rotate(-45deg) scale(1.12); }
+
+  /* Cincin animasi saat marker dipilih (signature element) */
+  .marker.selected .marker-pin{ transform:rotate(-45deg) scale(1.2); }
+  .marker .ping{
+    position:absolute;
+    top:0; left:0; width:26px; height:26px;
+    border-radius:50% 50% 50% 0;
+    transform:rotate(-45deg);
+    pointer-events:none;
+    opacity:0;
+  }
+  .marker.selected .ping{
+    animation:pingPulse 1.1s ease-out infinite;
+    background:var(--accent);
+  }
+  .marker[data-type="provinsi"].selected .ping{ background:var(--accent-2); }
+  @keyframes pingPulse{
+    0%   { opacity:.55; transform:rotate(-45deg) scale(1); }
+    100% { opacity:0;   transform:rotate(-45deg) scale(2.6); }
+  }
+
+  /* ===================================================================
+     3. TOPBAR — PENCARIAN
+     =================================================================== */
+  #topbar{
+    position:absolute; top:16px; left:16px; right:16px;
+    max-width:420px;
+    z-index:30;
+  }
+  #searchBox{
+    display:flex; align-items:center; gap:10px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);
+    padding:12px 16px;
+    backdrop-filter:blur(14px);
+    transition:background var(--dur) ease, border-color var(--dur) ease;
+  }
+  #searchBox svg{ flex:none; opacity:.6; }
+  #searchInput{
+    border:none; outline:none; background:transparent;
+    font-size:15px; color:var(--text); width:100%; font-family:var(--font);
+  }
+  #searchInput::placeholder{ color:var(--text-soft); }
+  #clearSearch{
+    border:none; background:none; cursor:pointer; color:var(--text-soft);
+    font-size:18px; line-height:1; display:none; padding:2px 4px;
+  }
+
+  #searchResults{
+    margin-top:8px;
+    background:var(--panel-solid);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    display:none;
+    max-height:260px;
+    overflow-y:auto;
+  }
+  .result-item{
+    display:flex; align-items:center; gap:10px;
+    padding:11px 14px;
+    cursor:pointer;
+    border-bottom:1px solid var(--border);
+    font-size:14px;
+  }
+  .result-item:last-child{ border-bottom:none; }
+  .result-item:hover{ background:rgba(79,70,229,0.08); }
+  .result-dot{ width:10px; height:10px; border-radius:50%; flex:none; }
+  .result-name{ font-weight:600; color:var(--text); }
+  .result-type{ margin-left:auto; font-size:11px; color:var(--text-soft); text-transform:uppercase; letter-spacing:.03em; }
+  #searchEmpty{ padding:14px; font-size:13px; color:var(--text-soft); text-align:center; display:none; }
+
+  /* ===================================================================
+     4. TOMBOL MENGAMBANG (KONTROL)
+     =================================================================== */
+  #controls{
+    position:absolute; right:16px; bottom:26px;
+    display:flex; flex-direction:column; gap:10px;
+    z-index:30;
+  }
+  .fab{
+    width:48px; height:48px;
+    border-radius:var(--radius-md);
+    background:var(--panel);
+    border:1px solid var(--border);
+    box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    color:var(--text);
+    backdrop-filter:blur(14px);
+    transition:transform .15s ease, background var(--dur) ease, border-color var(--dur) ease;
+  }
+  .fab:hover{ transform:translateY(-2px); }
+  .fab:active{ transform:translateY(0) scale(.94); }
+  .fab.active{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
+  #zoomGroup{
+    display:flex; flex-direction:column;
+    border-radius:var(--radius-md);
+    overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  #zoomGroup .fab{ box-shadow:none; border-radius:0; border-bottom:1px solid var(--border); }
+  #zoomGroup .fab:last-child{ border-bottom:none; }
+
+  /* ===================================================================
+     5. FORM TAMBAH MARKER (popup kontekstual)
+     =================================================================== */
+  #addForm{
+    position:absolute;
+    z-index:40;
+    width:240px;
+    background:var(--panel-solid);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    box-shadow:var(--shadow);
+    padding:14px;
+    display:none;
+    transform:translate(-50%,-115%);
+  }
+  #addForm h4{ font-size:13px; margin-bottom:10px; color:var(--text-soft); font-weight:700; letter-spacing:.02em; }
+  #addForm input[type="text"]{
+    width:100%; padding:9px 10px; border-radius:var(--radius-sm);
+    border:1px solid var(--border); background:transparent; color:var(--text);
+    font-size:14px; margin-bottom:8px; outline:none; font-family:var(--font);
+  }
+  #addForm input:focus{ border-color:var(--accent); }
+  .type-toggle{ display:flex; gap:6px; margin-bottom:12px; }
+  .type-toggle button{
+    flex:1; padding:8px 0; border-radius:var(--radius-sm);
+    border:1px solid var(--border); background:transparent; color:var(--text-soft);
+    font-size:12px; font-weight:700; cursor:pointer; font-family:var(--font);
+    transition:all .15s ease;
+  }
+  .type-toggle button.on{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
+  .form-actions{ display:flex; gap:8px; }
+  .btn{
+    flex:1; padding:9px 0; border-radius:var(--radius-sm); border:none;
+    font-size:13px; font-weight:700; cursor:pointer; font-family:var(--font);
+    transition:opacity .15s ease, transform .1s ease;
+  }
+  .btn:active{ transform:scale(.96); }
+  .btn-primary{ background:var(--accent); color:var(--accent-ink); }
+  .btn-ghost{ background:var(--border); color:var(--text); }
+  .btn-danger{ background:#ef4444; color:#fff; }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  /* ===================================================================
+     6. KARTU INFORMASI MARKER
+     =================================================================== */
+  #infoCard{
+    position:absolute;
+    left:50%; bottom:24px;
+    transform:translateX(-50%) translateY(140%);
+    width:min(320px, calc(100vw - 32px));
+    background:var(--panel-solid);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);
+    padding:18px;
+    z-index:45;
+    transition:transform .35s cubic-bezier(.2,.8,.2,1);
+  }
+  #infoCard.open{ transform:translateX(-50%) translateY(0); }
+  #infoCard .row-top{ display:flex; align-items:flex-start; gap:10px; margin-bottom:6px; }
+  #infoCard .dot{ width:12px; height:12px; border-radius:50%; margin-top:5px; flex:none; }
+  #infoCard h3{ font-size:17px; flex:1; word-break:break-word; }
+  #infoCard .badge{
+    font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--text-soft); border:1px solid var(--border); border-radius:999px;
+    padding:2px 8px; white-space:nowrap;
+  }
+  #infoCard .meta{ font-size:12px; color:var(--text-soft); margin-bottom:14px; }
+  #infoCard input[type="text"]{
+    width:100%; padding:9px 10px; border-radius:var(--radius-sm);
+    border:1px solid var(--border); background:transparent; color:var(--text);
+    font-size:15px; margin-bottom:12px; outline:none; display:none; font-family:var(--font);
+  }
+  #infoCard .actions{ display:flex; gap:8px; }
+  #closeInfo{
+    position:absolute; top:10px; right:10px; border:none; background:none;
+    color:var(--text-soft); font-size:18px; cursor:pointer; line-height:1; padding:4px;
+  }
+
+  /* ===================================================================
+     7. TOAST NOTIFIKASI
+     =================================================================== */
+  #toast{
+    position:absolute; left:50%; top:16px; transform:translate(-50%,-140%);
+    background:var(--panel-solid); color:var(--text); border:1px solid var(--border);
+    padding:10px 18px; border-radius:999px; font-size:13px; font-weight:600;
+    box-shadow:var(--shadow); z-index:60; transition:transform .3s ease;
+    max-width:90vw; text-align:center;
+  }
+  #toast.show{ transform:translate(-50%,0); }
+
+  /* ===================================================================
+     8. RESPONSIF
+     =================================================================== */
+  @media (max-width:640px){
+    #topbar{ right:16px; max-width:none; }
+    .fab{ width:44px; height:44px; }
+    #infoCard{ bottom:14px; }
+  }
+
+  /* svg icon helper */
+  svg{ display:block; }
+
+  /* ===========================
+   LOADING SCREEN
+=========================== */
+
+#loading-screen{
+    position:fixed;
+    inset:0;
+    background:#111827;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:999999;
+    transition:opacity .5s ease;
+    pointer-events:all;
+}
+
+#loading-screen.hide{
+    opacity:0;
+    visibility:hidden;
+}
+
+.loading-box{
+    text-align:center;
+    color:white;
+}
+
+.spinner{
+    width:70px;
+    height:70px;
+    border:6px solid rgba(255,255,255,.2);
+    border-top:6px solid #4CAF50;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+    margin:auto;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+.loading-title{
+    margin-top:20px;
+    font-size:24px;
+    font-weight:bold;
+}
+
+.loading-text{
+    margin-top:10px;
+    color:#d0d0d0;
+    font-size:15px;
+}
+
+.online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+  background:white;
+  border:1px solid #4e4e4e;
+  border-radius: 20px;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
+  
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-left:125px;
+  margin-top:2px;
+}
+
+/* ===========================
+   LOGIN SCREEN (nama negara)
+=========================== */
+#loginScreen{
+    position:fixed;
+    inset:0;
+    background:#111827;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:1000000;
+    padding:20px;
+    pointer-events:all;
+}
+#loginScreen.hide{ display:none; }
+.login-box{
+    width:100%;
+    max-width:340px;
+    background:#1a2233;
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:18px;
+    padding:26px 22px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    text-align:center;
+}
+.login-box .login-icon{
+    width:52px; height:52px; margin:0 auto 14px;
+    border-radius:50%;
+    background:#4f46e5;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:22px; font-weight:700;
+}
+.login-box h2{
+    color:#fff;
+    font-size:19px;
+    margin-bottom:6px;
+}
+.login-box p{
+    color:#9aa2ba;
+    font-size:13px;
+    margin-bottom:18px;
+    line-height:1.5;
+}
+.login-box input{
+    width:100%;
+    padding:11px 14px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:#0f1522;
+    color:#fff;
+    font-size:15px;
+    outline:none;
+    margin-bottom:10px;
+    font-family:var(--font);
+    text-align:center;
+}
+.login-box input:focus{ border-color:#4f46e5; }
+.login-box .login-err{
+    color:#f87171;
+    font-size:12px;
+    min-height:16px;
+    margin-bottom:6px;
+}
+.login-box button{
+    width:100%;
+    padding:11px 0;
+    border-radius:12px;
+    border:none;
+    background:#4f46e5;
+    color:#fff;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:var(--font);
+}
+.login-box button:active{ transform:scale(.97); }
+
+</style>
+</head>
+<body>
+
+  <!-- Login (wajib isi nama negara sebelum masuk, sekali saja) -->
+  <div id="loginScreen">
+    <div class="login-box">
+      <div class="login-icon">🌍</div>
+      <h2>Masuk ke Peta</h2>
+      <p>Masukkan nama negara Anda terlebih dahulu.<br/>Nama ini akan dipakai untuk menandai siapa yang menambahkan tempat, dan <strong>tidak bisa diubah lagi</strong> setelah masuk.</p>
+      <input id="loginCountry" type="text" placeholder="Nama negara" maxlength="40" autocomplete="off" />
+      <div class="login-err" id="loginError"></div>
+      <button id="loginBtn">Masuk</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+<div id="loading-screen">
+    <div class="loading-box">
+        <div class="spinner"></div>
+
+        <div class="loading-title">
+            Menyiapkan Peta
+        </div>
+
+        <div class="loading-text" id="loadingText">
+            Memuat gambar...
+        </div>
+    </div>
+</div>
+
+  <!-- ============================ VIEWPORT PETA ============================ -->
+  <div id="viewport">
+    <div id="mapLayer">
+      <img id="imgDay"   class="map-image" src="map-day.webp"   alt="Peta siang" draggable="false" />
+      <img id="imgNight" class="map-image" src="map-night.webp" alt="Peta malam" draggable="false" />
+      <div id="markersLayer"></div>
+    </div>
+  </div>
+
+  <!-- ============================ PENCARIAN ============================ -->
+  <div id="topbar">
+    <div id="searchBox">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="Cari nama negara atau provinsi…" autocomplete="off" />
+      <button id="clearSearch" title="Bersihkan">✕</button>
+    </div>
+    <div id="searchResults"></div>
+    <div id="searchEmpty">Tidak ada tempat yang cocok.</div>
+          <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
+  </div>
+
+  <!-- ============================ KONTROL MENGAMBANG ============================ -->
+  <div id="controls">
+    <button class="fab" id="btnAdd" title="Tambah tempat">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="fab" id="btnMode" title="Ganti mode siang/malam">
+      <svg id="iconMode" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="fab" id="btnHome" title="Kembali ke tampilan awal">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    </button>
+    <div id="zoomGroup">
+      <button class="fab" id="btnZoomIn" title="Perbesar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button class="fab" id="btnZoomOut" title="Perkecil">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================ FORM TAMBAH MARKER ============================ -->
+  <div id="addForm">
+    <h4>Tambahkan tempat</h4>
+    <input id="addName" type="text" placeholder="Nama tempat" maxlength="60" />
+    <div class="type-toggle">
+      <button type="button" id="typeNegara" class="on">Negara</button>
+      <button type="button" id="typeProvinsi">Provinsi</button>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" id="cancelAdd">Batal</button>
+      <button class="btn btn-primary" id="confirmAdd">Simpan</button>
+    </div>
+  </div>
+
+  <!-- ============================ KARTU INFO MARKER ============================ -->
+  <div id="infoCard">
+    <button id="closeInfo" title="Tutup">✕</button>
+    <div class="row-top">
+      <span class="dot" id="infoDot"></span>
+      <h3 id="infoName">-</h3>
+      <span class="badge" id="infoType">-</span>
+    </div>
+    <div class="meta" id="infoMeta">-</div>
+    <input type="text" id="infoEditInput" maxlength="60" />
+    <div class="actions" id="infoActionsView">
+      <button class="btn btn-ghost" id="btnEdit">Ubah nama</button>
+      <button class="btn btn-danger" id="btnDelete">Hapus</button>
+    </div>
+    <div class="actions" id="infoActionsEdit" style="display:none;">
+      <button class="btn btn-ghost" id="btnCancelEdit">Batal</button>
+      <button class="btn btn-primary" id="btnSaveEdit">Simpan</button>
+    </div>
+  </div>
+
+  <!-- ============================ TOAST ============================ -->
+  <div id="toast"></div>
+
+  <!-- =====================================================================
+       MODUL FIREBASE (ES Module dari CDN resmi Google — hanya SDK, tanpa
+       aset/logo/data Google Maps). Ganti firebaseConfig sesuai proyek Anda.
+       ===================================================================== -->
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script type="module">
+
+const loading = document.getElementById("loading-screen");
+const text = document.getElementById("loadingText");
+
+// Menonaktifkan semua interaksi
+document.body.style.pointerEvents = "none";
+loading.style.pointerEvents = "all";
+
+/* ---------------------------------------------------------------------
+   LOGIN NAMA NEGARA — wajib diisi sekali, lalu tidak bisa diubah lagi
+   (disimpan permanen di localStorage perangkat ini, seperti sesi login)
+   --------------------------------------------------------------------- */
+const USER_COUNTRY_KEY = "mapUserCountry";
+const loginScreen  = document.getElementById("loginScreen");
+const loginInput   = document.getElementById("loginCountry");
+const loginError   = document.getElementById("loginError");
+const loginBtn     = document.getElementById("loginBtn");
+loginScreen.style.pointerEvents = "all";
+
+function getUserCountry(){
+  return localStorage.getItem(USER_COUNTRY_KEY);
+}
+
+function startAppFlow(){
+  loading.style.pointerEvents = "all";
+  prepareApp();
+}
+
+if (getUserCountry()){
+  // Sudah pernah mengisi nama negara sebelumnya di perangkat ini
+  loginScreen.classList.add("hide");
+  startAppFlow();
+} else {
+  // Belum pernah login — tampilkan form, tunda pemuatan peta
+  loginScreen.classList.remove("hide");
+  loginInput.focus();
+}
+
+function submitLogin(){
+  const val = loginInput.value.trim();
+  if (!val){
+    loginError.textContent = "Nama negara tidak boleh kosong";
+    return;
+  }
+  if (val.length < 2){
+    loginError.textContent = "Nama negara terlalu pendek";
+    return;
+  }
+  if (containsProfanity(val)){
+    loginError.textContent = "Nama mengandung kata yang tidak pantas";
+    return;
+  }
+  localStorage.setItem(USER_COUNTRY_KEY, val);
+  loginScreen.classList.add("hide");
+  startAppFlow();
+}
+
+loginBtn.addEventListener("click", submitLogin);
+loginInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") submitLogin();
+});
+
+async function prepareApp(){
+
+    text.textContent = "Memuat gambar...";
+    await delay(1200);
+
+    text.textContent = "Merender peta...";
+    await delay(1200);
+
+    text.textContent = "Memuat marker...";
+    await delay(1200);
+
+    text.textContent = "Menghubungkan database...";
+    await delay(1200);
+
+    text.textContent = "Hampir selesai...";
+    await delay(1000);
+
+    loading.classList.add("hide");
+
+    // Aktifkan kembali interaksi
+    document.body.style.pointerEvents = "auto";
+
+    // Hapus loading setelah animasi selesai
+    setTimeout(()=>{
+        loading.remove();
+    },500);
+}
+
+function delay(ms){
+    return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    /* -------------------------------------------------------------------
+       1. KONFIGURASI FIREBASE — bagian ini mudah diganti sesuai proyek
+       ------------------------------------------------------------------- */
+    const firebaseConfig = {
+      apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+      authDomain: "puki-678bf.firebaseapp.com",
+      databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+      projectId: "puki-678bf",
+      storageBucket: "puki-678bf.firebasestorage.app",
+      messagingSenderId: "343647284151",
+      appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    const placesCol = collection(db, "places");
+    const rtdb = getDatabase(app);
+
+    /* -------------------------------------------------------------------
+       1b. FILTER KATA KOTOR / TIDAK PANTAS
+           - Menolak input yang mengandung kata terlarang (saat tambah/edit)
+           - Menghapus otomatis dari Firestore jika ada dokumen yang lolos
+             (misalnya dibuat lewat cara lain di luar form ini)
+       ------------------------------------------------------------------- */
+    const BANNED_WORDS = [
+      "rusdi", "muani", "amba", "rodok", "rudal", "ngocok", "telanjang","crt","crot","cr0t","crhot",
+      // Tambahkan kata lain di sini, huruf kecil semua, satu kata per elemen:
+      "anjing", "anjir", "bangsat", "bajingan", "brengsek", "kontol", "memek",
+      "ngentot", "goblok", "tolol", "kampret", "keparat", "pepek", "peler",
+      "jancok", "jancuk", "asu", "babi", "sialan", "kimak", "puki", "pukimak",
+      "lonte", "pelacur", "bencong", "banci", "tai", "monyet"
+    ];
+
+    // Normalisasi: huruf kecil, ganti angka/simbol mirip huruf (leetspeak),
+    // lalu ganti karakter non-huruf jadi spasi (bukan dihapus total) supaya
+    // kata tetap terpisah — mencegah false positive seperti "tambang" ikut
+    // kesensor gara-gara mengandung urutan huruf "amba" di tengah kata.
+    function normalizeForFilter(str){
+      return str
+        .toLowerCase()
+        .replace(/4/g, "a").replace(/8/g, "b").replace(/3/g, "e")
+        .replace(/1|!/g, "i").replace(/0/g, "o").replace(/5|\$/g, "s")
+        .replace(/7/g, "t")
+        .replace(/[^a-z]+/g, " ")
+        .trim();
+    }
+
+    function containsProfanity(text){
+      const normalized = normalizeForFilter(text);
+      if (!normalized) return false;
+      return BANNED_WORDS.some(word => new RegExp(`\\b${word}\\b`).test(normalized));
+    }
+
+    // Hapus dokumen "places" yang namanya mengandung kata terlarang.
+    // Dipakai sebagai jaring pengaman kedua (defense in depth) di listener realtime,
+    // untuk kasus data masuk lewat jalur lain di luar form tambah/edit ini.
+    async function purgeIfProfane(place){
+      if (containsProfanity(place.name)){
+        try{
+          await deleteDoc(doc(db, "places", place.id));
+          showToast(`Nama tidak pantas terdeteksi & dihapus otomatis`);
+        } catch(err){
+          console.error("Gagal menghapus otomatis:", err);
+        }
+        return true;
+      }
+      return false;
+    }
+
+    /* -------------------------------------------------------------------
+       2. IDENTITAS PEMILIK (tanpa login) — disimpan di localStorage agar
+          setiap browser punya "ownerId" tetap, sehingga hanya pembuat
+          marker yang bisa mengubah/menghapusnya.
+       ------------------------------------------------------------------- */
+    function getOwnerId(){
+      let id = localStorage.getItem("mapOwnerId");
+      if (!id){
+        id = (crypto.randomUUID ? crypto.randomUUID() : "own-" + Date.now() + "-" + Math.random().toString(16).slice(2));
+        localStorage.setItem("mapOwnerId", id);
+      }
+      return id;
+    }
+    const OWNER_ID = getOwnerId();
+
+    /* =====================================================================
+       3. REFERENSI ELEMEN DOM
+       ===================================================================== */
+    const viewport      = document.getElementById("viewport");
+    const mapLayer       = document.getElementById("mapLayer");
+    const imgDay          = document.getElementById("imgDay");
+    const imgNight        = document.getElementById("imgNight");
+    const markersLayer    = document.getElementById("markersLayer");
+
+    const searchInput    = document.getElementById("searchInput");
+    const searchResults  = document.getElementById("searchResults");
+    const searchEmpty    = document.getElementById("searchEmpty");
+    const clearSearchBtn = document.getElementById("clearSearch");
+
+    const btnAdd      = document.getElementById("btnAdd");
+    const btnMode     = document.getElementById("btnMode");
+    const btnHome     = document.getElementById("btnHome");
+    const btnZoomIn   = document.getElementById("btnZoomIn");
+    const btnZoomOut  = document.getElementById("btnZoomOut");
+
+    const addForm     = document.getElementById("addForm");
+    const addName     = document.getElementById("addName");
+    const typeNegara  = document.getElementById("typeNegara");
+    const typeProvinsi= document.getElementById("typeProvinsi");
+    const cancelAdd   = document.getElementById("cancelAdd");
+    const confirmAdd  = document.getElementById("confirmAdd");
+
+    const infoCard        = document.getElementById("infoCard");
+    const infoDot         = document.getElementById("infoDot");
+    const infoName        = document.getElementById("infoName");
+    const infoType        = document.getElementById("infoType");
+    const infoMeta        = document.getElementById("infoMeta");
+    const infoEditInput   = document.getElementById("infoEditInput");
+    const infoActionsView = document.getElementById("infoActionsView");
+    const infoActionsEdit = document.getElementById("infoActionsEdit");
+    const btnEdit         = document.getElementById("btnEdit");
+    const btnDelete       = document.getElementById("btnDelete");
+    const btnCancelEdit   = document.getElementById("btnCancelEdit");
+    const btnSaveEdit     = document.getElementById("btnSaveEdit");
+    const closeInfo       = document.getElementById("closeInfo");
+
+    const toastEl = document.getElementById("toast");
+
+    /* =====================================================================
+       4. STATE PETA (posisi & zoom)
+       ===================================================================== */
+    const state = {
+      scale: 1,
+      tx: 0,
+      ty: 0,
+      minScale: 0.6,
+      maxScale: 6
+    };
+    let MAP_W = 0, MAP_H = 0;      // ukuran asli gambar peta (px)
+    const OVERSCROLL = 120;         // batas toleransi peta keluar layar (px)
+
+    /* Cache data marker realtime dari Firestore */
+    let placesCache = [];           // [{id,name,type,x,y,createdAt,ownerId}]
+    const markerElements = new Map(); // id -> elemen DOM marker
+
+    let selectedId = null;
+    let addModeActive = false;
+    let pendingAddPoint = null;      // {xFrac,yFrac, screenX, screenY}
+
+    /* =====================================================================
+       5. UTILITAS
+       ===================================================================== */
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+    function showToast(msg, ms = 2400){
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toastEl.classList.remove("show"), ms);
+    }
+
+    function formatDate(ts){
+      if (!ts) return "baru saja";
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toLocaleString("id-ID", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    }
+
+    /* =====================================================================
+       6. TRANSFORM PETA (pan + zoom) — inti performa aplikasi
+       ===================================================================== */
+    function applyTransform(){
+
+      updateMarkerLabels();
+      // translate3d dipakai agar dipercepat oleh GPU (drag/zoom halus)
+      mapLayer.style.transform = `translate3d(${state.tx}px, ${state.ty}px, 0) scale(${state.scale})`;
+      // Marker dikompensasi agar ukurannya tetap konstan di layar (seperti pin Maps asli)
+      const invScale = 1 / state.scale;
+      markerElements.forEach(el => {
+        el.style.setProperty("--inv", invScale);
+      });
+    }
+
+    function clampPan(){
+      const vw = viewport.clientWidth;
+      const vh = viewport.clientHeight;
+      const scaledW = MAP_W * state.scale;
+      const scaledH = MAP_H * state.scale;
+
+      if (scaledW <= vw){
+        state.tx = (vw - scaledW) / 2;
+      } else {
+        const minTx = vw - scaledW - OVERSCROLL;
+        const maxTx = OVERSCROLL;
+        state.tx = clamp(state.tx, minTx, maxTx);
+      }
+      if (scaledH <= vh){
+        state.ty = (vh - scaledH) / 2;
+      } else {
+        const minTy = vh - scaledH - OVERSCROLL;
+        const maxTy = OVERSCROLL;
+        state.ty = clamp(state.ty, minTy, maxTy);
+      }
+    }
+
+    /* Zoom yang berpusat pada satu titik layar (kursor / sentuhan) */
+    function zoomAt(pointX, pointY, factor){
+      const oldScale = state.scale;
+      const newScale = clamp(oldScale * factor, state.minScale, state.maxScale);
+      if (newScale === oldScale) return;
+      const ratio = newScale / oldScale;
+      state.tx = pointX - (pointX - state.tx) * ratio;
+      state.ty = pointY - (pointY - state.ty) * ratio;
+      state.scale = newScale;
+      clampPan();
+      applyTransform();
+    }
+
+    function setInitialView(){
+      const vw = viewport.clientWidth;
+      const vh = viewport.clientHeight;
+      // skala awal: peta menutupi seluruh layar (mirip object-fit: cover)
+      state.scale = clamp(Math.max(vw / MAP_W, vh / MAP_H), state.minScale, state.maxScale);
+      state.tx = (vw - MAP_W * state.scale) / 2;
+      state.ty = (vh - MAP_H * state.scale) / 2;
+      clampPan();
+      applyTransform();
+    }
+
+    /* =====================================================================
+       7. DRAG (mouse & sentuhan) + PINCH ZOOM — via Pointer Events
+       ===================================================================== */
+    const activePointers = new Map(); // pointerId -> {x,y}
+    let dragLast = null;              // posisi terakhir untuk pan 1 jari
+    let pinchStartDist = null;
+    let moveAccum = 0;                // total pergerakan sesi pointer (bedakan tap vs drag)
+    let downPoint = null;
+
+    function dist(p1, p2){ return Math.hypot(p1.x - p2.x, p1.y - p2.y); }
+    function midpoint(p1, p2){ return { x:(p1.x+p2.x)/2, y:(p1.y+p2.y)/2 }; }
+
+    viewport.addEventListener("pointerdown", (e) => {
+      viewport.setPointerCapture(e.pointerId);
+      activePointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
+      moveAccum = 0;
+      downPoint = { x:e.clientX, y:e.clientY, target:e.target };
+
+      if (activePointers.size === 1){
+        dragLast = { x:e.clientX, y:e.clientY };
+        viewport.classList.add("dragging");
+      } else if (activePointers.size === 2){
+        const pts = [...activePointers.values()];
+        pinchStartDist = dist(pts[0], pts[1]);
+        dragLast = null;
+      }
+    });
+
+    viewport.addEventListener("pointermove", (e) => {
+      if (!activePointers.has(e.pointerId)) return;
+      activePointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
+
+      if (activePointers.size === 1 && dragLast){
+        const dx = e.clientX - dragLast.x;
+        const dy = e.clientY - dragLast.y;
+        moveAccum += Math.abs(dx) + Math.abs(dy);
+        state.tx += dx;
+        state.ty += dy;
+        clampPan();
+        applyTransform();
+        dragLast = { x:e.clientX, y:e.clientY };
+      } else if (activePointers.size === 2){
+        const pts = [...activePointers.values()];
+        const newDist = dist(pts[0], pts[1]);
+        const center = midpoint(pts[0], pts[1]);
+        if (pinchStartDist){
+          const factor = newDist / pinchStartDist;
+          moveAccum += Math.abs(newDist - pinchStartDist);
+          zoomAt(center.x, center.y, factor);
+        }
+        pinchStartDist = newDist;
+      }
+    });
+
+    function endPointer(e){
+      activePointers.delete(e.pointerId);
+      if (activePointers.size === 1){
+        // kembali ke mode pan tunggal tanpa "lompat"
+        const remaining = [...activePointers.values()][0];
+        dragLast = remaining;
+        pinchStartDist = null;
+      } else if (activePointers.size === 0){
+        dragLast = null;
+        pinchStartDist = null;
+        viewport.classList.remove("dragging");
+
+        // Jika pergerakan sangat kecil, anggap sebagai "tap/klik"
+        if (moveAccum < 6 && downPoint){
+          handleTap(downPoint);
+        }
+      }
+    }
+    viewport.addEventListener("pointerup", endPointer);
+    viewport.addEventListener("pointercancel", endPointer);
+
+    /* Zoom dengan scroll mouse (wheel) */
+    viewport.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.12 : 1/1.12;
+      zoomAt(e.clientX, e.clientY, factor);
+    }, { passive:false });
+
+    /* Tombol zoom +/- (zoom ke tengah layar, dengan transisi halus) */
+    function animatedZoom(factor){
+      mapLayer.style.transition = "transform .22s ease";
+      zoomAt(viewport.clientWidth/2, viewport.clientHeight/2, factor);
+      setTimeout(() => { mapLayer.style.transition = ""; }, 230);
+    }
+    btnZoomIn.addEventListener("click", () => animatedZoom(1.35));
+    btnZoomOut.addEventListener("click", () => animatedZoom(1/1.35));
+
+    /* Reset ke tampilan awal */
+    btnHome.addEventListener("click", () => {
+      mapLayer.style.transition = "transform .4s cubic-bezier(.2,.8,.2,1)";
+      setInitialView();
+      setTimeout(() => { mapLayer.style.transition = ""; }, 420);
+    });
+
+    window.addEventListener("resize", () => { clampPan(); applyTransform(); });
+
+    /* =====================================================================
+       8. TAP HANDLER: pilih marker / tambah marker baru
+       ===================================================================== */
+    function handleTap(point){
+      const markerEl = point.target.closest ? point.target.closest(".marker") : null;
+
+      if (markerEl){
+        selectPlace(markerEl.dataset.id);
+        return;
+      }
+
+      if (addModeActive){
+        openAddForm(point.x, point.y);
+      }
+    }
+
+    /* Konversi koordinat layar -> koordinat lokal peta (fraksi 0..1) */
+    function screenToMapFraction(clientX, clientY){
+      const rect = mapLayer.getBoundingClientRect();
+      const localX = (clientX - rect.left) / state.scale;
+      const localY = (clientY - rect.top) / state.scale;
+      return { xFrac: localX / MAP_W, yFrac: localY / MAP_H };
+    }
+    function mapFractionToScreen(xFrac, yFrac){
+      const localX = xFrac * MAP_W;
+      const localY = yFrac * MAP_H;
+      return {
+        x: localX * state.scale + state.tx,
+        y: localY * state.scale + state.ty
+      };
+    }
+
+    /* =====================================================================
+       9. FORM TAMBAH MARKER
+       ===================================================================== */
+    let selectedNewType = "negara";
+
+    function openAddForm(clientX, clientY){
+      pendingAddPoint = screenToMapFraction(clientX, clientY);
+      addForm.style.left = clientX + "px";
+      addForm.style.top  = clientY + "px";
+      addForm.style.display = "block";
+      addName.value = "";
+      selectedNewType = "negara";
+      typeNegara.classList.add("on");
+      typeProvinsi.classList.remove("on");
+      addName.focus();
+    }
+    function closeAddForm(){
+      addForm.style.display = "none";
+      pendingAddPoint = null;
+    }
+
+    typeNegara.addEventListener("click", () => {
+      selectedNewType = "negara";
+      typeNegara.classList.add("on"); typeProvinsi.classList.remove("on");
+    });
+    typeProvinsi.addEventListener("click", () => {
+      selectedNewType = "provinsi";
+      typeProvinsi.classList.add("on"); typeNegara.classList.remove("on");
+    });
+    cancelAdd.addEventListener("click", closeAddForm);
+
+    confirmAdd.addEventListener("click", async () => {
+      const name = addName.value.trim();
+      if (!name){ showToast("Nama tempat tidak boleh kosong"); return; }
+      if (containsProfanity(name)){ showToast("Nama mengandung kata yang tidak pantas"); return; }
+      if (!pendingAddPoint){ closeAddForm(); return; }
+
+      confirmAdd.disabled = true;
+      try{
+        await addDoc(placesCol, {
+          name,
+          type: selectedNewType,           // "negara" | "provinsi"
+          x: pendingAddPoint.xFrac,        // koordinat X (fraksi 0..1)
+          y: pendingAddPoint.yFrac,        // koordinat Y (fraksi 0..1)
+          createdAt: serverTimestamp(),
+          ownerId: OWNER_ID,
+          ownerCountry: getUserCountry() || "Tidak diketahui"
+        });
+        showToast(`"${name}" berhasil ditambahkan`);
+        closeAddForm();
+        setAddMode(false);
+      } catch(err){
+        console.error(err);
+        showToast("Gagal menyimpan: " + err.message);
+      } finally {
+        confirmAdd.disabled = false;
+      }
+    });
+
+    function setAddMode(on){
+      addModeActive = on;
+      btnAdd.classList.toggle("active", on);
+      viewport.classList.toggle("add-mode", on);
+      if (!on) closeAddForm();
+    }
+    btnAdd.addEventListener("click", () => setAddMode(!addModeActive));
+
+    /* =====================================================================
+       10. RENDER MARKER DARI FIRESTORE (REALTIME)
+       ===================================================================== */
+    function renderMarker(place){
+      let el = markerElements.get(place.id);
+      const isNew = !el;
+      if (isNew){
+        el = document.createElement("div");
+        el.className = "marker";
+        el.innerHTML = `
+          <div class="ping"></div>
+          <div class="marker-pin"></div>
+          <div class="marker-label"></div>
+        `;
+        markersLayer.appendChild(el);
+        markerElements.set(place.id, el);
+      }
+      el.dataset.id = place.id;
+      el.dataset.type = place.type;
+      el.querySelector(".marker-label").textContent = place.name;
+      const localX = place.x * MAP_W;
+      const localY = place.y * MAP_H;
+      el.style.left = localX + "px";
+      el.style.top  = localY + "px";
+      el.classList.toggle("selected", place.id === selectedId);
+    }
+
+    function removeStaleMarkers(currentIds){
+      markerElements.forEach((el, id) => {
+        if (!currentIds.has(id)){
+          el.remove();
+          markerElements.delete(id);
+        }
+      });
+    }
+
+    /* Dengarkan perubahan realtime pada koleksi "places" */
+    onSnapshot(placesCol, (snapshot) => {
+      const list = [];
+      const ids = new Set();
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const place = { id:docSnap.id, ...data };
+
+        // Cek & hapus otomatis jika nama mengandung kata terlarang
+        if (containsProfanity(place.name)){
+          purgeIfProfane(place);
+          return; // jangan render/masukkan ke cache, sedang dalam proses hapus
+        }
+
+        list.push(place);
+        ids.add(place.id);
+        renderMarker(place);
+      });
+      removeStaleMarkers(ids);
+      placesCache = list;
+
+      // Perbarui kartu info bila marker yang sedang dibuka datanya berubah
+      if (selectedId){
+        const current = placesCache.find(p => p.id === selectedId);
+        if (current) fillInfoCard(current);
+        else closeInfoCard(); // marker sudah dihapus pengguna lain
+      }
+      // Perbarui hasil pencarian jika sedang aktif
+      if (searchInput.value.trim()) runSearch(searchInput.value.trim());
+    }, (err) => {
+      console.error(err);
+      showToast("Koneksi Firestore bermasalah: " + err.message);
+    });
+
+    /* =====================================================================
+       11. KARTU INFORMASI MARKER (lihat / ubah / hapus)
+       ===================================================================== */
+    function selectPlace(id){
+      selectedId = id;
+      markerElements.forEach((el, mid) => el.classList.toggle("selected", mid === id));
+      const place = placesCache.find(p => p.id === id);
+      if (place) fillInfoCard(place);
+    }
+
+    function fillInfoCard(place){
+      infoDot.style.background = place.type === "negara" ? "var(--accent)" : "var(--accent-2)";
+      infoName.textContent = place.name;
+      infoType.textContent = place.type === "negara" ? "Negara" : "Provinsi";
+      infoMeta.textContent = "Dibuat " + formatDate(place.createdAt) + " oleh " + (place.ownerCountry || "Tidak diketahui");
+
+      const isOwner = place.ownerId === OWNER_ID;
+      infoActionsView.style.display = isOwner ? "flex" : "none";
+      infoActionsEdit.style.display = "none";
+      infoEditInput.style.display = "none";
+      infoName.style.display = "block";
+
+      infoCard.classList.add("open");
+    }
+
+    function closeInfoCard(){
+      infoCard.classList.remove("open");
+      selectedId = null;
+      markerElements.forEach(el => el.classList.remove("selected"));
+    }
+    closeInfo.addEventListener("click", closeInfoCard);
+
+    btnEdit.addEventListener("click", () => {
+      const place = placesCache.find(p => p.id === selectedId);
+      if (!place) return;
+      infoEditInput.value = place.name;
+      infoEditInput.style.display = "block";
+      infoName.style.display = "none";
+      infoActionsView.style.display = "none";
+      infoActionsEdit.style.display = "flex";
+      infoEditInput.focus();
+    });
+
+    btnCancelEdit.addEventListener("click", () => {
+      const place = placesCache.find(p => p.id === selectedId);
+      if (place) fillInfoCard(place);
+    });
+
+    btnSaveEdit.addEventListener("click", async () => {
+      const newName = infoEditInput.value.trim();
+      if (!newName){ showToast("Nama tidak boleh kosong"); return; }
+      if (containsProfanity(newName)){ showToast("Nama mengandung kata yang tidak pantas"); return; }
+      try{
+        await updateDoc(doc(db, "places", selectedId), { name:newName });
+        showToast("Nama berhasil diperbarui");
+      } catch(err){
+        console.error(err);
+        showToast("Gagal memperbarui: " + err.message);
+      }
+    });
+
+    btnDelete.addEventListener("click", async () => {
+      if (!selectedId) return;
+      if (!confirm("Hapus tempat ini? Tindakan tidak bisa dibatalkan.")) return;
+      try{
+        await deleteDoc(doc(db, "places", selectedId));
+        showToast("Tempat berhasil dihapus");
+        closeInfoCard();
+      } catch(err){
+        console.error(err);
+        showToast("Gagal menghapus: " + err.message);
+      }
+    });
+
+    /* =====================================================================
+       12. PENCARIAN NAMA TEMPAT (realtime, instan)
+       ===================================================================== */
+    function runSearch(query){
+      const q = query.toLowerCase();
+      const matches = placesCache.filter(p => p.name.toLowerCase().includes(q)).slice(0, 8);
+
+      searchResults.innerHTML = "";
+      if (matches.length === 0){
+        searchResults.style.display = "none";
+        searchEmpty.style.display = "block";
+        return;
+      }
+      searchEmpty.style.display = "none";
+      searchResults.style.display = "block";
+
+      matches.forEach(place => {
+        const item = document.createElement("div");
+        item.className = "result-item";
+        item.innerHTML = `
+          <span class="result-dot" style="background:${place.type === "negara" ? "var(--accent)" : "var(--accent-2)"}"></span>
+          <span class="result-name">${escapeHtml(place.name)}</span>
+          <span class="result-type">${place.type}</span>
+        `;
+        item.addEventListener("click", () => {
+          flyToPlace(place);
+          searchResults.style.display = "none";
+          searchEmpty.style.display = "none";
+        });
+        searchResults.appendChild(item);
+      });
+    }
+
+    function escapeHtml(str){
+      return str.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+    }
+
+    searchInput.addEventListener("input", () => {
+      const val = searchInput.value.trim();
+      clearSearchBtn.style.display = val ? "block" : "none";
+      if (!val){
+        searchResults.style.display = "none";
+        searchEmpty.style.display = "none";
+        return;
+      }
+      runSearch(val);
+    });
+    clearSearchBtn.addEventListener("click", () => {
+      searchInput.value = "";
+      searchResults.style.display = "none";
+      searchEmpty.style.display = "none";
+      clearSearchBtn.style.display = "none";
+      searchInput.blur();
+    });
+
+    /* Animasi halus perpindahan peta ke lokasi hasil pencarian */
+    function flyToPlace(place){
+      const targetScale = clamp(Math.max(state.scale, 2.4), state.minScale, state.maxScale);
+      const vw = viewport.clientWidth, vh = viewport.clientHeight;
+      const localX = place.x * MAP_W, localY = place.y * MAP_H;
+      const targetTx = vw/2 - localX * targetScale;
+      const targetTy = vh/2 - localY * targetScale;
+
+      const from = { scale:state.scale, tx:state.tx, ty:state.ty };
+      const to   = { scale:targetScale, tx:targetTx, ty:targetTy };
+      const duration = 600;
+      const start = performance.now();
+
+      function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+
+      function step(now){
+        const t = clamp((now - start) / duration, 0, 1);
+        const e = easeInOutCubic(t);
+        state.scale = from.scale + (to.scale - from.scale) * e;
+        state.tx    = from.tx    + (to.tx    - from.tx)    * e;
+        state.ty    = from.ty    + (to.ty    - from.ty)    * e;
+        applyTransform();
+        if (t < 1) requestAnimationFrame(step);
+        else {
+          clampPan(); applyTransform();
+          selectPlace(place.id);
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* =====================================================================
+       13. MODE SIANG / MALAM
+       ===================================================================== */
+    function setNightMode(on){
+      document.body.classList.toggle("night", on);
+      localStorage.setItem("mapNightMode", on ? "1" : "0");
+      btnMode.classList.toggle("active", on);
+    }
+    btnMode.addEventListener("click", () => {
+      setNightMode(!document.body.classList.contains("night"));
+    });
+    // Ingat preferensi mode terakhir pengguna di perangkat ini
+    setNightMode(localStorage.getItem("mapNightMode") === "1");
+
+    /* =====================================================================
+       14. INISIALISASI PETA (menunggu gambar dimuat)
+       ===================================================================== */
+    function initMap(){
+      MAP_W = imgDay.naturalWidth  || 2000;
+      MAP_H = imgDay.naturalHeight || 1200;
+      mapLayer.style.width  = MAP_W + "px";
+      mapLayer.style.height = MAP_H + "px";
+      imgDay.style.width = imgNight.style.width = MAP_W + "px";
+      imgDay.style.height = imgNight.style.height = MAP_H + "px";
+      setInitialView();
+    }
+
+    if (imgDay.complete && imgDay.naturalWidth){
+      initMap();
+    } else {
+      imgDay.addEventListener("load", initMap, { once:true });
+      imgDay.addEventListener("error", () => {
+        showToast("Gagal memuat map-day.png — pastikan file ada di folder yang sama");
+        MAP_W = 2000; MAP_H = 1200; initMap();
+      }, { once:true });
+    }
+
+    /* CSS custom property --inv dipakai untuk melawan skala peta pada marker */
+    const styleInv = document.createElement("style");
+    styleInv.textContent = `.marker{ transform:translate(-50%,-100%) scale(var(--inv,1)); }`;
+    document.head.appendChild(styleInv);
+
+    function updateMarkerLabels(){
+
+    markerElements.forEach(el=>{
+
+        const type = el.dataset.type;
+
+        if(type==="provinsi"){
+
+            if(state.scale < 2.5){
+                el.classList.add("hide-label");
+            }else{
+                el.classList.remove("hide-label");
+            }
+
+        }
+
+    });
+
+}
+
+// ================= ONLINE USER =================
+
+let userId = localStorage.getItem("ufn_user_id");
+
+if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem("ufn_user_id", userId);
+}
+
+const userRef = ref(rtdb, "online/" + userId);
+
+set(userRef, true);
+
+onDisconnect(userRef).remove();
+
+onValue(ref(rtdb, "online"), (snapshot) => {
+    document.getElementById("onlineCount").textContent =
+        snapshot.exists() ? snapshot.size ?? Object.keys(snapshot.val()).length : 0;
+});
+  </script>
+</body>
+</html>
