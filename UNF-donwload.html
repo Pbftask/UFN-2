@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Peta Siang &amp; Malam — Real-Time</title>
+
+<style>
+  /* ==========================================================
+     RESET & DASAR
+     ========================================================== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    background: #0F172A;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ==========================================================
+     CSS VARIABLES (dikendalikan oleh JavaScript)
+     --sun-x : posisi horizontal "matahari" (0%–100%), diperbarui tiap frame
+     ========================================================== */
+  :root {
+    --sun-x: 50%;
+  }
+
+  /* ==========================================================
+     LAYOUT UTAMA — jam di atas, kotak peta di bawah, latar putih
+     ========================================================== */
+  #app {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(24px, 6vh, 56px);
+    padding: 24px 16px;
+    background: #0F172A;
+  }
+
+  /* ----------------------------------------------------------
+     JAM DIGITAL BESAR
+  ---------------------------------------------------------- */
+  #clockPanel {
+    text-align: center;
+    user-select: none;
+  }
+
+  #clockTime {
+    font-size: clamp(34px, 9vw, 64px);
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: #0F172A;
+    color:white;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  #clockDate {
+    margin-top: 8px;
+    font-size: clamp(13px, 3vw, 16px);
+    color: #6b6b6b;
+    letter-spacing: 0.3px;
+  }
+
+  /* ----------------------------------------------------------
+     KOTAK PETA (berbingkai, ukuran terbatas, tetap proporsional)
+     Peta di dalamnya TIDAK PERNAH digeser / di-zoom / dirotasi.
+  ---------------------------------------------------------- */
+  #mapFrame {
+    position: relative;
+    width: min(92vw, 900px);
+    aspect-ratio: 16 / 9;
+    background: #000000;
+    overflow: hidden;
+    border: 1px solid #000000;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  #earth {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transform: translate3d(0, 0, 0); /* GPU acceleration */
+    will-change: transform;
+  }
+
+  /* Lapisan peta siang & malam: DIAM TOTAL di dalam kotak, hanya mengisi ukuran kotak */
+  #dayLayer,
+  #nightLayer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+
+  #dayLayer { z-index: 1; }
+
+  #nightLayer {
+    z-index: 2;
+    will-change: mask-image, -webkit-mask-image;
+
+    /* ----------------------------------------------------------
+       TERMINATOR (batas siang/malam)
+       Elips raksasa di posisi --sun-x. Karena elips jauh lebih
+       besar dari kotak, tepiannya tampak sebagai garis LENGKUNG
+       yang halus, lengkap dengan gradasi senja (bukan sekadar
+       opacity on/off).
+    ---------------------------------------------------------- */
+    -webkit-mask-image: radial-gradient(
+      ellipse 58% 135% at var(--sun-x) 50%,
+      rgba(0,0,0,0)     0%,
+      rgba(0,0,0,0)     36%,
+      rgba(0,0,0,0.18)  42%,
+      rgba(0,0,0,0.45)  46%,
+      rgba(0,0,0,0.72)  50%,
+      rgba(0,0,0,0.92)  54%,
+      rgba(0,0,0,1)     60%,
+      rgba(0,0,0,1)     100%
+    );
+    mask-image: radial-gradient(
+      ellipse 58% 135% at var(--sun-x) 50%,
+      rgba(0,0,0,0)     0%,
+      rgba(0,0,0,0)     36%,
+      rgba(0,0,0,0.18)  42%,
+      rgba(0,0,0,0.45)  46%,
+      rgba(0,0,0,0.72)  50%,
+      rgba(0,0,0,0.92)  54%,
+      rgba(0,0,0,1)     60%,
+      rgba(0,0,0,1)     100%
+    );
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  /* Glow senja (fajar/senja kemerahan) di sepanjang terminator */
+
+  /* Vignette tipis agar terasa seperti citra satelit */
+  #vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse 130% 130% at 50% 50%,
+      rgba(0,0,0,0) 65%,
+      rgba(0,0,0,0.30) 100%
+    );
+  }
+
+  /* ==========================================================
+     PESAN JIKA ASET GAMBAR BELUM ADA
+     ========================================================== */
+  #assetWarning {
+    display: none;
+    position: absolute;
+    z-index: 20;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 86%;
+    text-align: center;
+    color: #ffe9c7;
+    background: rgba(20, 14, 8, 0.85);
+    border: 1px solid rgba(255, 200, 120, 0.35);
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: clamp(11px, 2.6vw, 14px);
+    line-height: 1.5;
+  }
+  #assetWarning b { color: #ffd48a; }
+
+.online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+  color:white;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
+  
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-top:2px;
+}
+</style>
+</head>
+<body>
+
+  <div id="app">
+          <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
+
+    <!-- Jam digital real-time -->
+    <div id="clockPanel">
+      <div id="clockTime">--:--:--</div>
+      <div id="clockDate">-- --- ----</div>
+    </div>
+
+    <!-- Kotak peta berbingkai -->
+    <div id="mapFrame">
+      <div id="earth">
+        <img id="dayLayer" src="https://i.ibb.co.com/JwGCJKDL/New-Project-202-284-EE14.png" alt="Peta Bumi Siang" draggable="false">
+        <img id="nightLayer" src="https://i.ibb.co.com/pj2kh149/New-Project-206-C5-C7658.png" alt="Peta Bumi Malam" draggable="false">
+        <div id="terminatorGlow"></div>
+        <div id="vignette"></div>
+      </div>
+
+      <div id="assetWarning">
+        Gambar <b>day.png</b> dan/atau <b>night.png</b> tidak ditemukan.<br>
+        Letakkan kedua file tersebut pada folder yang sama dengan <b>index.html</b> ini.
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const userId = crypto.randomUUID();
+const userRef = ref(db, "online/" + userId);
+
+set(userRef, true);
+onDisconnect(userRef).remove();
+
+onValue(ref(db, "online"), (snapshot) => {
+    const data = snapshot.val() || {};
+    document.getElementById("onlineCount").textContent =
+        Object.keys(data).length;
+});
+    
+  (function () {
+    "use strict";
+
+    /* ============================================================
+       REFERENSI ELEMEN
+       ============================================================ */
+    var root        = document.documentElement;
+    var dayLayer    = document.getElementById('dayLayer');
+    var nightLayer  = document.getElementById('nightLayer');
+    var clockTimeEl = document.getElementById('clockTime');
+    var clockDateEl = document.getElementById('clockDate');
+    var warningEl   = document.getElementById('assetWarning');
+
+    /* ============================================================
+       PENANGANAN ASET HILANG (agar Console tetap bersih & UX rapi)
+       ============================================================ */
+    function handleAssetError(img) {
+      return function () {
+        img.style.visibility = 'hidden';
+        warningEl.style.display = 'block';
+      };
+    }
+    dayLayer.addEventListener('error', handleAssetError(dayLayer));
+    nightLayer.addEventListener('error', handleAssetError(nightLayer));
+
+    /* ============================================================
+       NAMA HARI & BULAN (Bahasa Indonesia) untuk panel jam
+       ============================================================ */
+    var NAMA_HARI  = ['senin', 'selasa', 'Rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
+    var NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni',
+                       'Juli','Agustus','September','Oktober','November','Desember'];
+
+    function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+    /* ============================================================
+       INTI ANIMASI REAL-TIME
+       ------------------------------------------------------------
+       1. Ambil waktu perangkat (new Date()) setiap frame.
+       2. Hitung "fraksi hari" (0 = tengah malam, 0.5 = tengah hari).
+       3. Petakan fraksi hari -> posisi horizontal matahari (--sun-x)
+          memakai fungsi kosinus agar pergerakan terasa halus.
+       4. Set CSS custom property --sun-x -> browser menghitung ulang
+          radial-gradient (mask & glow) memakai GPU, tanpa reflow.
+       ============================================================ */
+    var lastSecondShown = -1;
+
+    function computeSunX(date) {
+      var totalDetik = date.getHours() * 3600 +
+                        date.getMinutes() * 60 +
+                        date.getSeconds() +
+                        date.getMilliseconds() / 1000;
+      var fraksiHari = totalDetik / 86400; // 0..1 (0 = 00:00, 0.5 = 12:00)
+
+      // Kurva halus: 00:00 -> 0%, 12:00 -> 50%, 24:00 -> 100%
+      var sunX = 50 - 50 * Math.cos(Math.PI * fraksiHari);
+      return sunX;
+    }
+
+    function tick() {
+      var now = new Date();
+
+      // 1) Perbarui posisi terminator setiap frame (gerakan sangat halus)
+      var sunX = computeSunX(now);
+      root.style.setProperty('--sun-x', sunX.toFixed(3) + '%');
+
+      // 2) Perbarui teks jam hanya saat detik berubah (hemat repaint DOM)
+      var detikSekarang = now.getSeconds();
+      if (detikSekarang !== lastSecondShown) {
+        lastSecondShown = detikSekarang;
+        clockTimeEl.textContent =
+          pad2(now.getHours()) + ':' +
+          pad2(now.getMinutes()) + ':' +
+          pad2(now.getSeconds());
+
+        clockDateEl.textContent =
+          NAMA_HARI[now.getDay()] + ', ' +
+          now.getDate() + ' ' +
+          NAMA_BULAN[now.getMonth()] + ' ' +
+          now.getFullYear();
+      }
+
+      // 3) Jadwalkan frame berikutnya (~60fps, sinkron refresh rate layar)
+      requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+
+  })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>UFN</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#0f172a;
+    color:#fff;
+}
+
+header{
+    padding:18px;
+    text-align:center;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+header h2{
+    font-size:22px;
+}
+
+header p{
+    color:#9ca3af;
+    margin-top:4px;
+    font-size:14px;
+}
+
+.lemari{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+    padding:20px;
+}
+
+.enve{
+    background:#1b2942;
+    border:2px solid #ffc300;
+    border-radius:8px 16px;
+    padding:18px 10px;
+    text-align:center;
+    transition:.2s;
+  }
+
+.enve:active{
+    transform:scale(.96);
+}
+
+.enve a{
+    color:#fff;
+    text-decoration:none;
+    font-size:28px;
+    display:block;
+    width:100%;
+    height:100%;
+}
+
+.enve span{
+    display:block;
+    margin-top:px;
+    font-size:10px;
+    color:#d1d5db;
+}
+
+footer{
+    position:fixed;
+    bottom:15px;
+    width:100%;
+    text-align:center;
+    color:#6b7280;
+    font-size:12px;
+}
+
+.online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
+  
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-left:125px;
+  margin-top:2px;
+}
+
+.enve{
+  position:relative;
+}
+
+.badge{
+  position:absolute;
+  top:-6px;
+  right:-6px;
+  background:#ef4444;
+  color:#fff;
+  font-size:11px;
+  font-weight:bold;
+  min-width:18px;
+  height:18px;
+  border-radius:9px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 4px;
+}
+</style>
+
+</head>
+<body>
+
+<header>
+    <h2>UFN</h2>
+    <p>Menu Utama</p>
+  
+      <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
+</header>
+
+<div class="lemari">
+
+    <div class="enve">
+        <a href="UNF-donwload.html">
+            <i class="fa-solid fa-clock"></i>
+        </a>
+        <span>Waktu</span>
+    </div>
+
+    <div class="enve">
+        <a href="cuaca.html">
+            <i class="fa-solid fa-sun"></i>
+        </a>
+        <span>Cuaca</span>
+    </div>
+
+    <div class="enve">
+        <a href="berita.html">
+            <i class="fa-solid fa-newspaper"></i>
+        </a>
+        <span>Berita</span>
+    </div>
+
+    <div class="enve">
+        <a href="maps.html">
+            <i class="fa-solid fa-location-dot"></i>
+        </a>
+        <span>Maps</span>
+    </div>
+
+    <div class="enve">
+        <a href="List.html">
+            <i class="fa-solid fa-list"></i>
+        </a>
+        <span>daftar negara</span>
+    </div>
+  
+    <div class="enve">
+        <a href="tambang.html">
+            <i class="fa-solid fa-helmet-safety"></i>
+        </a>
+        <span>tambang</span>
+    </div>
+
+    <div class="enve">
+        <a href="Inbox.html">
+            <i class="fa-solid fa-envelope"></i>
+        </a>
+        <span>Inbox</span>
+        <div class="badge" id="inboxBadge" style="display:none;">0</div>
+    </div>
+
+</div>
+
+<footer>
+    UFN © 2026
+</footer>
+
+
+<!-- Firebase Compat -->
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+// =====================
+// Firebase Config
+// =====================
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+
+// Inisialisasi Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// =====================
+// ID pengguna tetap
+// =====================
+let userId = localStorage.getItem("ufn_user_id");
+
+if (!userId) {
+  userId = crypto.randomUUID();
+  localStorage.setItem("ufn_user_id", userId);
+}
+
+// =====================
+// Tandai Online
+// =====================
+const userRef = db.ref("online/" + userId);
+
+userRef.set(true);
+
+// Hapus otomatis saat koneksi benar-benar terputus
+userRef.onDisconnect().remove();
+
+// =====================
+// Hitung pengguna online
+// =====================
+db.ref("online").on("value", function(snapshot) {
+  const jumlah = snapshot.numChildren();
+
+  const el = document.getElementById("onlineCount");
+  if (el) {
+    el.textContent = jumlah;
+  }
+});
+
+// =====================
+// Badge Inbox (pesan belum dibaca)
+// =====================
+const lastRead = parseInt(localStorage.getItem("ufn_last_read") || "0");
+
+db.ref("messages").orderByChild("time").startAfter(lastRead).on("value", function(snapshot) {
+  const jumlahBelumDibaca = snapshot.numChildren();
+  const badge = document.getElementById("inboxBadge");
+  if (badge) {
+    if (jumlahBelumDibaca > 0) {
+      badge.textContent = jumlahBelumDibaca > 99 ? "99+" : jumlahBelumDibaca;
+      badge.style.display = "flex";
+    } else {
+      badge.style.display = "none";
+    }
+  }
+});
+</script>
+</body>
+</html>

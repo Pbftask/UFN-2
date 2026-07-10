@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ORECRAFT — Simulasi Ekonomi Pertambangan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* =========================================================
+   DESIGN TOKENS
+   ========================================================= */
+:root{
+  --bg-0:#080a0f;
+  --bg-1:#0d1119;
+  --bg-2:#11151f;
+  --panel:#131826;
+  --panel-2:#171d2c;
+  --glass: rgba(19,24,38,0.72);
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.14);
+
+  --gold:#f0b93b;
+  --gold-dim:#8a6a24;
+  --coal:#6c8bff;
+  --coal-dim:#3c4a8a;
+  --nickel:#3fe0a5;
+  --nickel-dim:#1f7a58;
+  --uranium:#baff2e;
+  --uranium-dim:#6a8a15;
+  --tembaga:#ff8a4c;
+  --tembaga-dim:#8a4a24;
+  --perak:#cfd6e4;
+  --perak-dim:#6b7280;
+  --minyak:#c98f4f;
+  --minyak-dim:#5c4425;
+
+  --text-0:#eef1f6;
+  --text-1:#aab2c5;
+  --text-2:#6b7284;
+
+  --up:#3fe0a5;
+  --down:#ff6b6b;
+  --danger:#ff5c5c;
+  --warn:#f0b93b;
+
+  --radius-sm:10px;
+  --radius-md:16px;
+  --radius-lg:22px;
+
+  --font-display:'Rajdhani', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+
+  --shadow-lift: 0 8px 30px rgba(0,0,0,0.35);
+  --nav-h: 68px;
+  --topbar-h: 104px;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  background:
+    radial-gradient(ellipse at 20% -10%, rgba(108,139,255,0.10), transparent 45%),
+    radial-gradient(ellipse at 90% 0%, rgba(240,185,59,0.08), transparent 40%),
+    var(--bg-0);
+  color:var(--text-0);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+button{font-family:inherit; cursor:pointer;}
+input,select{font-family:inherit;}
+::-webkit-scrollbar{width:6px; height:6px;}
+::-webkit-scrollbar-thumb{background:var(--border-strong); border-radius:10px;}
+.mono{font-family:var(--font-mono);}
+.display{font-family:var(--font-display); letter-spacing:0.02em;}
+
+/* =========================================================
+   LOADING SCREEN
+   ========================================================= */
+#loadingScreen{
+  position:fixed; inset:0; z-index:9999;
+  background:var(--bg-0);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  transition:opacity .6s ease, visibility .6s ease;
+}
+#loadingScreen.hidden{opacity:0; visibility:hidden; pointer-events:none;}
+.load-mark{
+  width:64px; height:64px; position:relative; margin-bottom:22px;
+}
+.load-mark svg{width:100%; height:100%;}
+.load-ring{
+  fill:none; stroke:var(--gold); stroke-width:3; stroke-linecap:round;
+  stroke-dasharray:150 200;
+  animation:spin 1.4s linear infinite;
+  transform-origin:center;
+}
+@keyframes spin{ to{ transform:rotate(360deg);} }
+.load-title{font-family:var(--font-display); font-weight:700; font-size:22px; letter-spacing:0.14em; color:var(--text-0);}
+.load-sub{font-size:12px; color:var(--text-2); margin-top:6px; letter-spacing:0.08em;}
+
+/* =========================================================
+   LOGIN SCREEN
+   ========================================================= */
+#loginScreen{
+  position:fixed; inset:0; z-index:9000;
+  display:flex; align-items:center; justify-content:center;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(108,139,255,0.14), transparent 55%),
+    var(--bg-0);
+  padding:24px;
+}
+.login-card{
+  width:100%; max-width:420px;
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:36px 28px;
+  backdrop-filter:blur(20px);
+  box-shadow:var(--shadow-lift);
+  animation:riseIn .6s cubic-bezier(.2,.9,.25,1);
+}
+@keyframes riseIn{ from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:translateY(0);} }
+.login-eyebrow{
+  font-size:11px; letter-spacing:0.22em; color:var(--gold); text-transform:uppercase; font-weight:600;
+}
+.login-title{
+  font-family:var(--font-display); font-weight:700; font-size:30px; margin:8px 0 4px;
+  background:linear-gradient(90deg, var(--text-0), var(--text-1));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.login-desc{font-size:13.5px; color:var(--text-1); line-height:1.55; margin-bottom:26px;}
+.field-label{font-size:11.5px; color:var(--text-2); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:8px; display:block; font-weight:600;}
+.field-input{
+  width:100%; background:var(--bg-1); border:1px solid var(--border-strong); color:var(--text-0);
+  padding:14px 16px; border-radius:var(--radius-sm); font-size:15px; outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+.field-input:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(240,185,59,0.14);}
+.field-hint{font-size:12px; color:var(--text-2); margin-top:8px; min-height:16px;}
+.field-hint.err{color:var(--danger);}
+.field-hint.ok{color:var(--up);}
+.btn-primary{
+  width:100%; margin-top:18px; padding:15px; border:none; border-radius:var(--radius-sm);
+  background:linear-gradient(135deg, var(--gold), #c98f1f); color:#1a1305; font-weight:700; font-size:15px;
+  letter-spacing:0.03em; display:flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow:0 8px 24px rgba(240,185,59,0.25);
+  transition:transform .15s, box-shadow .15s, opacity .2s;
+}
+.btn-primary:hover{transform:translateY(-1px); box-shadow:0 10px 28px rgba(240,185,59,0.32);}
+.btn-primary:active{transform:translateY(0);}
+.btn-primary:disabled{opacity:0.5; pointer-events:none;}
+.login-footnote{margin-top:18px; font-size:11.5px; color:var(--text-2); text-align:center;}
+
+/* =========================================================
+   APP SHELL
+   ========================================================= */
+#app{display:none; min-height:100%; padding-bottom:calc(var(--nav-h) + 14px);}
+#app.visible{display:block;}
+
+/* Ticker */
+.ticker-bar{
+  position:sticky; top:0; z-index:500;
+  background:var(--bg-1); border-bottom:1px solid var(--border);
+  overflow:hidden; white-space:nowrap; height:34px; display:flex; align-items:center;
+}
+.ticker-track{display:inline-flex; align-items:center; animation:tickerScroll 22s linear infinite;}
+@keyframes tickerScroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+.ticker-item{display:inline-flex; align-items:center; gap:6px; padding:0 22px; font-family:var(--font-mono); font-size:12.5px; color:var(--text-1); border-right:1px solid var(--border);}
+.ticker-item b{color:var(--text-0); font-weight:600;}
+.ticker-up{color:var(--up);}
+.ticker-down{color:var(--down);}
+
+/* Top bar */
+.topbar{
+  position:sticky; top:34px; z-index:490;
+  background:rgba(13,17,25,0.88); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  padding:14px 18px 12px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.topbar-row1{display:flex; align-items:center; justify-content:space-between;}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand-icon{
+  width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg, var(--gold), var(--coal)); color:#0b0e14; font-size:15px;
+}
+.brand-text{font-family:var(--font-display); font-weight:700; font-size:16.5px; letter-spacing:0.05em;}
+.country-chip{
+  display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--border);
+  padding:6px 12px 6px 8px; border-radius:100px; font-size:12.5px; color:var(--text-1);
+}
+.country-chip .dot{width:7px; height:7px; border-radius:50%; background:var(--up); box-shadow:0 0 8px var(--up);}
+.stat-strip{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+.stat-mini{
+  background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:9px 10px;
+}
+.stat-mini .lbl{font-size:10px; color:var(--text-2); letter-spacing:0.06em; text-transform:uppercase;}
+.stat-mini .val{font-family:var(--font-mono); font-weight:700; font-size:14px; margin-top:2px; color:var(--text-0);}
+.stat-mini .val.up{color:var(--up);} .stat-mini .val.down{color:var(--down);}
+
+/* Pages */
+.page{display:none; padding:18px; max-width:900px; margin:0 auto; animation:fadeUp .35s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+.section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+.section-title{font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:0.02em;}
+.section-sub{font-size:12.5px; color:var(--text-2); margin-top:2px;}
+
+/* Cards */
+.card{
+  background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-md);
+  padding:16px; margin-bottom:14px; position:relative; overflow:hidden;
+}
+.card:hover{border-color:var(--border-strong);}
+.glass{background:var(--glass); backdrop-filter:blur(16px);}
+
+/* Dashboard hero */
+.hero-card{
+  background:linear-gradient(160deg, var(--panel-2), var(--panel) 70%);
+  border:1px solid var(--border-strong); border-radius:var(--radius-lg); padding:22px; margin-bottom:16px;
+  position:relative; overflow:hidden;
+}
+.hero-card::after{
+  content:''; position:absolute; right:-40px; top:-40px; width:180px; height:180px; border-radius:50%;
+  background:radial-gradient(circle, rgba(240,185,59,0.16), transparent 70%);
+}
+.hero-lbl{font-size:11.5px; color:var(--text-2); letter-spacing:0.1em; text-transform:uppercase; font-weight:600;}
+.hero-val{font-family:var(--font-mono); font-weight:700; font-size:34px; margin-top:6px; letter-spacing:-0.02em;}
+.hero-sub{font-size:12.5px; color:var(--text-1); margin-top:8px; display:flex; align-items:center; gap:6px;}
+.hero-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px;}
+.hero-mini{background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px;}
+.hero-mini .lbl{font-size:10.5px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.05em;}
+.hero-mini .val{font-family:var(--font-mono); font-weight:700; font-size:15px; margin-top:3px;}
+
+/* Mine cards */
+.mine-card{border-radius:var(--radius-lg); padding:18px; margin-bottom:14px; border:1px solid var(--border);}
+.mine-card.gold{background:linear-gradient(150deg, rgba(240,185,59,0.09), var(--panel) 60%);}
+.mine-card.coal{background:linear-gradient(150deg, rgba(108,139,255,0.09), var(--panel) 60%);}
+.mine-card.nickel{background:linear-gradient(150deg, rgba(63,224,165,0.09), var(--panel) 60%);}
+.mine-card.uranium{background:linear-gradient(150deg, rgba(186,255,46,0.09), var(--panel) 60%);}
+.mine-card.tembaga{background:linear-gradient(150deg, rgba(255,138,76,0.09), var(--panel) 60%);}
+.mine-card.perak{background:linear-gradient(150deg, rgba(207,214,228,0.09), var(--panel) 60%);}
+.mine-card.minyak{background:linear-gradient(150deg, rgba(201,143,79,0.09), var(--panel) 60%);}
+.mine-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+.mine-id{display:flex; align-items:center; gap:10px;}
+.mine-icon{font-size:26px;}
+.mine-name{font-family:var(--font-display); font-weight:700; font-size:17px;}
+.mine-lvl{font-size:11.5px; color:var(--text-2);}
+.mine-price-badge{font-family:var(--font-mono); font-size:12.5px; padding:5px 10px; border-radius:100px; background:rgba(255,255,255,0.05); border:1px solid var(--border);}
+.mine-stats{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px;}
+.mine-stat{background:rgba(255,255,255,0.03); border-radius:var(--radius-sm); padding:9px 11px;}
+.mine-stat .lbl{font-size:10px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.05em;}
+.mine-stat .val{font-family:var(--font-mono); font-weight:600; font-size:14px; margin-top:2px;}
+.progress-track{height:7px; background:rgba(255,255,255,0.06); border-radius:10px; overflow:hidden; margin-bottom:12px;}
+.progress-fill{height:100%; border-radius:10px; transition:width .4s ease;}
+.mine-actions{display:flex; gap:8px;}
+.btn-sm{
+  flex:1; padding:10px; border-radius:var(--radius-sm); border:1px solid var(--border-strong);
+  background:rgba(255,255,255,0.04); color:var(--text-0); font-weight:600; font-size:13px;
+  display:flex; align-items:center; justify-content:center; gap:6px; transition:all .15s;
+}
+.btn-sm:hover{background:rgba(255,255,255,0.08);}
+.btn-sm.primary{background:var(--gold); color:#1a1305; border-color:transparent;}
+.btn-sm.primary:hover{filter:brightness(1.08);}
+.btn-sm:disabled{opacity:0.4; pointer-events:none;}
+
+/* Marketplace */
+.mkt-toolbar{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+.mkt-toolbar select,.mkt-toolbar input{
+  background:var(--panel); border:1px solid var(--border-strong); color:var(--text-0);
+  padding:9px 12px; border-radius:var(--radius-sm); font-size:13px; outline:none;
+}
+.mkt-toolbar input{flex:1; min-width:120px;}
+.tab-row{display:flex; gap:6px; margin-bottom:14px; background:var(--panel); border-radius:16px; padding:4px; border:1px solid var(--border); flex-wrap:wrap;}
+.tab-btn{flex:1 1 auto; min-width:76px; text-align:center; padding:9px 8px; border-radius:100px; font-size:12px; font-weight:600; color:var(--text-2); background:transparent; border:none; transition:all .2s; white-space:nowrap;}
+.tab-btn i{margin-right:4px;}
+.tab-btn.active{background:var(--gold); color:#1a1305;}
+.listing{
+  display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--border);
+  border-radius:var(--radius-md); padding:12px 14px; margin-bottom:10px;
+}
+.listing-icon{font-size:22px; width:38px; height:38px; border-radius:10px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center;}
+.listing-info{flex:1; min-width:0;}
+.listing-title{font-weight:600; font-size:13.5px;}
+.listing-sub{font-size:11.5px; color:var(--text-2); margin-top:2px;}
+.listing-price{text-align:right; font-family:var(--font-mono);}
+.listing-price .p{font-weight:700; font-size:14px;}
+.listing-price .u{font-size:10px; color:var(--text-2);}
+.listing-cta{display:flex; gap:6px;}
+.icon-btn{
+  width:36px; height:36px; border-radius:10px; border:1px solid var(--border-strong); background:rgba(255,255,255,0.04);
+  color:var(--text-0); display:flex; align-items:center; justify-content:center; font-size:13px;
+}
+.icon-btn.danger{color:var(--danger); border-color:rgba(255,92,92,0.3);}
+.icon-btn.buy{background:var(--nickel); color:#052018; border-color:transparent;}
+
+/* Leaderboard */
+.lb-row{display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-md); margin-bottom:8px;}
+.lb-rank{width:30px; text-align:center; font-family:var(--font-display); font-weight:700; font-size:15px; color:var(--text-2);}
+.lb-rank.top1{color:var(--gold);} .lb-rank.top2{color:#c7cbd6;} .lb-rank.top3{color:#c98f4f;}
+.lb-name{flex:1; font-weight:600; font-size:13.5px;}
+.lb-name .you{color:var(--gold); font-size:10px; margin-left:6px; font-weight:700;}
+.lb-val{font-family:var(--font-mono); font-weight:700; font-size:14px;}
+
+/* Stats */
+.chart-wrap{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; margin-bottom:14px;}
+canvas#incomeChart{width:100%; height:180px; display:block;}
+.stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+/* Profile */
+.profile-hero{text-align:center; padding:26px 18px;}
+.profile-avatar{
+  width:74px; height:74px; border-radius:22px; margin:0 auto 14px; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:700; font-size:26px; background:linear-gradient(135deg, var(--gold), var(--coal)); color:#0b0e14;
+}
+.profile-name{font-family:var(--font-display); font-weight:700; font-size:22px;}
+.profile-joined{font-size:12px; color:var(--text-2); margin-top:4px;}
+
+/* Clickable rows -> view profile */
+.lb-row.clickable, .online-row.clickable{cursor:pointer; transition:background .15s, transform .15s;}
+.lb-row.clickable:hover, .online-row.clickable:hover{background:var(--panel-2); transform:translateY(-1px);}
+
+/* View Profile Modal */
+.vp-stats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:16px 0;}
+.vp-stat{background:var(--bg-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px;}
+.vp-stat .lbl{font-size:10px; color:var(--text-2); letter-spacing:0.06em; text-transform:uppercase;}
+.vp-stat .val{font-family:var(--font-mono); font-weight:700; font-size:15px; margin-top:2px;}
+.vp-mines{display:flex; flex-direction:column; gap:8px;}
+.vp-mine-row{display:flex; align-items:center; gap:10px; background:var(--bg-1); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 12px;}
+.vp-mine-row i{width:18px; text-align:center;}
+.vp-mine-row .vp-mine-name{flex:1; font-size:13px; font-weight:600;}
+.vp-mine-row .vp-mine-level{font-family:var(--font-mono); font-size:12.5px; color:var(--text-1);}
+
+/* History */
+.hist-row{display:flex; align-items:center; gap:12px; padding:11px 4px; border-bottom:1px solid var(--border);}
+.hist-row:last-child{border-bottom:none;}
+.hist-icon{width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;}
+.hist-icon.buy{background:rgba(63,224,165,0.12); color:var(--nickel);}
+.hist-icon.sell{background:rgba(240,185,59,0.12); color:var(--gold);}
+.hist-icon.upg{background:rgba(108,139,255,0.12); color:var(--coal);}
+.hist-body{flex:1; min-width:0;}
+.hist-title{font-size:13px; font-weight:600;}
+.hist-time{font-size:11px; color:var(--text-2); margin-top:1px;}
+.hist-amt{font-family:var(--font-mono); font-weight:700; font-size:13px;}
+
+/* Settings */
+.setting-row{display:flex; align-items:center; justify-content:space-between; padding:14px 4px; border-bottom:1px solid var(--border);}
+.setting-row:last-child{border-bottom:none;}
+.setting-lbl{font-size:13.5px; font-weight:600;}
+.setting-desc{font-size:11.5px; color:var(--text-2); margin-top:2px;}
+.switch{width:44px; height:25px; border-radius:100px; background:var(--bg-1); border:1px solid var(--border-strong); position:relative; transition:background .2s;}
+.switch.on{background:var(--gold);}
+.switch-knob{position:absolute; top:2px; left:2px; width:19px; height:19px; border-radius:50%; background:#fff; transition:transform .2s;}
+.switch.on .switch-knob{transform:translateX(19px);}
+
+/* Empty state */
+.empty-state{text-align:center; padding:40px 20px; color:var(--text-2);}
+.empty-state i{font-size:30px; margin-bottom:10px; opacity:0.5;}
+.empty-state p{font-size:13px;}
+
+/* Bottom nav */
+.bottom-nav{
+  position:fixed; bottom:0; left:0; right:0; z-index:600; height:var(--nav-h);
+  background:rgba(13,17,25,0.92); backdrop-filter:blur(16px); border-top:1px solid var(--border);
+  display:flex; align-items:stretch; padding:6px 4px calc(env(safe-area-inset-bottom,0px));
+}
+.nav-item{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  color:var(--text-2); font-size:9.5px; font-weight:600; letter-spacing:0.02em; border:none; background:transparent;
+  transition:color .2s; position:relative;
+}
+.nav-item i{font-size:16px;}
+.nav-item.active{color:var(--gold);}
+.nav-item.active::before{
+  content:''; position:absolute; top:-6px; width:20px; height:3px; border-radius:10px; background:var(--gold);
+}
+
+/* Modal */
+.modal-overlay{
+  position:fixed; inset:0; z-index:2000; background:rgba(6,8,13,0.72); backdrop-filter:blur(4px);
+  display:none; align-items:flex-end; justify-content:center;
+}
+.modal-overlay.show{display:flex; animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+.modal-sheet{
+  width:100%; max-width:460px; background:var(--panel-2); border:1px solid var(--border-strong);
+  border-radius:22px 22px 0 0; padding:22px; animation:slideUp .3s cubic-bezier(.2,.9,.25,1);
+  max-height:85vh; overflow-y:auto;
+}
+@media (min-width:640px){
+  .modal-overlay{align-items:center;}
+  .modal-sheet{border-radius:22px;}
+}
+@keyframes slideUp{ from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+.modal-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+.modal-title{font-family:var(--font-display); font-weight:700; font-size:18px;}
+.modal-close{width:32px; height:32px; border-radius:50%; border:1px solid var(--border-strong); background:rgba(255,255,255,0.04); color:var(--text-1);}
+.form-group{margin-bottom:14px;}
+.form-row{display:flex; gap:10px;}
+.form-row .form-group{flex:1;}
+
+/* Toast notifications */
+#toastContainer{position:fixed; top:calc(var(--topbar-h) + 40px); left:50%; transform:translateX(-50%); z-index:3000; display:flex; flex-direction:column; gap:8px; width:min(92vw,380px); pointer-events:none;}
+.toast{
+  background:var(--panel-2); border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+  padding:12px 14px; display:flex; align-items:center; gap:10px; box-shadow:var(--shadow-lift);
+  animation:toastIn .3s cubic-bezier(.2,.9,.25,1), toastOut .3s ease 3.2s forwards;
+}
+@keyframes toastIn{ from{opacity:0; transform:translateY(-14px);} to{opacity:1; transform:translateY(0);} }
+@keyframes toastOut{ to{opacity:0; transform:translateY(-10px);} }
+.toast i{font-size:16px;}
+.toast.success i{color:var(--up);}
+.toast.error i{color:var(--danger);}
+.toast.info i{color:var(--coal);}
+.toast span{font-size:13px; font-weight:500;}
+
+/* Online players page (inside profil / dashboard widget) */
+.online-list{display:flex; flex-direction:column; gap:8px;}
+.online-row{display:flex; align-items:center; gap:10px; padding:9px 4px;}
+.online-dot{width:8px; height:8px; border-radius:50%; background:var(--text-2); flex-shrink:0;}
+.online-dot.on{background:var(--up); box-shadow:0 0 8px var(--up);}
+.online-name{flex:1; font-size:13px; font-weight:500;}
+.online-status{font-size:11px; color:var(--text-2);}
+
+@media (min-width:720px){
+  .stat-strip{grid-template-columns:repeat(3,180px); justify-content:flex-start;}
+  .page{padding:24px 18px;}
+}
+
+
+  .popup{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.box{
+    width:300px;
+    background:#222;
+    color:#fff;
+    padding:20px;
+    border-radius:15px;
+    text-align:center;
+}
+
+.box button{
+    margin:8px;
+    padding:10px 18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loadingScreen">
+  <div class="load-mark">
+    <svg viewBox="0 0 64 64"><circle class="load-ring" cx="32" cy="32" r="26"></circle></svg>
+  </div>
+  <div class="load-title">ORECRAFT</div>
+  <div class="load-sub">MEMUAT SIMULASI EKONOMI...</div>
+</div>
+
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="display:none;">
+  <div class="login-card">
+    <div class="login-eyebrow">Simulasi Pertambangan Global</div>
+    <div class="login-title">ORECRAFT</div>
+    <div class="login-desc">Dirikan negara pertambanganmu. Kelola tambang emas, batu bara, nikel, uranium, tembaga, perak, dan minyak — lalu bersaing di pasar global secara real-time.</div>
+    <label class="field-label">Nama Negara</label>
+    <input type="text" id="countryInput" class="field-input" placeholder="cth. Kaltara Union" maxlength="20" autocomplete="off">
+    <div class="field-hint" id="countryHint">Minimal 3 karakter, harus unik.</div>
+    <button class="btn-primary" id="loginBtn"><i class="fa-solid fa-flag"></i> Dirikan Negara</button>
+    <div class="login-footnote">Data tersimpan otomatis. Sesi tetap aktif di perangkat ini.</div>
+  </div>
+</div>
+  
+<!-- APP -->
+<div id="app">
+
+  <div id="musicPopup" class="popup">
+  <div class="box">
+    <h2>Musik Latar</h2>
+    <p>Aktifkan musik untuk pengalaman bermain yang lebih seru.<br>
+      music by RIFQY
+    </p>
+
+    <button onclick="playMusic()">Putar Musik</button>
+    <button onclick="closePopup()">Lewati</button>
+  </div>
+</div>
+
+<!-- Audio -->
+<audio id="bgMusic" src="miner.mp3" loop></audio>
+
+
+  <div class="ticker-bar">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <div class="topbar">
+    <div class="topbar-row1">
+      <div class="brand">
+        <div class="brand-icon"><i class="fa-solid fa-mountain"></i></div>
+        <div class="brand-text">ORECRAFT</div>
+      </div>
+      <div class="country-chip"><span class="dot"></span><span id="topCountryName">-</span></div>
+    </div>
+    <div id="workerStatus" class="worker-status">
+     Penambang: Bekerja
+</div>
+    <div class="stat-strip">
+      <div class="stat-mini"><div class="lbl">Saldo</div><div class="val mono" id="topBalance">0 T</div></div>
+      <div class="stat-mini"><div class="lbl">Total Aset</div><div class="val mono" id="topAssets">0 T</div></div>
+      <div class="stat-mini"><div class="lbl">Pendapatan/Y</div><div class="val mono" id="topIncome">0 T</div></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="hero-card">
+      <div class="hero-lbl">Kekayaan Bersih</div>
+      <div class="hero-val mono" id="heroNetWorth">0 T</div>
+      <div class="hero-sub"><i class="fa-solid fa-chart-line" style="color:var(--up)"></i> <span id="heroIncomeLine">Pendapatan proyeksi 0 T/Y</span></div>
+      <div class="hero-grid" id="heroMaterialsGrid"></div>
+      <div class="hero-grid" style="margin-top:10px;">
+        <div class="hero-mini"><div class="lbl"><i class="fa-solid fa-users"></i> Online</div><div class="val mono" id="heroOnline">0 negara</div></div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <div><div class="section-title">Ringkasan Tambang</div><div class="section-sub">Ketuk untuk kelola di halaman Tambang</div></div>
+    </div>
+    <div id="dashMineSummary"></div>
+
+    <div class="section-head">
+      <div><div class="section-title">Aktivitas Terbaru</div></div>
+    </div>
+    <div class="card" id="dashRecentHistory"><div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><p>Belum ada aktivitas.</p></div></div>
+  </div>
+
+  <!-- TAMBANG -->
+  <div class="page" id="page-tambang">
+    <div class="section-head">
+      <div><div class="section-title">Tambang Saya</div><div class="section-sub">Upgrade untuk meningkatkan produksi tahunan</div></div>
+    </div>
+    <div id="minesContainer"></div>
+  </div>
+
+  <!-- MARKETPLACE -->
+  <div class="page" id="page-marketplace">
+    <div class="section-head">
+      <div><div class="section-title">Marketplace</div><div class="section-sub">Perdagangan antar negara secara real-time</div></div>
+      <button class="btn-sm primary" style="flex:none; padding:9px 14px;" id="openSellModalBtn"><i class="fa-solid fa-plus"></i> Jual</button>
+    </div>
+    <div class="tab-row">
+      <button class="tab-btn active" data-mtab="all">Semua</button>
+      <button class="tab-btn" data-mtab="gold"><i class="fa-solid fa-coins"></i> Emas</button>
+      <button class="tab-btn" data-mtab="coal"><i class="fa-solid fa-fire"></i> Batu Bara</button>
+      <button class="tab-btn" data-mtab="nickel"><i class="fa-solid fa-gem"></i> Nikel</button>
+      <button class="tab-btn" data-mtab="uranium"><i class="fa-solid fa-radiation"></i> Uranium</button>
+      <button class="tab-btn" data-mtab="tembaga"><i class="fa-solid fa-bolt"></i> Tembaga</button>
+      <button class="tab-btn" data-mtab="perak"><i class="fa-solid fa-ring"></i> Perak</button>
+      <button class="tab-btn" data-mtab="minyak"><i class="fa-solid fa-oil-can"></i> Minyak</button>
+    </div>
+    <div class="mkt-toolbar">
+      <input type="text" id="mktSearch" placeholder="Cari nama negara...">
+      <select id="mktSort">
+        <option value="cheap">Termurah</option>
+        <option value="expensive">Termahal</option>
+        <option value="newest">Terbaru</option>
+      </select>
+    </div>
+    <div id="marketplaceList"></div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="page" id="page-leaderboard">
+    <div class="section-head">
+      <div><div class="section-title">Leaderboard Global</div><div class="section-sub">Peringkat diperbarui secara real-time</div></div>
+    </div>
+    <div class="tab-row">
+      <button class="tab-btn active" data-ltab="income">Pendapatan</button>
+      <button class="tab-btn" data-ltab="gold"><i class="fa-solid fa-coins"></i> Emas</button>
+      <button class="tab-btn" data-ltab="coal"><i class="fa-solid fa-fire"></i> Batu Bara</button>
+      <button class="tab-btn" data-ltab="nickel"><i class="fa-solid fa-gem"></i> Nikel</button>
+      <button class="tab-btn" data-ltab="uranium"><i class="fa-solid fa-radiation"></i> Uranium</button>
+      <button class="tab-btn" data-ltab="tembaga"><i class="fa-solid fa-bolt"></i> Tembaga</button>
+      <button class="tab-btn" data-ltab="perak"><i class="fa-solid fa-ring"></i> Perak</button>
+      <button class="tab-btn" data-ltab="minyak"><i class="fa-solid fa-oil-can"></i> Minyak</button>
+    </div>
+    <div id="leaderboardList"></div>
+  </div>
+
+  <!-- STATISTIK -->
+  <div class="page" id="page-statistik">
+    <div class="section-head"><div><div class="section-title">Statistik</div><div class="section-sub">Perkembangan ekonomi negaramu</div></div></div>
+    <div class="chart-wrap">
+      <div class="section-sub" style="margin-bottom:8px;">Grafik Kekayaan Bersih</div>
+      <canvas id="incomeChart"></canvas>
+    </div>
+    <div class="stat-grid">
+      <div class="card"><div class="lbl" style="font-size:11px;color:var(--text-2);text-transform:uppercase;">Total Uang</div><div class="val mono" id="statMoney" style="font-size:18px;font-weight:700;">0 T</div></div>
+      <div class="card"><div class="lbl" style="font-size:11px;color:var(--text-2);text-transform:uppercase;">Total Aset</div><div class="val mono" id="statAssets" style="font-size:18px;font-weight:700;">0 T</div></div>
+      <div class="card"><div class="lbl" style="font-size:11px;color:var(--text-2);text-transform:uppercase;">Total Produksi/Y</div><div class="val mono" id="statProduction" style="font-size:18px;font-weight:700;">0 t</div></div>
+      <div class="card"><div class="lbl" style="font-size:11px;color:var(--text-2);text-transform:uppercase;">Pendapatan/Y</div><div class="val mono" id="statIncome" style="font-size:18px;font-weight:700;">0 T</div></div>
+    </div>
+  </div>
+
+  <!-- PROFIL -->
+  <div class="page" id="page-profil">
+    <div class="card profile-hero">
+      <div class="profile-avatar" id="profileAvatar">?</div>
+      <div class="profile-name" id="profileName">-</div>
+      <div class="profile-joined" id="profileJoined">Bergabung -</div>
+    </div>
+    <div class="section-head"><div><div class="section-title">Pemain Online</div><div class="section-sub"><span id="onlineCountLabel">0</span> negara sedang online</div></div></div>
+    <div class="card"><div class="online-list" id="onlineList"></div></div>
+  </div>
+
+  <!-- RIWAYAT -->
+  <div class="page" id="page-riwayat">
+    <div class="section-head"><div><div class="section-title">Riwayat</div><div class="section-sub">Transaksi &amp; upgrade terakhir</div></div></div>
+    <div class="card" id="historyList"><div class="empty-state"><i class="fa-solid fa-inbox"></i><p>Belum ada riwayat.</p></div></div>
+  </div>
+
+  <!-- PENGATURAN -->
+  <div class="page" id="page-pengaturan">
+    <div class="section-head"><div><div class="section-title">Pengaturan</div></div></div>
+    <div class="card">
+      <div class="setting-row">
+        <div><div class="setting-lbl">Notifikasi Suara</div><div class="setting-desc">Bunyi saat transaksi berhasil</div></div>
+        <div class="switch" id="soundSwitch"><div class="switch-knob"></div></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-lbl">Efek Animasi</div><div class="setting-desc">Nonaktifkan untuk perangkat rendah</div></div>
+        <div class="switch on" id="fxSwitch"><div class="switch-knob"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="setting-row" style="border:none;">
+        <div><div class="setting-lbl">Negara</div><div class="setting-desc" id="settingsCountry">-</div></div>
+      </div>
+      <div class="setting-row" style="border:none;">
+        <div><div class="setting-lbl" style="color:var(--danger);">Keluar dari Perangkat Ini</div><div class="setting-desc">Sesi lokal akan dihapus (data negara tetap aman di server)</div></div>
+        <button class="icon-btn danger" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    </div>
+    <div class="login-footnote" style="margin-top:20px;">ORECRAFT v1.0 · Ditenagai Realtime Database</div>
+    <button class="btn-primary" onclick="claimDailyReward()">
+    <i class="fa-solid fa-gift"></i>
+    Klaim Hadiah Harian (300T)
+</button>
+
+    <button onclick="paySalary()" class="btn-primary" id="paySalaryBtn">
+<i class="fa-solid fa-money-bill-wave"></i>
+Bayar Gaji
+</button>
+    
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="bottomNav" style="display:none;">
+  <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-house"></i>Beranda</button>
+  <button class="nav-item" data-page="tambang"><i class="fa-solid fa-mound"></i>Tambang</button>
+  <button class="nav-item" data-page="marketplace"><i class="fa-solid fa-store"></i>Pasar</button>
+  <button class="nav-item" data-page="leaderboard"><i class="fa-solid fa-trophy"></i>Papan</button>
+  <button class="nav-item" data-page="statistik"><i class="fa-solid fa-chart-simple"></i>Statistik</button>
+  <button class="nav-item" data-page="profil"><i class="fa-solid fa-user"></i>Profil</button>
+  <button class="nav-item" data-page="riwayat"><i class="fa-solid fa-clock-rotate-left"></i>Riwayat</button>
+  <button class="nav-item" data-page="pengaturan"><i class="fa-solid fa-gear"></i>Atur</button>
+</div>
+
+<!-- TOASTS -->
+<div id="toastContainer"></div>
+
+<!-- SELL MODAL -->
+<div class="modal-overlay" id="sellModal">
+  <div class="modal-sheet">
+    <div class="modal-head"><div class="modal-title">Buat Penawaran Jual</div><button class="modal-close" data-close="sellModal"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="form-group">
+      <label class="field-label">Jenis Mineral</label>
+      <select class="field-input" id="sellMineral">
+        <option value="gold">Emas</option>
+        <option value="coal">Batu Bara</option>
+        <option value="nickel">Nikel</option>
+        <option value="uranium">Uranium</option>
+        <option value="tembaga">Tembaga</option>
+        <option value="perak">Perak</option>
+        <option value="minyak">Minyak</option>
+      </select>
+      <div class="field-hint" id="sellStockHint">Stok: 0 t</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="field-label">Jumlah (ton)</label>
+        <input type="number" class="field-input" id="sellAmount" placeholder="0" min="1">
+      </div>
+      <div class="form-group">
+        <label class="field-label">Harga / Ton (T)</label>
+        <input type="number" class="field-input" id="sellPrice" placeholder="0" min="1">
+      </div>
+    </div>
+    <div class="field-hint">Total: <span id="sellTotalPreview" class="mono">0 T</span></div>
+    <button class="btn-primary" id="confirmSellBtn"><i class="fa-solid fa-tag"></i> Pasang Penawaran</button>
+  </div>
+</div>
+
+<!-- BUY MODAL -->
+<div class="modal-overlay" id="buyModal">
+  <div class="modal-sheet">
+    <div class="modal-head"><div class="modal-title">Beli Mineral</div><button class="modal-close" data-close="buyModal"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="card" id="buyListingInfo" style="margin-bottom:16px;"></div>
+    <div class="form-group">
+      <label class="field-label">Jumlah yang Dibeli (ton)</label>
+      <input type="number" class="field-input" id="buyAmount" min="1">
+      <div class="field-hint" id="buyMaxHint"></div>
+    </div>
+    <div class="field-hint">Total Bayar: <span id="buyTotalPreview" class="mono">0 T</span></div>
+    <button class="btn-primary" id="confirmBuyBtn"><i class="fa-solid fa-cart-shopping"></i> Konfirmasi Pembelian</button>
+  </div>
+</div>
+
+<!-- QUICK SELL MODAL (sell to global market instantly) -->
+<div class="modal-overlay" id="quickSellModal">
+  <div class="modal-sheet">
+    <div class="modal-head"><div class="modal-title" id="quickSellTitle">Jual ke Pasar</div><button class="modal-close" data-close="quickSellModal"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="field-hint" id="quickSellStock" style="margin-bottom:10px;">Stok: 0 t · Harga saat ini: 0 T/t</div>
+    <div class="form-group">
+      <label class="field-label">Jumlah (ton)</label>
+      <input type="number" class="field-input" id="quickSellAmount" min="1">
+    </div>
+    <div class="field-hint">Total Diterima: <span id="quickSellTotalPreview" class="mono">0 T</span></div>
+    <button class="btn-primary" id="confirmQuickSellBtn"><i class="fa-solid fa-coins"></i> Jual Sekarang</button>
+  </div>
+</div>
+
+<!-- VIEW PLAYER PROFILE MODAL -->
+<div class="modal-overlay" id="viewProfileModal">
+  <div class="modal-sheet">
+    <div class="modal-head"><div class="modal-title">Profil Negara</div><button class="modal-close" data-close="viewProfileModal"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="card profile-hero" style="margin-bottom:14px;">
+      <div class="profile-avatar" id="vpAvatar">?</div>
+      <div class="profile-name" id="vpName">-</div>
+      <div class="profile-joined" id="vpJoined">Bergabung -</div>
+    </div>
+    <div class="vp-stats">
+      <div class="vp-stat"><div class="lbl">Saldo</div><div class="val" id="vpBalance">0 T</div></div>
+      <div class="vp-stat"><div class="lbl">Kekayaan Bersih</div><div class="val" id="vpNetWorth">0 T</div></div>
+    </div>
+    <div class="section-sub" style="margin-bottom:8px;">Tambang</div>
+    <div class="vp-mines" id="vpMines"></div>
+  </div>
+</div>
+
+<script type="module">
+/* =========================================================
+   FIREBASE INIT
+   ========================================================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getDatabase, ref, get, set, update, remove, push, onValue, onDisconnect,
+  runTransaction, serverTimestamp, query, orderByChild, limitToLast
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+  
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+
+/* =========================================================
+   CONFIG / STATE
+   ========================================================= */
+const MINE_CONFIG = {
+  gold:    { label:"Emas",      icon:"fa-coins",     baseProduction:2, baseCost:50, baseCapacity:50,  min:10, max:26, key:"gold",    color:"#f0b93b" },
+  coal:    { label:"Batu Bara", icon:"fa-fire",      baseProduction:5, baseCost:30, baseCapacity:100, min:5,  max:16, key:"coal",    color:"#6c8bff" },
+  nickel:  { label:"Nikel",     icon:"fa-gem",       baseProduction:3, baseCost:40, baseCapacity:70,  min:12, max:29, key:"nickel",  color:"#3fe0a5" },
+  uranium: { label:"Uranium",   icon:"fa-radiation", baseProduction:3, baseCost:45, baseCapacity:65,  min:14, max:32, key:"uranium", color:"#baff2e" },
+  tembaga: { label:"Tembaga",   icon:"fa-bolt",      baseProduction:4, baseCost:38, baseCapacity:75,  min:10, max:24, key:"tembaga", color:"#ff8a4c" },
+  perak:   { label:"Perak",     icon:"fa-ring",      baseProduction:3, baseCost:42, baseCapacity:70,  min:13, max:27, key:"perak",   color:"#cfd6e4" },
+  minyak:  { label:"Minyak",    icon:"fa-oil-can",   baseProduction:4, baseCost:40, baseCapacity:80,  min:11, max:26, key:"minyak",  color:"#c98f4f" }
+};
+const MATERIAL_KEYS = Object.keys(MINE_CONFIG);
+const MAX_LEVEL = 100;
+const YEAR_SECONDS = 300;        // 1 game year = 5 minutes real time
+const PRICE_INTERVAL_MS = 60000; // prices can shift roughly every 60s
+const TICK_MS = 2000;
+
+let uid = localStorage.getItem("orecraft_uid") || null;
+let myName = localStorage.getItem("orecraft_name") || null;
+let playerData = null;
+let currentPrices = { gold:{current:15,previous:15}, coal:{current:8,previous:8}, nickel:{current:20,previous:20}, uranium:{current:23,previous:23}, tembaga:{current:17,previous:17}, perak:{current:20,previous:20}, minyak:{current:18,previous:18}, lastUpdate:0 };
+let onlinePlayers = {};
+let marketplaceData = {};
+let allPlayers = {};
+let mktFilter = "all";
+let mktSort = "cheap";
+let lbFilter = "income";
+let netWorthHistory = [];
+let settings = { sound:true, fx:true };
+let currentBuyListingId = null;
+
+function fmtT(n){
+  n = Number(n)||0;
+  const sign = n<0 ? "-" : "";
+  n = Math.abs(n);
+  if(n>=1e12) return sign+(n/1e12).toFixed(2)+"jt T";
+  if(n>=1e6)  return sign+(n/1e6).toFixed(2)+"jt T";
+  if(n>=1e3)  return sign+n.toLocaleString('id-ID',{maximumFractionDigits:1})+" T";
+  return sign+n.toLocaleString('id-ID',{maximumFractionDigits:2})+" T";
+}
+function fmtTon(n){ n=Number(n)||0; return n.toLocaleString('id-ID',{maximumFractionDigits:1})+" t"; }
+function timeAgo(ts){
+  if(!ts) return "-";
+  const diff = Math.floor((Date.now()-ts)/1000);
+  if(diff<60) return diff+"d lalu";
+  if(diff<3600) return Math.floor(diff/60)+"m lalu";
+  if(diff<86400) return Math.floor(diff/3600)+"j lalu";
+  return Math.floor(diff/86400)+"h lalu";
+}
+
+/* =========================================================
+   TOASTS
+   ========================================================= */
+function toast(msg, type="info", icon="fa-circle-info"){
+  const c = document.getElementById("toastContainer");
+  const el = document.createElement("div");
+  el.className = "toast "+type;
+  el.innerHTML = `<i class="fa-solid ${icon}"></i><span>${msg}</span>`;
+  c.appendChild(el);
+  setTimeout(()=>el.remove(), 3600);
+}
+
+/* =========================================================
+   LOGIN FLOW
+   ========================================================= */
+const loadingScreen = document.getElementById("loadingScreen");
+const loginScreen = document.getElementById("loginScreen");
+const appEl = document.getElementById("app");
+const bottomNav = document.getElementById("bottomNav");
+
+async function boot(){
+  await new Promise(r=>setTimeout(r, 700));
+  loadingScreen.classList.add("hidden");
+  if(uid){
+    const snap = await get(ref(db, "players/"+uid));
+    if(snap.exists()){
+      playerData = snap.val();
+      startApp();
+      return;
+    }
+  }
+  loginScreen.style.display = "flex";
+}
+
+document.getElementById("loginBtn").addEventListener("click", handleLogin);
+document.getElementById("countryInput").addEventListener("keydown", e=>{ if(e.key==="Enter") handleLogin(); });
+
+async function handleLogin(){
+  const input = document.getElementById("countryInput");
+  const hint = document.getElementById("countryHint");
+  const name = input.value.trim();
+  if(name.length < 3){
+    hint.textContent = "Nama negara minimal 3 karakter.";
+    hint.className = "field-hint err";
+    return;
+  }
+  const btn = document.getElementById("loginBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memeriksa...';
+  try{
+    const allSnap = await get(ref(db, "players"));
+    const all = allSnap.exists() ? allSnap.val() : {};
+    const taken = Object.values(all).some(p => (p.name||"").toLowerCase() === name.toLowerCase());
+    if(taken){
+      hint.textContent = "Nama negara sudah digunakan pemain lain.";
+      hint.className = "field-hint err";
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-flag"></i> Dirikan Negara';
+      return;
+    }
+    const newRef = push(ref(db, "players"));
+    const newUid = newRef.key;
+    const now = Date.now();
+    const newPlayer = {
+      lastSalary: Date.now(),
+      salaryPaid: true,
+      lastTax: Date.now(),
+      name: name,
+      balance: 500,
+      inventory: { gold:0, coal:0, nickel:0, uranium:0, tembaga:0, perak:0, minyak:0 },
+      mines: {
+        gold:    { level:1, lastCollected: now },
+        coal:    { level:1, lastCollected: now },
+        nickel:  { level:1, lastCollected: now },
+        uranium: { level:1, lastCollected: now },
+        tembaga: { level:1, lastCollected: now },
+        perak:   { level:1, lastCollected: now },
+        minyak:  { level:1, lastCollected: now }
+      },
+      createdAt: now
+    };
+    await set(newRef, newPlayer);
+    uid = newUid; myName = name;
+    localStorage.setItem("orecraft_uid", uid);
+    localStorage.setItem("orecraft_name", myName);
+    playerData = newPlayer;
+    hint.textContent = "Negara berhasil didirikan!";
+    hint.className = "field-hint ok";
+    setTimeout(startApp, 400);
+  }catch(e){
+    console.error(e);
+    hint.textContent = "Gagal terhubung ke server. Coba lagi.";
+    hint.className = "field-hint err";
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-flag"></i> Dirikan Negara';
+  }
+}
+
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
+  if(confirm("Keluar dari sesi lokal? Data negara tetap tersimpan di server dan bisa diakses kembali dengan nama yang sama pada perangkat lain jika kamu menyimpan UID.")){
+    localStorage.removeItem("orecraft_uid");
+    localStorage.removeItem("orecraft_name");
+    location.reload();
+  }
+});
+
+/* =========================================================
+   APP START
+   ========================================================= */
+function startApp(){
+  loginScreen.style.display = "none";
+  appEl.classList.add("visible");
+  bottomNav.style.display = "flex";
+  document.getElementById("topCountryName").textContent = playerData.name;
+  document.getElementById("profileName").textContent = playerData.name;
+  document.getElementById("profileAvatar").textContent = playerData.name.slice(0,2).toUpperCase();
+  document.getElementById("settingsCountry").textContent = playerData.name;
+  document.getElementById("profileJoined").textContent = "Bergabung " + new Date(playerData.createdAt).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+
+  setupPresence();
+  listenPrices();
+  listenPlayer();
+  listenMarketplace();
+  listenAllPlayers();
+  setupNav();
+  setupModals();
+  setupMarketplaceControls();
+  setupLeaderboardControls();
+  setupSettings();
+
+  setInterval(gameTick, TICK_MS);
+  setInterval(maybeUpdatePrices, 15000);
+  maybeUpdatePrices();
+}
+
+/* =========================================================
+   PRESENCE
+   ========================================================= */
+function setupPresence(){
+  const myPresenceRef = ref(db, "presence/"+uid);
+  const connectedRef = ref(db, ".info/connected");
+  onValue(connectedRef, (snap)=>{
+    if(snap.val() === true){
+      onDisconnect(myPresenceRef).remove().then(()=>{
+        set(myPresenceRef, { name: playerData.name, online:true, lastChanged: Date.now() });
+      });
+    }
+  });
+  onValue(ref(db, "presence"), (snap)=>{
+    onlinePlayers = snap.exists() ? snap.val() : {};
+    renderOnlineList();
+  });
+}
+
+function renderOnlineList(){
+  const list = Object.entries(onlinePlayers).map(([id,p])=>({id, ...p}));
+  document.getElementById("heroOnline").textContent = list.length + " negara";
+  document.getElementById("onlineCountLabel").textContent = list.length;
+  const container = document.getElementById("onlineList");
+  if(list.length === 0){
+    container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-user-slash"></i><p>Tidak ada negara online.</p></div>';
+    return;
+  }
+  container.innerHTML = list.sort((a,b)=>(a.name||"").localeCompare(b.name||"")).map(p=>`
+    <div class="online-row clickable" data-pid="${p.id}">
+      <div class="online-dot on"></div>
+      <div class="online-name">${escapeHtml(p.name)}</div>
+      <div class="online-status">Online</div>
+    </div>
+  `).join("");
+  container.querySelectorAll(".online-row[data-pid]").forEach(row=>{
+    row.addEventListener("click", ()=>openPlayerProfile(row.getAttribute("data-pid")));
+  });
+}
+
+/* =========================================================
+   PRICE ENGINE
+   ========================================================= */
+function listenPrices(){
+  onValue(ref(db, "prices"), (snap)=>{
+    if(snap.exists()){
+      const prev = currentPrices;
+      currentPrices = snap.val();
+      checkPriceChangeNotify(prev, currentPrices);
+      renderTicker();
+      renderAll();
+    }
+  });
+}
+
+let lastNotifiedUpdate = 0;
+function checkPriceChangeNotify(prev, next){
+  if(next.lastUpdate && next.lastUpdate !== lastNotifiedUpdate && lastNotifiedUpdate !== 0){
+    toast("Harga mineral diperbarui!", "info", "fa-arrow-trend-up");
+  }
+  lastNotifiedUpdate = next.lastUpdate || 0;
+}
+
+async function maybeUpdatePrices(){
+  const priceRef = ref(db, "prices");
+  const snap = await get(priceRef);
+  const now = Date.now();
+  let data = snap.exists() ? snap.val() : null;
+  if(!data || !data.lastUpdate || (now - data.lastUpdate) > PRICE_INTERVAL_MS){
+    await runTransaction(priceRef, (curr)=>{
+      if(curr && curr.lastUpdate && (now - curr.lastUpdate) <= PRICE_INTERVAL_MS){
+        return curr; // someone else already updated
+      }
+      const base = curr || {
+        gold:{current:15,previous:15}, coal:{current:8,previous:8}, nickel:{current:20,previous:20},
+        uranium:{current:23,previous:23}, tembaga:{current:17,previous:17}, perak:{current:20,previous:20}, minyak:{current:18,previous:18}
+      };
+      const updated = { lastUpdate: now };
+      for(const key of MATERIAL_KEYS){
+        const cfg = MINE_CONFIG[key];
+        const cur = base[key] ? base[key].current : cfg.min;
+        const delta = (Math.random()*0.3 - 0.15) * cur; // +/-15%
+        let next = Math.round((cur + delta) * 10) / 10;
+        next = Math.max(cfg.min, Math.min(cfg.max, next));
+        updated[key] = { current: next, previous: cur };
+      }
+      return updated;
+    });
+  }
+}
+
+function renderTicker(){
+  const track = document.getElementById("tickerTrack");
+  const items = [];
+  for(let rep=0; rep<2; rep++){
+    for(const key of MATERIAL_KEYS){
+      const cfg = MINE_CONFIG[key];
+      const p = currentPrices[key] || {current:0, previous:0};
+      const up = p.current >= p.previous;
+      items.push(`<span class="ticker-item"><i class="fa-solid ${cfg.icon}"></i> ${cfg.label} <b>${fmtT(p.current)}/t</b> <span class="${up?'ticker-up':'ticker-down'}"><i class="fa-solid fa-caret-${up?'up':'down'}"></i></span></span>`);
+    }
+  }
+  track.innerHTML = items.join("");
+}
+
+/* =========================================================
+   PLAYER DATA LISTENER
+   ========================================================= */
+function listenPlayer(){
+onValue(ref(db, "players/" + uid), async (snapshot) => {
+
+    playerData = snapshot.val();
+
+if(playerData && playerData.lastTax == null){
+    await update(ref(db,"players/"+uid),{
+        lastTax: Date.now()
+    });
+    playerData.lastTax = Date.now();
+}
+  
+    updateWorkerStatus();
+    playerData.mines = playerData.mines || {};
+    playerData.inventory = playerData.inventory || {gold:0,coal:0,nickel:0,uranium:0,tembaga:0,perak:0,minyak:0};
+    for(const key of MATERIAL_KEYS){
+      if(!playerData.inventory[key]) playerData.inventory[key] = 0;
+      if(!playerData.mines[key]) playerData.mines[key] = {level:1, lastCollected:Date.now()};
+    }
+    renderAll();
+  });
+  onValue(query(ref(db,"history/"+uid), limitToLast(50)), (snap)=>{
+    const items = [];
+    snap.forEach(child=>{ items.push({id:child.key, ...child.val()}); });
+    items.reverse();
+    renderHistory(items);
+  });
+}
+
+function listenAllPlayers(){
+  onValue(ref(db, "players"), (snap)=>{
+    allPlayers = snap.exists() ? snap.val() : {};
+    renderLeaderboard();
+  });
+}
+
+/* =========================================================
+   GAME TICK: passive production accrual
+   ========================================================= */
+async function gameTick(){
+  if(!playerData) return;
+  const now = Date.now();
+
+if(now - (playerData.lastSalary || 0) >= 86400000){
+    if(playerData.salaryPaid !== false){
+        await update(ref(db,"players/"+uid),{
+            salaryPaid:false
+        });
+
+        toast("💼 Waktunya membayar gaji penambang!","error","fa-users");
+    }
+}
+
+// ==========================
+// Pajak tiap 5 menit (termasuk offline)
+// ==========================
+const interval = 3600000; // 1 jam
+const lastTax = playerData.lastTax || now;
+const maxTimes = 288; // Maksimal 24 jam offline
+
+const times = Math.min(
+    Math.floor((now - lastTax) / interval),
+    maxTimes
+);
+  
+if(times > 0){
+    const income = times * getTaxIncome();
+
+    await update(ref(db,"players/"+uid),{
+        balance: (playerData.balance || 0) + income,
+        lastTax: lastTax + (times * interval)
+    });
+
+    toast("🏛 Pajak +" + formatNumber(income) + "T","success","fa-coins");
+}
+
+// Selama gaji belum dibayar
+if(playerData.salaryPaid === false){
+    return;
+}
+
+  // Selama gaji belum dibayar, penambang mogok: tidak ada produksi tambang
+  if(playerData.salaryPaid === false){
+    return;
+  }
+
+  const updates = {};
+  let changed = false;
+  for(const key of MATERIAL_KEYS){
+    const cfg = MINE_CONFIG[key];
+    const mine = playerData.mines[key];
+    const level = mine.level || 1;
+    const last = mine.lastCollected || now;
+    const elapsedSec = (now - last)/1000;
+    if(elapsedSec < 1) continue;
+    const prodPerYear = cfg.baseProduction * level;
+    const gained = prodPerYear * (elapsedSec / YEAR_SECONDS);
+    if(gained <= 0) continue;
+    const capacity = cfg.baseCapacity * level;
+    const currentInv = playerData.inventory[key] || 0;
+    const newInv = Math.min(capacity, currentInv + gained);
+    if(newInv !== currentInv){
+      updates["inventory/"+key] = Math.round(newInv*100)/100;
+      changed = true;
+    }
+    updates["mines/"+key+"/lastCollected"] = now;
+  }
+  if(changed){
+    try{ await update(ref(db, "players/"+uid), updates); }catch(e){ console.error(e); }
+  }
+  recordNetWorthPoint();
+}
+
+function recordNetWorthPoint(){
+  if(!playerData) return;
+  const nw = computeNetWorth();
+  netWorthHistory.push(nw);
+  if(netWorthHistory.length > 60) netWorthHistory.shift();
+  drawChart();
+}
+
+/* =========================================================
+   COMPUTATIONS
+   ========================================================= */
+function computeInventoryValue(){
+  if(!playerData) return 0;
+  let v = 0;
+  for(const key of MATERIAL_KEYS){
+    const price = currentPrices[key] ? currentPrices[key].current : 0;
+    v += (playerData.inventory[key]||0) * price;
+  }
+  return v;
+}
+function computeNetWorth(){
+  if(!playerData) return 0;
+  return (playerData.balance||0) + computeInventoryValue();
+}
+function computeTotalProduction(){
+  if(!playerData) return 0;
+  let total = 0;
+  for(const key of MATERIAL_KEYS){
+    total += MINE_CONFIG[key].baseProduction * (playerData.mines[key].level||1);
+  }
+  return total;
+}
+function computeProjectedIncome(){
+  if(!playerData) return 0;
+  let total = 0;
+  for(const key of MATERIAL_KEYS){
+    const prod = MINE_CONFIG[key].baseProduction * (playerData.mines[key].level||1);
+    const price = currentPrices[key] ? currentPrices[key].current : 0;
+    total += prod * price;
+  }
+  return total;
+}
+function upgradeCost(key, level){
+  return Math.round(MINE_CONFIG[key].baseCost * Math.pow(1.35, level));
+}
+
+/* =========================================================
+   RENDER: ALL
+   ========================================================= */
+function renderAll(){
+  if(!playerData) return;
+  const balance = playerData.balance || 0;
+  const netWorth = computeNetWorth();
+  const income = computeProjectedIncome();
+
+  document.getElementById("topBalance").textContent = fmtT(balance);
+  document.getElementById("topAssets").textContent = fmtT(netWorth);
+  document.getElementById("topIncome").textContent = fmtT(income);
+
+  document.getElementById("heroNetWorth").textContent = fmtT(netWorth);
+  document.getElementById("heroIncomeLine").textContent = "Pendapatan proyeksi " + fmtT(income) + "/Y";
+  renderHeroMaterials();
+
+  document.getElementById("statMoney").textContent = fmtT(balance);
+  document.getElementById("statAssets").textContent = fmtT(netWorth);
+  document.getElementById("statProduction").textContent = fmtTon(computeTotalProduction());
+  document.getElementById("statIncome").textContent = fmtT(income);
+
+  renderMines();
+  renderDashboardMineSummary();
+  renderMarketplace();
+  renderLeaderboard();
+}
+
+function renderHeroMaterials(){
+  const container = document.getElementById("heroMaterialsGrid");
+  if(!container) return;
+  container.innerHTML = MATERIAL_KEYS.map(key=>{
+    const cfg = MINE_CONFIG[key];
+    return `<div class="hero-mini"><div class="lbl"><i class="fa-solid ${cfg.icon}"></i> ${cfg.label}</div><div class="val mono">${fmtTon(playerData.inventory[key]||0)}</div></div>`;
+  }).join("");
+}
+
+function mineProgressPct(key){
+  const cfg = MINE_CONFIG[key];
+  const level = playerData.mines[key].level || 1;
+  const capacity = cfg.baseCapacity * level;
+  const inv = playerData.inventory[key] || 0;
+  return Math.min(100, (inv/capacity)*100);
+}
+
+function renderMines(){
+  const container = document.getElementById("minesContainer");
+  container.innerHTML = Object.keys(MINE_CONFIG).map(key=>{
+    const cfg = MINE_CONFIG[key];
+    const level = playerData.mines[key].level || 1;
+    const price = currentPrices[key] ? currentPrices[key].current : 0;
+    const prevPrice = currentPrices[key] ? currentPrices[key].previous : 0;
+    const up = price >= prevPrice;
+    const prod = cfg.baseProduction * level;
+    const capacity = cfg.baseCapacity * level;
+    const cost = upgradeCost(key, level);
+    const efficiency = Math.min(100, 60 + level*2);
+    const pct = mineProgressPct(key);
+    const isMaxLevel = level >= MAX_LEVEL;
+    const canAfford = !isMaxLevel && (playerData.balance||0) >= cost;
+    const inv = playerData.inventory[key] || 0;
+    return `
+    <div class="mine-card ${key}">
+      <div class="mine-top">
+        <div class="mine-id">
+          <div class="mine-icon"><i class="fa-solid ${cfg.icon}"></i></div>
+          <div><div class="mine-name">${cfg.label}</div><div class="mine-lvl">Level ${level}${isMaxLevel?' (MAX)':''} · Efisiensi ${efficiency}%</div></div>
+        </div>
+        <div class="mine-price-badge ${up?'ticker-up':'ticker-down'}"><i class="fa-solid fa-caret-${up?'up':'down'}"></i> ${fmtT(price)}/t</div>
+      </div>
+      <div class="mine-stats">
+        <div class="mine-stat"><div class="lbl">Produksi/Tahun</div><div class="val">${fmtTon(prod)}</div></div>
+        <div class="mine-stat"><div class="lbl">Kapasitas</div><div class="val">${fmtTon(capacity)}</div></div>
+        <div class="mine-stat"><div class="lbl">Stok Saat Ini</div><div class="val">${fmtTon(inv)}</div></div>
+        <div class="mine-stat"><div class="lbl">Biaya Upgrade</div><div class="val">${isMaxLevel?'-':fmtT(cost)}</div></div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%; background:${cfg.color};"></div></div>
+      <div class="mine-actions">
+        <button class="btn-sm" data-quicksell="${key}" ${inv<=0?'disabled':''}><i class="fa-solid fa-coins"></i> Jual ke Pasar</button>
+        <button class="btn-sm primary" data-upgrade="${key}" ${!canAfford?'disabled':''}><i class="fa-solid fa-arrow-up"></i> ${isMaxLevel?'Level Maks':'Upgrade'}</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  container.querySelectorAll("[data-upgrade]").forEach(btn=>{
+    btn.addEventListener("click", ()=>handleUpgrade(btn.getAttribute("data-upgrade")));
+  });
+  container.querySelectorAll("[data-quicksell]").forEach(btn=>{
+    btn.addEventListener("click", ()=>openQuickSell(btn.getAttribute("data-quicksell")));
+  });
+}
+
+function renderDashboardMineSummary(){
+  const container = document.getElementById("dashMineSummary");
+  container.innerHTML = Object.keys(MINE_CONFIG).map(key=>{
+    const cfg = MINE_CONFIG[key];
+    const level = playerData.mines[key].level||1;
+    const prod = cfg.baseProduction*level;
+    const pct = mineProgressPct(key);
+    return `<div class="card" style="display:flex; align-items:center; gap:12px; padding:12px 14px;">
+      <div style="font-size:22px; color:${cfg.color};"><i class="fa-solid ${cfg.icon}"></i></div>
+      <div style="flex:1;">
+        <div style="font-weight:600; font-size:13.5px;">${cfg.label} · Lv.${level}</div>
+        <div class="progress-track" style="margin:6px 0 0;"><div class="progress-fill" style="width:${pct}%; background:${cfg.color};"></div></div>
+      </div>
+      <div class="mono" style="font-size:13px; font-weight:700;">${fmtTon(prod)}/Y</div>
+    </div>`;
+  }).join("");
+}
+
+/* =========================================================
+   UPGRADE
+   ========================================================= */
+async function handleUpgrade(key){
+  const level = playerData.mines[key].level || 1;
+  if(level >= MAX_LEVEL){
+    toast("Tambang ini sudah mencapai Level Maksimum (100).", "info", "fa-flag-checkered");
+    return;
+  }
+  const cost = upgradeCost(key, level);
+  if((playerData.balance||0) < cost){
+    toast("Saldo tidak cukup untuk upgrade.", "error", "fa-triangle-exclamation");
+    return;
+  }
+  const playerRef = ref(db, "players/"+uid);
+  try{
+    const result = await runTransaction(playerRef, (curr)=>{
+      if(!curr) return curr;
+      const lvl = curr.mines[key].level || 1;
+      if(lvl >= MAX_LEVEL) return curr;
+      const c = upgradeCost(key, lvl);
+      if((curr.balance||0) < c) return curr;
+      curr.balance = Math.round((curr.balance - c)*100)/100;
+      curr.mines[key].level = lvl + 1;
+      return curr;
+    });
+    if(result.committed){
+      await push(ref(db, "history/"+uid), { type:"upgrade", text:`Upgrade tambang ${MINE_CONFIG[key].label} ke Level ${level+1}`, amount:-cost, timestamp:Date.now() });
+      toast(`${MINE_CONFIG[key].label} naik ke Level ${level+1}!`, "success", "fa-arrow-up");
+      playSound();
+    } else if(level >= MAX_LEVEL){
+      toast("Tambang ini sudah mencapai Level Maksimum (100).", "info", "fa-flag-checkered");
+    }
+  }catch(e){ console.error(e); toast("Upgrade gagal, coba lagi.", "error", "fa-triangle-exclamation"); }
+}
+
+/* =========================================================
+   QUICK SELL (to global market instantly)
+   ========================================================= */
+let quickSellKey = null;
+function openQuickSell(key){
+  quickSellKey = key;
+  const cfg = MINE_CONFIG[key];
+  const price = currentPrices[key] ? currentPrices[key].current : 0;
+  const inv = playerData.inventory[key] || 0;
+  document.getElementById("quickSellTitle").textContent = `Jual ${cfg.label} ke Pasar`;
+  document.getElementById("quickSellStock").textContent = `Stok: ${fmtTon(inv)} · Harga saat ini: ${fmtT(price)}/t`;
+  document.getElementById("quickSellAmount").value = "";
+  document.getElementById("quickSellAmount").max = inv;
+  document.getElementById("quickSellTotalPreview").textContent = fmtT(0);
+  openModal("quickSellModal");
+}
+document.getElementById("quickSellAmount").addEventListener("input", ()=>{
+  const amt = parseFloat(document.getElementById("quickSellAmount").value)||0;
+  const price = quickSellKey && currentPrices[quickSellKey] ? currentPrices[quickSellKey].current : 0;
+  document.getElementById("quickSellTotalPreview").textContent = fmtT(amt*price);
+});
+document.getElementById("confirmQuickSellBtn").addEventListener("click", async ()=>{
+  const amt = parseFloat(document.getElementById("quickSellAmount").value)||0;
+  if(amt<=0){ toast("Masukkan jumlah yang valid.","error","fa-triangle-exclamation"); return; }
+  const key = quickSellKey;
+  const price = currentPrices[key] ? currentPrices[key].current : 0;
+  const playerRef = ref(db, "players/"+uid);
+  try{
+    const result = await runTransaction(playerRef, (curr)=>{
+      if(!curr) return curr;
+      const inv = curr.inventory[key] || 0;
+      if(inv < amt) return curr;
+      curr.inventory[key] = Math.round((inv-amt)*100)/100;
+      curr.balance = Math.round((curr.balance + amt*price)*100)/100;
+      return curr;
+    });
+    if(result.committed){
+      await push(ref(db,"history/"+uid), { type:"sell", text:`Jual ${fmtTon(amt)} ${MINE_CONFIG[key].label} ke pasar global`, amount: amt*price, timestamp: Date.now() });
+      toast(`Berhasil menjual ${fmtTon(amt)} ${MINE_CONFIG[key].label}!`, "success", "fa-coins");
+      playSound();
+      closeModal("quickSellModal");
+    } else {
+      toast("Stok tidak mencukupi.", "error", "fa-triangle-exclamation");
+    }
+  }catch(e){ console.error(e); toast("Transaksi gagal.", "error", "fa-triangle-exclamation"); }
+});
+
+/* =========================================================
+   MARKETPLACE
+   ========================================================= */
+function listenMarketplace(){
+  onValue(ref(db, "marketplace"), (snap)=>{
+    marketplaceData = snap.exists() ? snap.val() : {};
+    renderMarketplace();
+  });
+}
+
+function setupMarketplaceControls(){
+  document.querySelectorAll("[data-mtab]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll("[data-mtab]").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      mktFilter = btn.getAttribute("data-mtab");
+      renderMarketplace();
+    });
+  });
+  document.getElementById("mktSearch").addEventListener("input", renderMarketplace);
+  document.getElementById("mktSort").addEventListener("change", (e)=>{ mktSort = e.target.value; renderMarketplace(); });
+}
+
+function renderMarketplace(){
+  const container = document.getElementById("marketplaceList");
+  if(!container) return;
+  const search = (document.getElementById("mktSearch").value||"").toLowerCase();
+  let listings = Object.entries(marketplaceData).map(([id,v])=>({id,...v}));
+  if(mktFilter !== "all") listings = listings.filter(l=>l.mineral===mktFilter);
+  if(search) listings = listings.filter(l=>(l.sellerName||"").toLowerCase().includes(search));
+  if(mktSort==="cheap") listings.sort((a,b)=>a.pricePerTon-b.pricePerTon);
+  else if(mktSort==="expensive") listings.sort((a,b)=>b.pricePerTon-a.pricePerTon);
+  else listings.sort((a,b)=>b.createdAt-a.createdAt);
+
+  if(listings.length===0){
+    container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-store-slash"></i><p>Belum ada penawaran. Jadilah yang pertama menjual!</p></div>';
+    return;
+  }
+  container.innerHTML = listings.map(l=>{
+    const cfg = MINE_CONFIG[l.mineral];
+    const isMine = l.sellerId === uid;
+    return `
+    <div class="listing">
+      <div class="listing-icon" style="color:${cfg.color};"><i class="fa-solid ${cfg.icon}"></i></div>
+      <div class="listing-info">
+        <div class="listing-title">${escapeHtml(l.sellerName)}${isMine?' <span style="color:var(--gold);font-size:10px;">(Anda)</span>':''}</div>
+        <div class="listing-sub">${fmtTon(l.amount)} ${cfg.label} · ${timeAgo(l.createdAt)}</div>
+      </div>
+      <div class="listing-price"><div class="p">${fmtT(l.pricePerTon)}</div><div class="u">per ton</div></div>
+      <div class="listing-cta">
+        ${isMine ? `<button class="icon-btn danger" data-cancel="${l.id}"><i class="fa-solid fa-trash"></i></button>`
+                 : `<button class="icon-btn buy" data-buy="${l.id}"><i class="fa-solid fa-cart-shopping"></i></button>`}
+      </div>
+    </div>`;
+  }).join("");
+
+  container.querySelectorAll("[data-cancel]").forEach(btn=>{
+    btn.addEventListener("click", ()=>cancelListing(btn.getAttribute("data-cancel")));
+  });
+  container.querySelectorAll("[data-buy]").forEach(btn=>{
+    btn.addEventListener("click", ()=>openBuyModal(btn.getAttribute("data-buy")));
+  });
+}
+
+async function cancelListing(id){
+  try{
+    const snap = await get(ref(db,"marketplace/"+id));
+    if(!snap.exists()) return;
+    const listing = snap.val();
+    if(listing.sellerId !== uid) return;
+    // return unsold stock to seller inventory
+    const playerRef = ref(db, "players/"+uid);
+    await runTransaction(playerRef, (curr)=>{
+      if(!curr) return curr;
+      curr.inventory[listing.mineral] = Math.round(((curr.inventory[listing.mineral]||0) + listing.amount)*100)/100;
+      return curr;
+    });
+    await remove(ref(db,"marketplace/"+id));
+    toast("Penawaran dibatalkan, stok dikembalikan.", "info", "fa-rotate-left");
+  }catch(e){ console.error(e); toast("Gagal membatalkan penawaran.","error","fa-triangle-exclamation"); }
+}
+
+/* Sell modal (create listing) */
+document.getElementById("openSellModalBtn").addEventListener("click", ()=>{
+  updateSellStockHint();
+  openModal("sellModal");
+});
+document.getElementById("sellMineral").addEventListener("change", updateSellStockHint);
+function updateSellStockHint(){
+  const key = document.getElementById("sellMineral").value;
+  const inv = playerData ? (playerData.inventory[key]||0) : 0;
+  document.getElementById("sellStockHint").textContent = `Stok: ${fmtTon(inv)}`;
+}
+function updateSellTotalPreview(){
+  const amt = parseFloat(document.getElementById("sellAmount").value)||0;
+  const price = parseFloat(document.getElementById("sellPrice").value)||0;
+  document.getElementById("sellTotalPreview").textContent = fmtT(amt*price);
+}
+document.getElementById("sellAmount").addEventListener("input", updateSellTotalPreview);
+document.getElementById("sellPrice").addEventListener("input", updateSellTotalPreview);
+
+document.getElementById("confirmSellBtn").addEventListener("click", async ()=>{
+  const key = document.getElementById("sellMineral").value;
+  const amt = parseFloat(document.getElementById("sellAmount").value)||0;
+  const price = parseFloat(document.getElementById("sellPrice").value)||0;
+  if(amt<=0 || price<=0){ toast("Isi jumlah dan harga dengan benar.","error","fa-triangle-exclamation"); return; }
+  const playerRef = ref(db,"players/"+uid);
+  try{
+    const result = await runTransaction(playerRef, (curr)=>{
+      if(!curr) return curr;
+      const inv = curr.inventory[key]||0;
+      if(inv < amt) return curr;
+      curr.inventory[key] = Math.round((inv-amt)*100)/100;
+      return curr;
+    });
+    if(!result.committed){ toast("Stok tidak mencukupi.","error","fa-triangle-exclamation"); return; }
+    await push(ref(db,"marketplace"), {
+      sellerId: uid, sellerName: playerData.name, mineral:key, amount:amt, pricePerTon:price, createdAt: Date.now()
+    });
+    await push(ref(db,"history/"+uid), { type:"sell", text:`Memasang penawaran jual ${fmtTon(amt)} ${MINE_CONFIG[key].label}`, amount:0, timestamp: Date.now() });
+    toast("Penawaran berhasil dipasang!", "success", "fa-tag");
+    playSound();
+    closeModal("sellModal");
+    document.getElementById("sellAmount").value = "";
+    document.getElementById("sellPrice").value = "";
+  }catch(e){ console.error(e); toast("Gagal memasang penawaran.","error","fa-triangle-exclamation"); }
+});
+
+/* Buy modal */
+function openBuyModal(listingId){
+  const listing = marketplaceData[listingId];
+  if(!listing) return;
+  currentBuyListingId = listingId;
+  const cfg = MINE_CONFIG[listing.mineral];
+  document.getElementById("buyListingInfo").innerHTML = `
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="font-size:26px; color:${cfg.color};"><i class="fa-solid ${cfg.icon}"></i></div>
+      <div style="flex:1;">
+        <div style="font-weight:700; font-size:14px;">${escapeHtml(listing.sellerName)}</div>
+        <div style="font-size:12px; color:var(--text-2);">${fmtTon(listing.amount)} ${cfg.label} tersedia</div>
+      </div>
+      <div class="mono" style="font-weight:700;">${fmtT(listing.pricePerTon)}/t</div>
+    </div>`;
+  document.getElementById("buyAmount").value = "";
+  document.getElementById("buyAmount").max = listing.amount;
+  document.getElementById("buyMaxHint").textContent = `Maks: ${fmtTon(listing.amount)} · Saldo: ${fmtT(playerData.balance)}`;
+  document.getElementById("buyTotalPreview").textContent = fmtT(0);
+  openModal("buyModal");
+}
+document.getElementById("buyAmount").addEventListener("input", ()=>{
+  const listing = marketplaceData[currentBuyListingId];
+  if(!listing) return;
+  const amt = parseFloat(document.getElementById("buyAmount").value)||0;
+  document.getElementById("buyTotalPreview").textContent = fmtT(amt*listing.pricePerTon);
+});
+
+document.getElementById("confirmBuyBtn").addEventListener("click", async ()=>{
+  const listingId = currentBuyListingId;
+  const listing = marketplaceData[listingId];
+  if(!listing){ toast("Penawaran tidak lagi tersedia.","error","fa-triangle-exclamation"); return; }
+  const amt = parseFloat(document.getElementById("buyAmount").value)||0;
+  if(amt<=0){ toast("Masukkan jumlah yang valid.","error","fa-triangle-exclamation"); return; }
+  if(listing.sellerId === uid){ toast("Tidak bisa membeli penawaran sendiri.","error","fa-triangle-exclamation"); return; }
+  const totalCost = amt * listing.pricePerTon;
+
+  if((playerData.balance||0) < totalCost){ toast("Saldo tidak mencukupi.","error","fa-triangle-exclamation"); return; }
+
+  const listingRef = ref(db, "marketplace/"+listingId);
+  try{
+    let finalAmount = 0, finalMineral = "", finalSellerId = "", finalSellerName = "", success=false;
+    const result = await runTransaction(listingRef, (curr)=>{
+      if(!curr) return curr;
+      if(curr.amount < amt) return curr;
+      finalAmount = amt; finalMineral = curr.mineral; finalSellerId = curr.sellerId; finalSellerName = curr.sellerName;
+      const remaining = Math.round((curr.amount - amt)*100)/100;
+      if(remaining <= 0.001) return null; // delete listing, sold out
+      curr.amount = remaining;
+      return curr;
+    });
+    if(!result.committed){ toast("Stok tidak mencukupi atau sudah dibeli pembeli lain.","error","fa-triangle-exclamation"); return; }
+    success = true;
+
+    // Deduct buyer balance, add inventory
+    await runTransaction(ref(db,"players/"+uid), (curr)=>{
+      if(!curr) return curr;
+      curr.balance = Math.round((curr.balance - totalCost)*100)/100;
+      curr.inventory[finalMineral] = Math.round(((curr.inventory[finalMineral]||0)+finalAmount)*100)/100;
+      return curr;
+    });
+    // Credit seller balance
+    await runTransaction(ref(db,"players/"+finalSellerId), (curr)=>{
+      if(!curr) return curr;
+      curr.balance = Math.round((curr.balance + totalCost)*100)/100;
+      return curr;
+    });
+
+    await push(ref(db,"history/"+uid), { type:"buy", text:`Membeli ${fmtTon(finalAmount)} ${MINE_CONFIG[finalMineral].label} dari ${finalSellerName}`, amount:-totalCost, timestamp: Date.now() });
+    await push(ref(db,"history/"+finalSellerId), { type:"sell", text:`${playerData.name} membeli ${fmtTon(finalAmount)} ${MINE_CONFIG[finalMineral].label}`, amount: totalCost, timestamp: Date.now() });
+
+    toast(`Berhasil membeli ${fmtTon(finalAmount)} ${MINE_CONFIG[finalMineral].label}!`, "success", "fa-cart-shopping");
+    playSound();
+    closeModal("buyModal");
+  }catch(e){ console.error(e); toast("Transaksi gagal, coba lagi.","error","fa-triangle-exclamation"); }
+});
+
+/* =========================================================
+   LEADERBOARD
+   ========================================================= */
+function setupLeaderboardControls(){
+  document.querySelectorAll("[data-ltab]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll("[data-ltab]").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      lbFilter = btn.getAttribute("data-ltab");
+      renderLeaderboard();
+    });
+  });
+}
+
+function renderLeaderboard(){
+  const container = document.getElementById("leaderboardList");
+  if(!container || Object.keys(allPlayers).length===0){
+    if(container) container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-trophy"></i><p>Belum ada data.</p></div>';
+    return;
+  }
+  let list = Object.entries(allPlayers).map(([id,p])=>{
+    p.mines = p.mines||{}; p.inventory = p.inventory||{gold:0,coal:0,nickel:0,uranium:0,tembaga:0,perak:0,minyak:0};
+    for(const k of MATERIAL_KEYS) if(!p.mines[k]) p.mines[k]={level:1};
+    let value;
+    if(lbFilter==="income"){
+      value = (p.balance||0);
+      for(const k of MATERIAL_KEYS){
+        const prod = MINE_CONFIG[k].baseProduction*(p.mines[k].level||1);
+        const price = currentPrices[k]?currentPrices[k].current:0;
+        value += prod*price;
+      }
+    } else {
+      value = p.inventory[lbFilter]||0;
+    }
+    return { id, name:p.name||"???", value };
+  });
+  list.sort((a,b)=>b.value-a.value);
+  list = list.slice(0,50);
+  container.innerHTML = list.map((p,i)=>{
+    const rank = i+1;
+    const rankClass = rank===1?"top1":rank===2?"top2":rank===3?"top3":"";
+    const valStr = lbFilter==="income" ? fmtT(p.value) : fmtTon(p.value);
+    return `<div class="lb-row clickable" data-pid="${p.id}">
+      <div class="lb-rank ${rankClass}">${rank}</div>
+      <div class="lb-name">${escapeHtml(p.name)}${p.id===uid?'<span class="you">ANDA</span>':''}</div>
+      <div class="lb-val">${valStr}</div>
+    </div>`;
+  }).join("");
+  container.querySelectorAll(".lb-row[data-pid]").forEach(row=>{
+    row.addEventListener("click", ()=>openPlayerProfile(row.getAttribute("data-pid")));
+  });
+}
+
+/* =========================================================
+   VIEW PLAYER PROFILE (other players)
+   ========================================================= */
+function openPlayerProfile(id){
+  if(!id) return;
+  let p = allPlayers[id];
+  if(!p){
+    toast("Data pemain tidak ditemukan.", "error", "fa-user-slash");
+    return;
+  }
+  p.mines = p.mines || {};
+  p.inventory = p.inventory || {gold:0,coal:0,nickel:0,uranium:0,tembaga:0,perak:0,minyak:0};
+  for(const k of MATERIAL_KEYS) if(!p.mines[k]) p.mines[k] = {level:1};
+
+  const name = p.name || "???";
+  document.getElementById("vpAvatar").textContent = name.slice(0,2).toUpperCase();
+  document.getElementById("vpName").textContent = name + (id===uid ? " (Anda)" : "");
+  document.getElementById("vpJoined").textContent = p.createdAt
+    ? "Bergabung " + new Date(p.createdAt).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})
+    : "Bergabung -";
+
+  document.getElementById("vpBalance").textContent = fmtT(p.balance||0);
+
+  let netWorth = p.balance || 0;
+  for(const k of MATERIAL_KEYS){
+    const prod = MINE_CONFIG[k].baseProduction*(p.mines[k].level||1);
+    const price = currentPrices[k] ? currentPrices[k].current : 0;
+    netWorth += prod*price;
+  }
+  document.getElementById("vpNetWorth").textContent = fmtT(netWorth);
+
+  document.getElementById("vpMines").innerHTML = MATERIAL_KEYS.map(k=>{
+    const cfg = MINE_CONFIG[k];
+    const level = p.mines[k].level || 1;
+    return `<div class="vp-mine-row">
+      <i class="fa-solid ${cfg.icon}" style="color:${cfg.color};"></i>
+      <div class="vp-mine-name">${cfg.label}</div>
+      <div class="vp-mine-level">Level ${level}</div>
+    </div>`;
+  }).join("");
+
+  openModal("viewProfileModal");
+}
+window.openPlayerProfile = openPlayerProfile;
+
+/* =========================================================
+   HISTORY
+   ========================================================= */
+function renderHistory(items){
+  const listEl = document.getElementById("historyList");
+  const dashEl = document.getElementById("dashRecentHistory");
+  if(items.length===0){
+    listEl.innerHTML = '<div class="empty-state"><i class="fa-solid fa-inbox"></i><p>Belum ada riwayat.</p></div>';
+    dashEl.innerHTML = '<div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i><p>Belum ada aktivitas.</p></div>';
+    return;
+  }
+  const rowHtml = (h)=>{
+    const iconClass = h.type==="buy"?"buy":h.type==="sell"?"sell":"upg";
+    const icon = h.type==="buy"?"fa-cart-shopping":h.type==="sell"?"fa-coins":"fa-arrow-up";
+    const amtColor = h.amount>0?"var(--up)":h.amount<0?"var(--danger)":"var(--text-2)";
+    const amtStr = h.amount===0?"":(h.amount>0?"+":"")+fmtT(h.amount);
+    return `<div class="hist-row">
+      <div class="hist-icon ${iconClass}"><i class="fa-solid ${icon}"></i></div>
+      <div class="hist-body"><div class="hist-title">${escapeHtml(h.text)}</div><div class="hist-time">${timeAgo(h.timestamp)}</div></div>
+      <div class="hist-amt" style="color:${amtColor};">${amtStr}</div>
+    </div>`;
+  };
+  listEl.innerHTML = items.map(rowHtml).join("");
+  dashEl.innerHTML = items.slice(0,5).map(rowHtml).join("");
+}
+
+/* =========================================================
+   CHART
+   ========================================================= */
+function drawChart(){
+  const canvas = document.getElementById("incomeChart");
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 180 * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr,dpr);
+  const w = rect.width, h = 180;
+  ctx.clearRect(0,0,w,h);
+  if(netWorthHistory.length < 2){
+    ctx.fillStyle = "#6b7284"; ctx.font = "12px Inter"; ctx.fillText("Mengumpulkan data...", 10, h/2);
+    return;
+  }
+  const max = Math.max(...netWorthHistory)*1.1 || 1;
+  const min = Math.min(...netWorthHistory)*0.9;
+  const range = (max-min)||1;
+  ctx.beginPath();
+  netWorthHistory.forEach((v,i)=>{
+    const x = (i/(netWorthHistory.length-1))*w;
+    const y = h - ((v-min)/range)*h;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,"rgba(240,185,59,0.35)");
+  grad.addColorStop(1,"rgba(240,185,59,0)");
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+
+  ctx.beginPath();
+  netWorthHistory.forEach((v,i)=>{
+    const x = (i/(netWorthHistory.length-1))*w;
+    const y = h - ((v-min)/range)*h;
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle = "#f0b93b"; ctx.lineWidth = 2.5; ctx.stroke();
+}
+window.addEventListener("resize", drawChart);
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+function setupNav(){
+  document.querySelectorAll(".nav-item").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const pageId = btn.getAttribute("data-page");
+      document.querySelectorAll(".nav-item").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+      document.getElementById("page-"+pageId).classList.add("active");
+      if(pageId==="statistik") setTimeout(drawChart, 50);
+    });
+  });
+}
+
+/* =========================================================
+   MODALS
+   ========================================================= */
+function openModal(id){ document.getElementById(id).classList.add("show"); }
+function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+function setupModals(){
+  document.querySelectorAll("[data-close]").forEach(btn=>{
+    btn.addEventListener("click", ()=>closeModal(btn.getAttribute("data-close")));
+  });
+  document.querySelectorAll(".modal-overlay").forEach(overlay=>{
+    overlay.addEventListener("click", (e)=>{ if(e.target===overlay) overlay.classList.remove("show"); });
+  });
+}
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+function setupSettings(){
+  const soundSwitch = document.getElementById("soundSwitch");
+  const fxSwitch = document.getElementById("fxSwitch");
+  const saved = JSON.parse(localStorage.getItem("orecraft_settings")||'{"sound":true,"fx":true}');
+  settings = saved;
+  soundSwitch.classList.toggle("on", settings.sound);
+  fxSwitch.classList.toggle("on", settings.fx);
+  soundSwitch.addEventListener("click", ()=>{
+    settings.sound = !settings.sound;
+    soundSwitch.classList.toggle("on", settings.sound);
+    localStorage.setItem("orecraft_settings", JSON.stringify(settings));
+  });
+  fxSwitch.addEventListener("click", ()=>{
+    settings.fx = !settings.fx;
+    fxSwitch.classList.toggle("on", settings.fx);
+    document.body.style.setProperty('--tickerAnim', settings.fx ? 'running':'paused');
+    localStorage.setItem("orecraft_settings", JSON.stringify(settings));
+  });
+}
+
+function playSound(){
+  if(!settings.sound) return;
+  try{
+    const ctxA = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctxA.createOscillator();
+    const gain = ctxA.createGain();
+    osc.type = "sine"; osc.frequency.value = 880;
+    gain.gain.value = 0.06;
+    osc.connect(gain); gain.connect(ctxA.destination);
+    osc.start(); osc.stop(ctxA.currentTime+0.12);
+  }catch(e){}
+}
+
+function escapeHtml(str){
+  const d = document.createElement("div");
+  d.textContent = str==null?"":String(str);
+  return d.innerHTML;
+}
+
+boot();
+
+  const DAILY_REWARD = 300; // 200T
+
+  async function claimDailyReward() {
+    const now = Date.now();
+    const lastClaim = playerData.lastDailyClaim || 0;
+
+    if (now - lastClaim < 86400000) {
+        const sisa = 86400000 - (now - lastClaim);
+        const jam = Math.floor(sisa / 3600000);
+        const menit = Math.floor((sisa % 3600000) / 60000);
+
+        toast(`Hadiah harian sudah diambil. Coba lagi ${jam}j ${menit}m`, "error", "fa-clock");
+        return;
+    }
+
+    await update(ref(db, "players/" + uid), {
+        balance: (playerData.balance || 0) + DAILY_REWARD,
+        lastDailyClaim: now
+    });
+
+    toast("🎁 Hadiah harian +300T berhasil diklaim!", "success", "fa-gift");
+}
+  window.claimDailyReward = claimDailyReward;
+
+  function getTaxIncome() {
+    let total = 0;
+
+    for (const key of MATERIAL_KEYS) {
+        const level = playerData.mines[key].level;
+        total += 50 + ((level - 1) * 20);
+    }
+
+    return total;
+}
+
+  function getSalaryCost(){
+    if(!playerData || !playerData.mines) return 150;
+    let total = 100; // biaya dasar gaji harian
+    for(const key of MATERIAL_KEYS){
+      const level = (playerData.mines[key] && playerData.mines[key].level) || 1;
+      total += (level - 1) * 30;
+    }
+    return total;
+  }
+  window.getSalaryCost = getSalaryCost;
+
+  async function paySalary(){
+
+    if(!playerData) return;
+
+    // Sudah digaji hari ini -> tidak boleh digaji lagi sampai 24 jam berlalu
+    if(playerData.salaryPaid === true){
+        toast("Gaji hari ini sudah dibayar. Penambang sedang bekerja.","info","fa-check");
+        return;
+    }
+
+    const biaya = getSalaryCost();
+
+    if(playerData.balance < biaya){
+        toast("Saldo tidak cukup!","error","fa-xmark");
+        return;
+    }
+
+    await update(ref(db,"players/"+uid),{
+        balance: playerData.balance - biaya,
+        salaryPaid:true,
+        lastSalary:Date.now()
+    });
+
+    toast("✅ Gaji penambang dibayar","success","fa-check");
+}
+
+window.paySalary = paySalary;
+
+
+  function updateWorkerStatus(){
+
+    const el = document.getElementById("workerStatus");
+    const btn = document.getElementById("paySalaryBtn");
+    if(!el || !playerData) return;
+
+    if(playerData.salaryPaid === false){
+        el.innerHTML = " Penambang: Mogok (Bayar Gaji!)";
+    }else{
+        el.innerHTML = " Penambang: Bekerja";
+    }
+
+    if(btn){
+        if(playerData.salaryPaid === false){
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-money-bill-wave"></i> Bayar Gaji';
+        }else{
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Gaji Sudah Dibayar';
+        }
+    }
+}
+
+  window.playMusic = function () {
+    const music = document.getElementById("bgMusic");
+    music.play();
+    document.getElementById("musicPopup").style.display = "none";
+};
+
+window.closePopup = function () {
+    document.getElementById("musicPopup").style.display = "none";
+};
+</script>
+</body>
+</html>
