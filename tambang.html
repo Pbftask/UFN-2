@@ -477,12 +477,29 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
   <div class="login-card">
     <div class="login-eyebrow">Simulasi Pertambangan Global</div>
     <div class="login-title">ORECRAFT</div>
-    <div class="login-desc">Dirikan negara pertambanganmu. Kelola tambang emas, batu bara, nikel, uranium, tembaga, perak, dan minyak — lalu bersaing di pasar global secara real-time.</div>
-    <label class="field-label">Nama Negara</label>
-    <input type="text" id="countryInput" class="field-input" placeholder="cth. Kaltara Union" maxlength="20" autocomplete="off">
-    <div class="field-hint" id="countryHint">Minimal 3 karakter, harus unik.</div>
-    <button class="btn-primary" id="loginBtn"><i class="fa-solid fa-flag"></i> Dirikan Negara</button>
-    <div class="login-footnote">Data tersimpan otomatis. Sesi tetap aktif di perangkat ini.</div>
+
+    <div class="tab-row" id="loginModeTabs">
+      <button class="tab-btn active" id="modeNewBtn" data-mode="new"><i class="fa-solid fa-flag"></i> Negara Baru</button>
+      <button class="tab-btn" id="modeReturnBtn" data-mode="return"><i class="fa-solid fa-right-to-bracket"></i> Sudah Punya ID</button>
+    </div>
+
+    <div id="newCountryForm">
+      <div class="login-desc">Dirikan negara pertambanganmu. Kelola tambang emas, batu bara, nikel, uranium, tembaga, perak, dan minyak — lalu bersaing di pasar global secara real-time.</div>
+      <label class="field-label">Nama Negara</label>
+      <input type="text" id="countryInput" class="field-input" placeholder="cth. Kaltara Union" maxlength="20" autocomplete="off">
+      <div class="field-hint" id="countryHint">Minimal 3 karakter, harus unik.</div>
+      <button class="btn-primary" id="loginBtn"><i class="fa-solid fa-flag"></i> Dirikan Negara</button>
+      <div class="login-footnote">Data tersimpan otomatis. Sesi tetap aktif di perangkat ini.</div>
+    </div>
+
+    <div id="returnCountryForm" style="display:none;">
+      <div class="login-desc">Sudah pernah main sebelumnya? Masukkan ID Negara-mu untuk melanjutkan progres lama — bisa dari perangkat manapun.</div>
+      <label class="field-label">ID Negara</label>
+      <input type="text" id="uidInput" class="field-input" placeholder="Tempel ID Negara di sini" autocomplete="off">
+      <div class="field-hint" id="uidHint">ID bisa ditemukan di menu Pengaturan saat kamu masih login.</div>
+      <button class="btn-primary" id="returnLoginBtn"><i class="fa-solid fa-right-to-bracket"></i> Masuk</button>
+      <div class="login-footnote">Progres, saldo, dan tambangmu akan dipulihkan sepenuhnya.</div>
+    </div>
   </div>
 </div>
   
@@ -651,6 +668,13 @@ canvas#incomeChart{width:100%; height:180px; display:block;}
     <div class="card">
       <div class="setting-row" style="border:none;">
         <div><div class="setting-lbl">Negara</div><div class="setting-desc" id="settingsCountry">-</div></div>
+      </div>
+      <div class="setting-row">
+        <div style="min-width:0;"><div class="setting-lbl">ID Negara</div><div class="setting-desc mono" id="settingsUid" style="overflow-wrap:anywhere;">-</div></div>
+        <button class="icon-btn" id="copyUidBtn" title="Salin ID"><i class="fa-solid fa-copy"></i></button>
+      </div>
+      <div class="setting-row" style="border:none;">
+        <div><div class="setting-desc" style="color:var(--text-2);">Simpan ID ini baik-baik. Gunakan untuk masuk kembali dan melanjutkan progres di perangkat manapun.</div></div>
       </div>
       <div class="setting-row" style="border:none;">
         <div><div class="setting-lbl" style="color:var(--danger);">Keluar dari Perangkat Ini</div><div class="setting-desc">Sesi lokal akan dihapus (data negara tetap aman di server)</div></div>
@@ -877,6 +901,67 @@ async function boot(){
 document.getElementById("loginBtn").addEventListener("click", handleLogin);
 document.getElementById("countryInput").addEventListener("keydown", e=>{ if(e.key==="Enter") handleLogin(); });
 
+const newCountryForm = document.getElementById("newCountryForm");
+const returnCountryForm = document.getElementById("returnCountryForm");
+const modeNewBtn = document.getElementById("modeNewBtn");
+const modeReturnBtn = document.getElementById("modeReturnBtn");
+
+function setLoginMode(mode){
+  if(mode === "return"){
+    modeReturnBtn.classList.add("active");
+    modeNewBtn.classList.remove("active");
+    newCountryForm.style.display = "none";
+    returnCountryForm.style.display = "block";
+  } else {
+    modeNewBtn.classList.add("active");
+    modeReturnBtn.classList.remove("active");
+    returnCountryForm.style.display = "none";
+    newCountryForm.style.display = "block";
+  }
+}
+modeNewBtn.addEventListener("click", ()=>setLoginMode("new"));
+modeReturnBtn.addEventListener("click", ()=>setLoginMode("return"));
+
+document.getElementById("returnLoginBtn").addEventListener("click", handleReturnLogin);
+document.getElementById("uidInput").addEventListener("keydown", e=>{ if(e.key==="Enter") handleReturnLogin(); });
+
+async function handleReturnLogin(){
+  const input = document.getElementById("uidInput");
+  const hint = document.getElementById("uidHint");
+  const id = input.value.trim();
+  if(!id){
+    hint.textContent = "Masukkan ID Negara terlebih dahulu.";
+    hint.className = "field-hint err";
+    return;
+  }
+  const btn = document.getElementById("returnLoginBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memeriksa...';
+  try{
+    const snap = await get(ref(db, "players/"+id));
+    if(!snap.exists()){
+      hint.textContent = "ID tidak ditemukan. Periksa kembali ID-mu.";
+      hint.className = "field-hint err";
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk';
+      return;
+    }
+    playerData = snap.val();
+    uid = id; myName = playerData.name;
+    localStorage.setItem("orecraft_uid", uid);
+    localStorage.setItem("orecraft_name", myName);
+    hint.textContent = "Berhasil masuk! Memuat progres...";
+    hint.className = "field-hint ok";
+    setTimeout(startApp, 400);
+  }catch(e){
+    console.error(e);
+    hint.textContent = "Gagal terhubung ke server. Coba lagi.";
+    hint.className = "field-hint err";
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk';
+  }
+}
+
 async function handleLogin(){
   const input = document.getElementById("countryInput");
   const hint = document.getElementById("countryHint");
@@ -939,10 +1024,26 @@ async function handleLogin(){
 }
 
 document.getElementById("logoutBtn").addEventListener("click", ()=>{
-  if(confirm("Keluar dari sesi lokal? Data negara tetap tersimpan di server dan bisa diakses kembali dengan nama yang sama pada perangkat lain jika kamu menyimpan UID.")){
+  if(confirm("Keluar dari sesi lokal? Pastikan kamu sudah menyalin ID Negara di halaman ini agar bisa masuk kembali dan melanjutkan progres kapan saja.")){
     localStorage.removeItem("orecraft_uid");
     localStorage.removeItem("orecraft_name");
     location.reload();
+  }
+});
+
+document.getElementById("copyUidBtn").addEventListener("click", async ()=>{
+  if(!uid) return;
+  try{
+    await navigator.clipboard.writeText(uid);
+    toast("ID Negara disalin!", "success", "fa-check");
+  }catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = uid;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    toast("ID Negara disalin!", "success", "fa-check");
   }
 });
 
@@ -957,6 +1058,7 @@ function startApp(){
   document.getElementById("profileName").textContent = playerData.name;
   document.getElementById("profileAvatar").textContent = playerData.name.slice(0,2).toUpperCase();
   document.getElementById("settingsCountry").textContent = playerData.name;
+  document.getElementById("settingsUid").textContent = uid;
   document.getElementById("profileJoined").textContent = "Bergabung " + new Date(playerData.createdAt).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
 
   setupPresence();
