@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Inbox - UFN</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+html,body{
+    height:100%;
+    background:#0f172a;
+    color:#fff;
+    overflow:hidden;
+}
+
+body{
+    display:flex;
+    flex-direction:column;
+}
+
+header{
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    flex-shrink:0;
+}
+
+header a{
+    color:#fff;
+    text-decoration:none;
+    font-size:18px;
+    width:32px;
+    height:32px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#1b2942;
+    border-radius:50%;
+}
+
+header h2{
+    font-size:18px;
+}
+
+header p{
+    color:#9ca3af;
+    font-size:12px;
+    margin-top:2px;
+}
+
+.chat-area{
+    flex:1;
+    overflow-y:auto;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.msg{
+    max-width:100%;
+    padding:10px 14px;
+    border-radius:14px;
+    background:#1b2942;
+    border:1px solid #111;
+    align-self:flex-start;
+    word-wrap:break-word;
+}
+
+.msg.mine{
+    align-self:flex-end;
+    background:#fff;
+    color:#111;
+    border:none;
+}
+
+.msg .sender{
+    font-size:11px;
+    font-weight:bold;
+    color:#222;
+    margin-bottom:3px;
+}
+
+.msg.mine .sender{
+    color:#111;
+}
+
+.msg .text{
+    font-size:14px;
+    line-height:1.4;
+}
+
+.msg .time{
+    font-size:10px;
+    color:white;
+    margin-top:4px;
+    text-align:right;
+}
+
+.msg.mine .time{
+    color:#fff;
+}
+
+.empty{
+    text-align:center;
+    color:#fff;
+    font-size:13px;
+    margin-top:30px;
+}
+
+.compose{
+    display:flex;
+    gap:8px;
+    padding:12px;
+    border-top:1px solid rgba(255,255,255,.08);
+    flex-shrink:0;
+    background:#0f172a;
+}
+
+.compose input{
+    flex:1;
+    padding:12px 14px;
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.15);
+    background:#1b2942;
+    color:#fff;
+    font-size:14px;
+    outline:none;
+}
+
+.compose button{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:none;
+    background:#ffc300;
+    color:#111;
+    font-size:16px;
+    flex-shrink:0;
+}
+
+.compose button:active{
+    transform:scale(.94);
+}
+
+.info-banner{
+    font-size:11px;
+    color:#9ca3af;
+    text-align:center;
+    padding:6px 16px 0;
+    flex-shrink:0;
+}
+</style>
+
+</head>
+<body>
+
+<header>
+    <a href="UFN.html"><i class="fa-solid fa-arrow-left"></i></a>
+    <div>
+        <h2>Inbox</h2>
+        <p>Pesan Dari aplikasi</p>
+    </div>
+</header>
+
+<div class="info-banner">pesan seputar update aplikasi</div>
+
+<div class="chat-area" id="chatArea">
+    <div class="empty" id="emptyState">Belum ada pesan.</div>
+</div>
+
+
+<!-- Firebase Compat -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+// =====================
+// Firebase Config
+// =====================
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// =====================
+// ID pengguna tetap (sama seperti UFN.html)
+// =====================
+let userId = localStorage.getItem("ufn_user_id");
+if (!userId) {
+  userId = crypto.randomUUID();
+  localStorage.setItem("ufn_user_id", userId);
+}
+
+// =====================
+// Nama tampilan pengguna
+// =====================
+let displayName = localStorage.getItem("ufn_display_name");
+if (!displayName) {
+  displayName = prompt("Masukkan nama kamu untuk chat Inbox:", "Player");
+  if (!displayName || displayName.trim() === "") {
+    displayName = "Player-" + userId.slice(0, 4);
+  }
+  localStorage.setItem("ufn_display_name", displayName);
+}
+
+// =====================
+// Elemen DOM
+// =====================
+const chatArea = document.getElementById("chatArea");
+const emptyState = document.getElementById("emptyState");
+const msgInput = document.getElementById("msgInput");
+const sendBtn = document.getElementById("sendBtn");
+
+function formatTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleString("id-ID", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" });
+}
+
+function renderMessage(data) {
+  if (emptyState) emptyState.remove();
+
+  const div = document.createElement("div");
+  div.className = "msg" + (data.sender === userId ? " mine" : "");
+
+  const senderEl = document.createElement("div");
+  senderEl.className = "sender";
+  senderEl.textContent = data.sender === userId ? "Cs LuminUX" : (data.name || "Player");
+
+  const textEl = document.createElement("div");
+  textEl.className = "text";
+  textEl.textContent = data.text;
+
+  const timeEl = document.createElement("div");
+  timeEl.className = "time";
+  timeEl.textContent = data.time ? formatTime(data.time) : "";
+
+  div.appendChild(senderEl);
+  div.appendChild(textEl);
+  div.appendChild(timeEl);
+  chatArea.appendChild(div);
+
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+// =====================
+// Ambil & dengarkan pesan (100 terakhir)
+// =====================
+db.ref("messages").limitToLast(100).on("child_added", function(snapshot) {
+  renderMessage(snapshot.val());
+});
+
+// =====================
+// Kirim pesan ke semua player
+// =====================
+function sendMessage() {
+  const text = msgInput.value.trim();
+  if (!text) return;
+
+  db.ref("messages").push({
+    sender: userId,
+    name: displayName,
+    text: text,
+    time: firebase.database.ServerValue.TIMESTAMP
+  });
+
+  msgInput.value = "";
+}
+
+sendBtn.addEventListener("click", sendMessage);
+msgInput.addEventListener("keydown", function(e) {
+  if (e.key === "Enter") sendMessage();
+});
+
+// =====================
+// Tandai sudah dibaca sampai waktu sekarang
+// =====================
+window.addEventListener("beforeunload", function() {
+  localStorage.setItem("ufn_last_read", Date.now().toString());
+});
+</script>
+</body>
+</html>

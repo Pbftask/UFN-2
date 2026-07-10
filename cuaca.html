@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ATMOS — Fictive Nations Weather Network</title>
+<meta name="description" content="Prediksi cuaca profesional untuk negara-negara fiksi, dihasilkan secara deterministik dari data Firestore.">
+
+<!-- ============================================================
+     GOOGLE FONTS
+     Space Grotesk  -> display / angka besar (karakter instrumen)
+     Inter          -> body / UI teks
+     JetBrains Mono -> data numerik / statistik (panel instrumen)
+============================================================= -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* =====================================================================
+   1. DESIGN TOKENS — variabel warna, tipografi, layout
+   ===================================================================== */
+:root{
+  /* -- palet dasar (dark / default) -- */
+  --bg-0:#080c14;
+  --bg-1:#0b1120;
+  --bg-2:#111a2c;
+  --glass:rgba(255,255,255,.055);
+  --glass-strong:rgba(255,255,255,.09);
+  --glass-border:rgba(255,255,255,.10);
+  --text-0:#eef2fa;
+  --text-1:#c3cbdc;
+  --text-2:#8b97ac;
+  --accent-gold:#f2b84b;
+  --accent-teal:#4fd1c5;
+  --accent-rose:#ff6b6b;
+  --danger:#ff5c5c;
+  --good:#4fd18a;
+
+  /* -- tipografi -- */
+  --font-display:'Space Grotesk', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+
+  /* -- layout -- */
+  --radius-lg:26px;
+  --radius-md:18px;
+  --radius-sm:10px;
+  --header-h:76px;
+  --maxw:1360px;
+
+  /* -- shadow -- */
+  --shadow-soft:0 20px 60px -20px rgba(0,0,0,.55);
+  --shadow-card:0 12px 40px -16px rgba(0,0,0,.5);
+
+  color-scheme: dark;
+}
+
+html[data-theme="light"]{
+  --bg-0:#eef1f7;
+  --bg-1:#f4f6fb;
+  --bg-2:#ffffff;
+  --glass:rgba(255,255,255,.55);
+  --glass-strong:rgba(255,255,255,.75);
+  --glass-border:rgba(20,30,50,.08);
+  --text-0:#131a29;
+  --text-1:#3a4459;
+  --text-2:#707d94;
+  --shadow-soft:0 20px 50px -24px rgba(30,40,70,.25);
+  --shadow-card:0 10px 30px -14px rgba(30,40,70,.18);
+  color-scheme: light;
+}
+
+/* =====================================================================
+   2. RESET & BASE
+   ===================================================================== */
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+html{ scroll-behavior:smooth; -webkit-text-size-adjust:100%; }
+body{
+  font-family:var(--font-body);
+  background:var(--bg-0);
+  color:var(--text-0);
+  min-height:100vh;
+  overflow-x:hidden;
+  transition:background .5s ease, color .5s ease;
+  position:relative;
+}
+img,svg{ display:block; max-width:100%; }
+button{ font-family:inherit; border:none; background:none; cursor:pointer; color:inherit; }
+input,select{ font-family:inherit; color:inherit; }
+::selection{ background:var(--accent-gold); color:#1a1408; }
+
+/* scrollbar halus */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:var(--glass-strong); border-radius:10px; }
+
+/* =====================================================================
+   3. BACKGROUND AMBIENT (bergeser lembut, independen dari kartu)
+   ===================================================================== */
+.ambient-bg{
+  position:fixed; inset:0; z-index:-2;
+  background:
+    radial-gradient(1100px 700px at 15% -10%, rgba(242,184,75,.10), transparent 60%),
+    radial-gradient(900px 700px at 100% 10%, rgba(79,209,197,.10), transparent 55%),
+    radial-gradient(1200px 900px at 50% 120%, rgba(120,90,255,.08), transparent 60%),
+    var(--bg-0);
+  transition:background-color .5s ease;
+}
+.ambient-noise{
+  position:fixed; inset:0; z-index:-1; opacity:.035; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* =====================================================================
+   4. HEADER
+   ===================================================================== */
+header.app-header{
+  position:sticky; top:0; z-index:60;
+  backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);
+  background:var(--glass);
+  border-bottom:1px solid var(--glass-border);
+  padding:14px clamp(16px,4vw,40px);
+}
+.header-inner{
+  max-width:var(--maxw); margin:0 auto;
+  display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+}
+.brand{ display:flex; align-items:center; gap:12px; margin-right:auto; }
+.brand-mark{
+  width:44px; height:44px; border-radius:14px;
+  background:conic-gradient(from 210deg, var(--accent-gold), var(--accent-rose), var(--accent-teal), var(--accent-gold));
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:700; font-size:18px; color:#1a1408;
+  box-shadow:0 8px 24px -8px rgba(242,184,75,.55);
+  animation:brandSpin 12s linear infinite;
+}
+@keyframes brandSpin{ to{ filter:hue-rotate(360deg); } }
+.brand-text h1{
+  font-family:var(--font-display); font-size:18px; letter-spacing:.5px; font-weight:700;
+}
+.brand-text span{
+  display:block; font-size:11px; color:var(--text-2); letter-spacing:1.5px; text-transform:uppercase;
+  font-family:var(--font-mono);
+}
+
+.header-controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+.search-wrap{
+  position:relative; display:flex; align-items:center;
+}
+.search-wrap input{
+  width:220px; padding:10px 14px 10px 38px; border-radius:999px;
+  background:var(--glass-strong); border:1px solid var(--glass-border);
+  color:var(--text-0); font-size:13.5px; outline:none;
+  transition:width .3s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.search-wrap input:focus{ width:260px; border-color:var(--accent-teal); box-shadow:0 0 0 4px rgba(79,209,197,.15); }
+.search-wrap svg{ position:absolute; left:12px; width:16px; height:16px; opacity:.6; pointer-events:none; }
+
+select.control-select{
+  padding:10px 30px 10px 14px; border-radius:999px;
+  background:var(--glass-strong) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b97ac'/%3E%3C/svg%3E") no-repeat right 12px center;
+  border:1px solid var(--glass-border); font-size:13px; appearance:none; -webkit-appearance:none;
+  cursor:pointer;
+}
+
+.icon-btn{
+  width:40px; height:40px; border-radius:50%;
+  background:var(--glass-strong); border:1px solid var(--glass-border);
+  display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+  transition:transform .2s ease, background .2s ease;
+}
+.icon-btn:hover{ transform:translateY(-2px); background:var(--glass); }
+.icon-btn:active{ transform:translateY(0) scale(.94); }
+.icon-btn svg{ width:18px; height:18px; }
+
+#refreshBtn.spinning svg{ animation:spin .7s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+.theme-toggle{
+  width:52px; height:30px; border-radius:999px; background:var(--glass-strong);
+  border:1px solid var(--glass-border); position:relative; cursor:pointer; padding:3px;
+}
+.theme-toggle .knob{
+  width:22px; height:22px; border-radius:50%;
+  background:linear-gradient(135deg,var(--accent-gold),var(--accent-rose));
+  transition:transform .35s cubic-bezier(.5,-0.2,.2,1.3);
+  display:flex; align-items:center; justify-content:center; font-size:12px;
+}
+html[data-theme="light"] .theme-toggle .knob{ transform:translateX(22px); background:linear-gradient(135deg,#8fd6ff,#4fd1c5); }
+
+/* =====================================================================
+   5. STATISTIK RINGKAS
+   ===================================================================== */
+.stats-bar{
+  max-width:var(--maxw); margin:22px auto 0; padding:0 clamp(16px,4vw,40px);
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;
+}
+.stat-card{
+  background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius-md);
+  padding:14px 16px; backdrop-filter:blur(16px);
+  animation:fadeUp .5s ease both;
+}
+.stat-card .stat-label{ font-size:10.5px; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-2); font-family:var(--font-mono); }
+.stat-card .stat-value{ font-family:var(--font-display); font-size:26px; font-weight:700; margin-top:4px; }
+.stat-card .stat-sub{ font-size:11px; color:var(--text-2); margin-top:2px; font-family:var(--font-mono); }
+
+/* =====================================================================
+   6. FILTER PILLS
+   ===================================================================== */
+.filter-row{
+  max-width:var(--maxw); margin:18px auto 0; padding:0 clamp(16px,4vw,40px);
+  display:flex; gap:8px; overflow-x:auto; padding-bottom:6px;
+  scrollbar-width:none;
+}
+.filter-row::-webkit-scrollbar{ display:none; }
+.pill{
+  flex:0 0 auto; padding:8px 16px; border-radius:999px; font-size:12.5px;
+  background:var(--glass); border:1px solid var(--glass-border); white-space:nowrap;
+  transition:all .2s ease; display:flex; align-items:center; gap:6px;
+}
+.pill.active{ background:linear-gradient(135deg,var(--accent-gold),var(--accent-rose)); color:#1a1408; font-weight:600; border-color:transparent; }
+.pill:hover{ transform:translateY(-1px); }
+
+/* =====================================================================
+   7. GRID KARTU
+   ===================================================================== */
+main{ max-width:var(--maxw); margin:0 auto; padding:22px clamp(16px,4vw,40px) 80px; position:relative; }
+.grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px;
+}
+.empty-state{
+  grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-2);
+}
+.empty-state h3{ font-family:var(--font-display); font-size:20px; color:var(--text-0); margin-bottom:6px; }
+
+/* ---- skeleton loader ---- */
+.skeleton-card{
+  height:330px; border-radius:var(--radius-lg); overflow:hidden; position:relative;
+  background:var(--glass); border:1px solid var(--glass-border);
+}
+.skeleton-card::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(100deg, transparent 30%, rgba(255,255,255,.08) 50%, transparent 70%);
+  transform:translateX(-100%); animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer{ to{ transform:translateX(100%); } }
+
+/* =====================================================================
+   8. KARTU CUACA
+   ===================================================================== */
+.w-card{
+  border-radius:var(--radius-lg); overflow:hidden; position:relative;
+  background:var(--glass); border:1px solid var(--glass-border);
+  box-shadow:var(--shadow-card);
+  cursor:pointer; isolation:isolate;
+  transform:translateY(0);
+  transition:transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, border-color .35s ease;
+  animation:cardIn .55s cubic-bezier(.22,1,.36,1) both;
+}
+.w-card:hover{ transform:translateY(-6px); box-shadow:0 26px 60px -18px rgba(0,0,0,.5); border-color:var(--glass-strong); }
+.w-card:active{ transform:translateY(-2px) scale(.995); }
+
+@keyframes cardIn{
+  from{ opacity:0; transform:translateY(26px) scale(.97); }
+  to{ opacity:1; transform:translateY(0) scale(1); }
+}
+
+.w-scene{
+  height:130px; position:relative; overflow:hidden;
+  display:flex; align-items:flex-end; justify-content:center;
+}
+.w-scene .scene-icon{
+  font-size:52px; margin-bottom:10px; filter:drop-shadow(0 8px 18px rgba(0,0,0,.35));
+  z-index:3; position:relative;
+}
+.w-scene::before{ content:''; position:absolute; inset:0; opacity:.9; }
+.w-scene::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, var(--bg-1) 105%); opacity:.85; }
+
+.w-body{ padding:16px 18px 18px; position:relative; z-index:2; }
+.w-country{ font-family:var(--font-display); font-size:16px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.w-condition{ font-size:12px; color:var(--text-2); margin-top:2px; text-transform:capitalize; }
+.w-temp{
+  font-family:var(--font-display); font-size:46px; font-weight:700; line-height:1; margin:10px 0 14px;
+  display:flex; align-items:flex-start; gap:2px;
+}
+.w-temp small{ font-size:18px; font-weight:500; margin-top:6px; color:var(--text-2); }
+
+.w-stats-mini{
+  display:grid; grid-template-columns:1fr 1fr; gap:8px 14px;
+  border-top:1px dashed var(--glass-border); padding-top:12px;
+}
+.mini-stat{ display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--text-1); }
+.mini-stat .mi-ico{ opacity:.7; font-size:13px; width:16px; text-align:center; }
+.mini-stat b{ font-family:var(--font-mono); color:var(--text-0); font-weight:500; }
+
+/* =====================================================================
+   9. RIPPLE EFFECT
+   ===================================================================== */
+.ripple{
+  position:absolute; border-radius:50%; background:rgba(255,255,255,.35);
+  transform:scale(0); animation:rippleAnim .6s ease-out; pointer-events:none; z-index:5;
+}
+html[data-theme="light"] .ripple{ background:rgba(20,30,50,.18); }
+@keyframes rippleAnim{ to{ transform:scale(3.2); opacity:0; } }
+
+/* =====================================================================
+   10. ANIMASI SCENE PER KONDISI (kartu kecil, ringan / 60fps friendly)
+   ===================================================================== */
+/* --- SUNNY --- */
+.scene-sunny::before{ background:linear-gradient(180deg,#ff9a56,#ff6b6b 70%); }
+.scene-sunny .sun-orb{
+  position:absolute; top:14px; left:50%; width:64px; height:64px; margin-left:-32px;
+  border-radius:50%; background:radial-gradient(circle at 35% 35%, #fff6d8, #ffcf5c 60%, #ff9d3d);
+  box-shadow:0 0 40px 10px rgba(255,190,80,.55);
+  animation:sunPulse 3.2s ease-in-out infinite;
+}
+.scene-sunny .sun-ray{
+  position:absolute; top:14px; left:50%; width:100px; height:100px; margin-left:-50px; margin-top:-18px;
+  background:conic-gradient(from 0deg, transparent 0 10deg, rgba(255,255,255,.35) 12deg 16deg, transparent 18deg 40deg);
+  animation:rotate360 9s linear infinite; border-radius:50%;
+}
+@keyframes sunPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+@keyframes rotate360{ to{ transform:rotate(360deg); } }
+
+/* --- PARTLY CLOUDY / CLOUDY --- */
+.scene-partly-cloudy::before{ background:linear-gradient(180deg,#6dd5ed,#2193b0 85%); }
+.scene-cloudy::before{ background:linear-gradient(180deg,#8b95a8,#4b5468 85%); }
+.cloud{
+  position:absolute; background:rgba(255,255,255,.85); border-radius:50px;
+  filter:blur(.3px);
+}
+.cloud::before,.cloud::after{ content:''; position:absolute; background:inherit; border-radius:50%; }
+.c1{ width:70px; height:24px; top:30px; left:-20%; animation:driftCloud 14s linear infinite; }
+.c1::before{ width:34px; height:34px; top:-16px; left:8px; }
+.c1::after{ width:26px; height:26px; top:-10px; left:36px; }
+.c2{ width:50px; height:18px; top:60px; left:-40%; opacity:.7; animation:driftCloud 20s linear infinite; animation-delay:-6s; }
+.c2::before{ width:24px; height:24px; top:-11px; left:6px; }
+.c2::after{ width:18px; height:18px; top:-7px; left:26px; }
+@keyframes driftCloud{ from{ transform:translateX(0); } to{ transform:translateX(340px); } }
+
+/* --- LIGHT RAIN / RAIN --- */
+.scene-light-rain::before{ background:linear-gradient(180deg,#4b6cb7,#182848 90%); }
+.scene-rain::before{ background:linear-gradient(180deg,#373b44,#20232a 90%); }
+.drop{
+  position:absolute; top:-10%; width:2px; height:16px; border-radius:2px;
+  background:linear-gradient(180deg, transparent, rgba(180,210,255,.85));
+  animation-name:fall; animation-timing-function:linear; animation-iteration-count:infinite;
+}
+@keyframes fall{ to{ transform:translateY(160px); opacity:.2; } }
+
+/* --- THUNDERSTORM --- */
+.scene-thunderstorm::before{ background:linear-gradient(180deg,#0f2027,#203a43 90%); }
+.bolt{
+  position:absolute; top:20%; left:48%; font-size:30px; opacity:0;
+  animation:flash 3.4s ease-in-out infinite;
+  filter:drop-shadow(0 0 10px #fff6c8);
+}
+@keyframes flash{
+  0%,92%,100%{ opacity:0; }
+  93%{ opacity:1; }
+  94%{ opacity:.2; }
+  95%{ opacity:1; }
+  97%{ opacity:0; }
+}
+
+/* --- SNOW / BLIZZARD --- */
+.scene-snow::before{ background:linear-gradient(180deg,#3a4a5c,#1c2733 90%); }
+.scene-blizzard::before{ background:linear-gradient(180deg,#7c8ba3,#3d4b5f 90%); }
+.flake{
+  position:absolute; top:-8%; color:#fff; font-size:12px; opacity:.9;
+  animation-name:snowFall; animation-timing-function:linear; animation-iteration-count:infinite;
+}
+@keyframes snowFall{ to{ transform:translateY(150px) translateX(14px) rotate(180deg); opacity:.3; } }
+
+/* --- FOG --- */
+.scene-fog::before{ background:linear-gradient(180deg,#8b98a6,#5c6875 90%); }
+.fog-layer{
+  position:absolute; left:-30%; width:160%; height:26px; border-radius:50%;
+  background:rgba(255,255,255,.45); filter:blur(6px);
+  animation:fogDrift 10s ease-in-out infinite;
+}
+@keyframes fogDrift{ 0%,100%{ transform:translateX(-20px); } 50%{ transform:translateX(20px); } }
+
+/* --- STORM / HEAVY STORM --- */
+.scene-storm::before{ background:linear-gradient(180deg,#232526,#414345 90%); }
+.scene-heavy-storm::before{ background:linear-gradient(180deg,#000000,#3a3a3a 90%); }
+.wind-line{
+  position:absolute; height:2px; border-radius:2px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent);
+  animation:windBlow 1.6s linear infinite;
+}
+@keyframes windBlow{ from{ transform:translateX(-60px); opacity:0; } 15%{ opacity:1; } to{ transform:translateX(240px); opacity:0; } }
+
+/* --- VOLCANIC ASH --- */
+.scene-volcanic-ash::before{ background:linear-gradient(180deg,#3a1c1c,#1a1010 90%); }
+.ash{
+  position:absolute; top:-8%; width:4px; height:4px; border-radius:50%; background:#6b6156;
+  animation-name:ashFall; animation-timing-function:linear; animation-iteration-count:infinite;
+}
+@keyframes ashFall{ to{ transform:translateY(150px) translateX(-10px); opacity:.1; } }
+
+/* --- COASTAL WIND --- */
+.scene-coastal-wind::before{ background:linear-gradient(180deg,#00c6ff,#0072ff 90%); }
+.wave{
+  position:absolute; bottom:0; left:-10%; width:120%; height:22px;
+  border-radius:50% 50% 0 0/100% 100% 0 0;
+  background:rgba(255,255,255,.4);
+  animation:waveMove 4s ease-in-out infinite;
+}
+@keyframes waveMove{ 0%,100%{ transform:translateX(-10px) scaleY(1); } 50%{ transform:translateX(10px) scaleY(1.3); } }
+
+/* =====================================================================
+   11. MODAL DETAIL NEGARA
+   ===================================================================== */
+.modal-overlay{
+  position:fixed; inset:0; z-index:200; background:rgba(4,6,12,.6);
+  backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .35s ease;
+  padding:20px;
+}
+.modal-overlay.open{ opacity:1; pointer-events:auto; }
+.modal-panel{
+  width:100%; max-width:760px; max-height:92vh; overflow-y:auto;
+  background:var(--bg-2); border:1px solid var(--glass-border); border-radius:28px;
+  box-shadow:var(--shadow-soft);
+  transform:translateY(30px) scale(.97); opacity:0;
+  transition:transform .4s cubic-bezier(.22,1,.36,1), opacity .4s ease;
+  position:relative;
+}
+.modal-overlay.open .modal-panel{ transform:translateY(0) scale(1); opacity:1; }
+
+.modal-hero{ height:230px; position:relative; overflow:hidden; border-radius:28px 28px 0 0; }
+.modal-hero .scene-icon{ font-size:84px; margin-bottom:20px; }
+.modal-close{
+  position:absolute; top:16px; right:16px; z-index:10;
+  width:38px; height:38px; border-radius:50%; background:rgba(0,0,0,.35);
+  color:#fff; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(6px);
+  transition:transform .2s ease, background .2s ease;
+}
+.modal-close:hover{ transform:rotate(90deg); background:rgba(0,0,0,.55); }
+
+.modal-content{ padding:26px clamp(18px,4vw,36px) 36px; }
+.modal-title{ font-family:var(--font-display); font-size:28px; font-weight:700; display:flex; align-items:center; gap:10px; }
+.modal-updated{ font-size:11.5px; color:var(--text-2); font-family:var(--font-mono); margin-top:4px; }
+.modal-desc{ margin-top:14px; color:var(--text-1); line-height:1.7; font-size:14.5px; }
+
+.modal-temp-row{ display:flex; align-items:baseline; gap:16px; margin:22px 0 6px; flex-wrap:wrap; }
+.modal-temp-row .big-temp{ font-family:var(--font-display); font-size:64px; font-weight:700; }
+.modal-temp-row .cond-badge{
+  padding:8px 16px; border-radius:999px; background:var(--glass-strong);
+  border:1px solid var(--glass-border); font-size:13px; text-transform:capitalize; display:flex; align-items:center; gap:8px;
+}
+
+.detail-grid{
+  margin-top:22px; display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px;
+}
+.detail-item{
+  background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius-sm);
+  padding:12px 14px;
+}
+.detail-item .dl{ font-size:10px; letter-spacing:1.1px; text-transform:uppercase; color:var(--text-2); font-family:var(--font-mono); }
+.detail-item .dv{ font-family:var(--font-mono); font-size:18px; margin-top:4px; font-weight:500; }
+
+/* =====================================================================
+   12. FLOATING CONTROLS (scroll-to-top, pull-to-refresh)
+   ===================================================================== */
+.scroll-top{
+  position:fixed; bottom:26px; right:22px; z-index:80;
+  width:48px; height:48px; border-radius:50%;
+  background:linear-gradient(135deg,var(--accent-gold),var(--accent-rose));
+  color:#1a1408; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 10px 30px -8px rgba(242,184,75,.6);
+  transform:translateY(120px) scale(.8); opacity:0; transition:transform .35s cubic-bezier(.22,1,.36,1), opacity .3s ease;
+}
+.scroll-top.show{ transform:translateY(0) scale(1); opacity:1; }
+.scroll-top:active{ transform:scale(.9); }
+
+.ptr-indicator{
+  position:fixed; top:calc(var(--header-h) + 6px); left:50%; transform:translate(-50%,-60px);
+  z-index:70; width:40px; height:40px; border-radius:50%;
+  background:var(--glass-strong); border:1px solid var(--glass-border); backdrop-filter:blur(10px);
+  display:flex; align-items:center; justify-content:center; transition:transform .25s ease, opacity .25s ease;
+  opacity:0;
+}
+.ptr-indicator.visible{ opacity:1; }
+.ptr-indicator svg{ width:18px; height:18px; transition:transform .2s ease; }
+.ptr-indicator.spin svg{ animation:spin .6s linear infinite; }
+
+/* =====================================================================
+   13. FOOTER
+   ===================================================================== */
+footer{
+  border-top:1px solid var(--glass-border); padding:30px clamp(16px,4vw,40px) 40px;
+  margin-top:20px; text-align:center; color:var(--text-2); font-size:12.5px;
+}
+footer b{ color:var(--text-0); font-family:var(--font-display); }
+footer .foot-links{ display:flex; gap:16px; justify-content:center; margin-top:10px; flex-wrap:wrap; }
+footer .foot-links span{ font-family:var(--font-mono); }
+
+/* =====================================================================
+   14. UTIL ANIMATIONS
+   ===================================================================== */
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+.fade-in{ animation:fadeUp .5s ease both; }
+@keyframes slideIn{ from{ opacity:0; transform:translateX(-14px); } to{ opacity:1; transform:translateX(0); } }
+.slide-in{ animation:slideIn .4s ease both; }
+
+/* toast */
+.toast{
+  position:fixed; bottom:26px; left:50%; transform:translate(-50%,20px); z-index:250;
+  background:var(--bg-2); border:1px solid var(--glass-border); padding:12px 20px; border-radius:999px;
+  font-size:13px; box-shadow:var(--shadow-soft); opacity:0; pointer-events:none; transition:all .3s ease;
+}
+.toast.show{ opacity:1; transform:translate(-50%,0); }
+
+/* =====================================================================
+   15. RESPONSIVE
+   ===================================================================== */
+@media (max-width:640px){
+  .search-wrap input{ width:150px; }
+  .search-wrap input:focus{ width:180px; }
+  .brand-text span{ display:none; }
+  .grid{ grid-template-columns:1fr; }
+  .modal-temp-row .big-temp{ font-size:50px; }
+  .stats-bar{ grid-template-columns:repeat(2,1fr); }
+}
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+}
+
+.online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
+  
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-left:125px;
+  margin-top:2px;
+}
+</style>
+</head>
+<body>
+
+<div class="ambient-bg"></div>
+<div class="ambient-noise"></div>
+
+<!-- ===================== HEADER ===================== -->
+<header class="app-header">
+  <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
+  <div class="header-inner">
+    <div class="brand">
+    </div>
+
+    <div class="header-controls">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="searchInput" type="text" placeholder="Cari negara...">
+      </div>
+
+      <select id="sortSelect" class="control-select">
+        <option value="name-asc">Nama A–Z</option>
+        <option value="name-desc">Nama Z–A</option>
+        <option value="temp-desc">Suhu Tertinggi</option>
+        <option value="temp-asc">Suhu Terendah</option>
+      </select>
+
+      <button id="refreshBtn" class="icon-btn" title="Segarkan data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15"/></svg>
+      </button>
+
+      <button id="themeToggle" class="theme-toggle" title="Ganti mode tampilan">
+        <div class="knob">🌙</div>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== STATISTIK ===================== -->
+<section class="stats-bar" id="statsBar"></section>
+
+<!-- ===================== FILTER KONDISI ===================== -->
+<nav class="filter-row" id="filterRow"></nav>
+
+<!-- ===================== PULL TO REFRESH INDICATOR ===================== -->
+<div class="ptr-indicator" id="ptrIndicator">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.13-3.36L23 10M1 14l5.36 4.36A9 9 0 0020.49 15"/></svg>
+</div>
+
+<!-- ===================== GRID KARTU ===================== -->
+<main>
+  <div class="grid" id="grid">
+    <!-- skeleton awal -->
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+  </div>
+</main>
+
+<!-- ===================== MODAL DETAIL ===================== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-panel" id="modalPanel">
+    <div class="modal-hero" id="modalHero">
+      <button class="modal-close" id="modalClose">✕</button>
+      <div class="scene-icon" id="modalIcon" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:3;"></div>
+    </div>
+    <div class="modal-content" id="modalContent">
+      <!-- diisi via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ===================== FLOATING BUTTONS ===================== -->
+<button class="scroll-top" id="scrollTopBtn" title="Kembali ke atas">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div><b>LuminuX</b> — Jaringan Prakiraan Cuaca Negara Fiksi</div>
+  <div class="foot-links">
+    <span id="footCount">0 negara terpantau</span>
+    <span>•</span>
+    <span id="footClock">--:--:--</span>
+    <span>•</span>
+    <span>Data cuaca dihasilkan secara deterministik</span>
+  </div>
+</footer>
+
+<script type="module">
+
+/* =========================================================================
+   BAGIAN 0 — KONFIGURASI FIREBASE
+   Ganti nilai di bawah ini dengan konfigurasi proyek Firebase Anda sendiri.
+   ========================================================================= */
+
+  
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+/* =========================================================================
+   BAGIAN 1 — IMPORT FIREBASE (ES MODULE, versi terbaru via CDN)
+   ========================================================================= */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  onSnapshot,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+
+import {
+  getDatabase,
+  ref,
+ set,
+  onValue,
+  onDisconnect
+} from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+
+let app, db, rtdb;
+
+try{
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  rtdb = getDatabase(app);
+}catch(err){
+  console.warn("Firebase belum dikonfigurasi:", err);
+}
+
+const onlineRef = ref(rtdb, "online/" + crypto.randomUUID());
+
+set(onlineRef, true);
+onDisconnect(onlineRef).remove();
+
+onValue(ref(rtdb, "online"), (snapshot) => {
+    document.getElementById("onlineCount").textContent =
+        snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
+});
+
+/* =========================================================================
+   BAGIAN 2 — STATE APLIKASI
+   ========================================================================= */
+const state = {
+  countries: [],      // data mentah dari Firestore: {id, name, description, createdAt}
+  search: "",
+  sortBy: "name-asc",
+  filterCondition: "all",
+  darkMode: true,
+  loaded: false
+};
+
+/* =========================================================================
+   BAGIAN 3 — DEFINISI KONDISI CUACA (ikon, label, kelas animasi)
+   ========================================================================= */
+const CONDITIONS = {
+  "sunny":          { label: "Sunny",          icon: "☀️", scene: "scene-sunny" },
+  "partly-cloudy":  { label: "Partly Cloudy",  icon: "🌤️", scene: "scene-partly-cloudy" },
+  "cloudy":         { label: "Cloudy",         icon: "☁️", scene: "scene-cloudy" },
+  "light-rain":     { label: "Light Rain",     icon: "🌦️", scene: "scene-light-rain" },
+  "rain":           { label: "Rain",           icon: "🌧️", scene: "scene-rain" },
+  "thunderstorm":   { label: "Thunderstorm",   icon: "⛈️", scene: "scene-thunderstorm" },
+  "snow":           { label: "Snow",           icon: "❄️", scene: "scene-snow" },
+  "blizzard":       { label: "Blizzard",       icon: "🌨️", scene: "scene-blizzard" },
+  "fog":            { label: "Fog",            icon: "🌫️", scene: "scene-fog" },
+  "storm":          { label: "Storm",          icon: "🌪️", scene: "scene-storm" },
+  "heavy-storm":    { label: "Heavy Storm",    icon: "🌩️", scene: "scene-heavy-storm" },
+  "volcanic-ash":   { label: "Volcanic Ash",   icon: "🌋", scene: "scene-volcanic-ash" },
+  "coastal-wind":   { label: "Coastal Wind",   icon: "🌊", scene: "scene-coastal-wind" }
+};
+
+/* pool kondisi berdasarkan rentang suhu, agar hasil tetap masuk akal
+   namun tetap ditentukan sepenuhnya oleh hash nama negara            */
+function conditionPoolForTemp(t){
+  if(t < -5)  return ["snow","blizzard","fog","cloudy"];
+  if(t < 5)   return ["snow","cloudy","fog","coastal-wind","partly-cloudy"];
+  if(t < 15)  return ["cloudy","light-rain","rain","fog","partly-cloudy","coastal-wind"];
+  if(t < 25)  return ["partly-cloudy","cloudy","light-rain","sunny","coastal-wind","thunderstorm"];
+  if(t < 35)  return ["sunny","partly-cloudy","thunderstorm","storm","rain","coastal-wind"];
+  return ["sunny","storm","heavy-storm","volcanic-ash","thunderstorm"];
+}
+
+/* =========================================================================
+   BAGIAN 4 — HASH & PRNG DETERMINISTIK
+   Nama negara yang sama akan SELALU menghasilkan cuaca yang sama.
+   ========================================================================= */
+function hashString(str){
+  // djb2 hash
+  let hash = 5381;
+  for(let i = 0; i < str.length; i++){
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash = hash & 0xffffffff;
+  }
+  return Math.abs(hash);
+}
+
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function randRange(rand, min, max){
+  return min + rand() * (max - min);
+}
+function randInt(rand, min, max){
+  return Math.floor(randRange(rand, min, max + 1));
+}
+
+
+/* =========================================================================
+   BAGIAN 5 — GENERATOR DATA CUACA DARI NAMA NEGARA
+   ========================================================================= */
+function generateWeather(name){
+const now = new Date();
+
+const hourSeed =
+`${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,"0")}-${String(now.getUTCDate()).padStart(2,"0")}-${String(now.getUTCHours()).padStart(2,"0")}`;
+
+const seed = hashString(
+  name.trim().toLowerCase() + hourSeed
+);
+  const rand = mulberry32(seed);
+
+  const temp = Math.round(randRange(rand, -15, 45));
+  const pool = conditionPoolForTemp(temp);
+  const conditionKey = pool[Math.floor(rand() * pool.length) % pool.length];
+
+const humidity   = randInt(rand, 20, 100);
+const windSpeed  = Math.round(randRange(rand, 2, 120));
+const pressure   = randInt(rand, 950, 1050);
+const uv         = Math.min(11, Math.max(0, Math.round(randRange(rand, 0, 11))));
+const visibility = Math.round(randRange(rand, 0.5, 20) * 10) / 10;
+
+const r = rand();
+
+let aqi;
+
+if (r < 0.70) {
+  aqi = randInt(rand, 8, 50);
+} else if (r < 0.90) {
+  aqi = randInt(rand, 51, 100);
+} else if (r < 0.97) {
+  aqi = randInt(rand, 101, 150);
+} else if (r < 0.99) {
+  aqi = randInt(rand, 151, 200);
+} else {
+  aqi = randInt(rand, 201, 320);
+}
+
+const rainChance = randInt(rand, 0, 100);
+
+  // dew point sederhana berdasarkan suhu & kelembapan (perkiraan Magnus)
+  const dewPoint = Math.round(temp - ((100 - humidity) / 5));
+
+  // feels like: dipengaruhi angin (wind chill) & kelembapan (heat index ringan)
+  let feelsLike = temp;
+  if(temp <= 10 && windSpeed > 10){
+    feelsLike = Math.round(temp - (windSpeed / 18));
+  }else if(temp >= 27 && humidity > 40){
+    feelsLike = Math.round(temp + (humidity - 40) / 22);
+  }
+
+  // sunrise / sunset deterministik
+  const sunriseH = randInt(rand, 4, 7);
+  const sunriseM = randInt(rand, 0, 59);
+  const sunsetH  = randInt(rand, 17, 20);
+  const sunsetM  = randInt(rand, 0, 59);
+  const pad = n => String(n).padStart(2,"0");
+
+  return {
+    temp, conditionKey,
+    condition: CONDITIONS[conditionKey],
+    humidity, windSpeed, pressure, uv, visibility, aqi, rainChance,
+    dewPoint, feelsLike,
+    sunrise: `${pad(sunriseH)}:${pad(sunriseM)}`,
+    sunset: `${pad(sunsetH)}:${pad(sunsetM)}`
+  };
+}
+
+function aqiLabel(aqi){
+  if(aqi <= 50) return { text:"Baik", color:"var(--good)" };
+  if(aqi <= 100) return { text:"Sedang", color:"var(--accent-gold)" };
+  if(aqi <= 150) return { text:"Tidak Sehat (Sensitif)", color:"#ff9d4d" };
+  if(aqi <= 200) return { text:"Tidak Sehat", color:"var(--danger)" };
+  return { text:"Berbahaya", color:"#b53434" };
+}
+
+/* =========================================================================
+   BAGIAN 6 — RENDER SCENE ANIMASI (dipakai kartu & modal)
+   ========================================================================= */
+function buildSceneMarkup(conditionKey, big){
+  const n = big ? 34 : 14; // jumlah partikel lebih banyak di modal
+  switch(conditionKey){
+    case "sunny":
+      return `<div class="sun-ray"></div><div class="sun-orb"></div>`;
+    case "partly-cloudy":
+    case "cloudy":
+      return `<div class="cloud c1"></div><div class="cloud c2"></div>`;
+    case "light-rain":
+    case "rain": {
+      let html = "";
+      for(let i=0;i<n;i++){
+        const left = (i / n) * 100 + (Math.random()*4-2);
+        const dur = 0.7 + Math.random()*0.6;
+        const delay = Math.random()*1.4;
+        html += `<span class="drop" style="left:${left}%;animation-duration:${dur}s;animation-delay:${delay}s;"></span>`;
+      }
+      return html;
+    }
+    case "thunderstorm":
+      return `<div class="cloud c1"></div><div class="bolt">⚡</div>`;
+    case "snow":
+    case "blizzard": {
+      let html = "";
+      for(let i=0;i<n;i++){
+        const left = (i / n) * 100 + (Math.random()*4-2);
+        const dur = 2 + Math.random()*2.5;
+        const delay = Math.random()*2.5;
+        html += `<span class="flake" style="left:${left}%;animation-duration:${dur}s;animation-delay:${delay}s;">❅</span>`;
+      }
+      return html;
+    }
+    case "fog":
+      return `<div class="fog-layer" style="top:24%;animation-duration:9s;"></div>
+              <div class="fog-layer" style="top:48%;animation-duration:12s;opacity:.6;"></div>
+              <div class="fog-layer" style="top:70%;animation-duration:7s;opacity:.4;"></div>`;
+    case "storm":
+    case "heavy-storm": {
+      let html = "";
+      for(let i=0;i<Math.round(n*0.6);i++){
+        const top = Math.random()*100;
+        const delay = Math.random()*1.6;
+        const w = 40 + Math.random()*60;
+        html += `<span class="wind-line" style="top:${top}%;width:${w}px;animation-delay:${delay}s;"></span>`;
+      }
+      return html;
+    }
+    case "volcanic-ash": {
+      let html = "";
+      for(let i=0;i<n;i++){
+        const left = (i / n) * 100 + (Math.random()*4-2);
+        const dur = 2.5 + Math.random()*2;
+        const delay = Math.random()*2;
+        html += `<span class="ash" style="left:${left}%;animation-duration:${dur}s;animation-delay:${delay}s;"></span>`;
+      }
+      return html;
+    }
+    case "coastal-wind":
+      return `<div class="wave" style="animation-delay:0s;"></div>
+              <div class="wave" style="bottom:6px;opacity:.5;animation-delay:-1.5s;"></div>`;
+    default:
+      return "";
+  }
+}
+
+/* =========================================================================
+   BAGIAN 7 — RENDER STATISTIK
+   ========================================================================= */
+function renderStats(list){
+  const bar = document.getElementById("statsBar");
+  if(list.length === 0){ bar.innerHTML = ""; return; }
+
+  const temps = list.map(c => c.weather.temp);
+  const avg = Math.round(temps.reduce((a,b)=>a+b,0) / temps.length);
+  const hottest = list.reduce((a,b)=> a.weather.temp > b.weather.temp ? a : b);
+  const coldest = list.reduce((a,b)=> a.weather.temp < b.weather.temp ? a : b);
+
+  const freq = {};
+  list.forEach(c => { freq[c.weather.conditionKey] = (freq[c.weather.conditionKey]||0)+1; });
+  const commonKey = Object.keys(freq).sort((a,b)=>freq[b]-freq[a])[0];
+  const common = CONDITIONS[commonKey];
+
+  bar.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Negara</div><div class="stat-value">${list.length}</div><div class="stat-sub">terpantau real-time</div></div>
+    <div class="stat-card"><div class="stat-label">Suhu Rata-rata</div><div class="stat-value">${avg}°C</div><div class="stat-sub">seluruh negara</div></div>
+    <div class="stat-card"><div class="stat-label">Terpanas</div><div class="stat-value">${hottest.weather.temp}°C</div><div class="stat-sub">${escapeHtml(hottest.name)}</div></div>
+    <div class="stat-card"><div class="stat-label">Terdingin</div><div class="stat-value">${coldest.weather.temp}°C</div><div class="stat-sub">${escapeHtml(coldest.name)}</div></div>
+    <div class="stat-card"><div class="stat-label">Kondisi Dominan</div><div class="stat-value" style="font-size:20px;">${common.icon} ${common.label}</div><div class="stat-sub">${freq[commonKey]} negara</div></div>
+  `;
+}
+
+/* =========================================================================
+   BAGIAN 8 — RENDER FILTER PILLS
+   ========================================================================= */
+function renderFilters(){
+  const row = document.getElementById("filterRow");
+  const keys = ["all", ...Object.keys(CONDITIONS)];
+  row.innerHTML = keys.map(k => {
+    const active = state.filterCondition === k ? "active" : "";
+    if(k === "all"){
+      return `<button class="pill ${active}" data-filter="all">🌐 Semua</button>`;
+    }
+    const c = CONDITIONS[k];
+    return `<button class="pill ${active}" data-filter="${k}">${c.icon} ${c.label}</button>`;
+  }).join("");
+
+  row.querySelectorAll(".pill").forEach(btn=>{
+    btn.addEventListener("click", (e)=>{
+      spawnRipple(e, btn);
+      state.filterCondition = btn.dataset.filter;
+      renderFilters();
+      renderGrid();
+    });
+  });
+}
+
+/* =========================================================================
+   BAGIAN 9 — RENDER GRID KARTU
+   ========================================================================= */
+function getProcessedList(){
+  let list = state.countries.map(c => ({ ...c, weather: generateWeather(c.name) }));
+
+  if(state.search.trim() !== ""){
+    const q = state.search.trim().toLowerCase();
+    list = list.filter(c => c.name.toLowerCase().includes(q));
+  }
+  if(state.filterCondition !== "all"){
+    list = list.filter(c => c.weather.conditionKey === state.filterCondition);
+  }
+
+  switch(state.sortBy){
+    case "name-asc":  list.sort((a,b)=> a.name.localeCompare(b.name)); break;
+    case "name-desc": list.sort((a,b)=> b.name.localeCompare(a.name)); break;
+    case "temp-desc": list.sort((a,b)=> b.weather.temp - a.weather.temp); break;
+    case "temp-asc":  list.sort((a,b)=> a.weather.temp - b.weather.temp); break;
+  }
+  return list;
+}
+
+function renderGrid(){
+  const grid = document.getElementById("grid");
+  const fullList = state.countries.map(c => ({ ...c, weather: generateWeather(c.name) }));
+  renderStats(fullList);
+
+  const list = getProcessedList();
+  document.getElementById("footCount").textContent = `${state.countries.length} negara terpantau`;
+
+  if(!state.loaded){
+    grid.innerHTML = Array(6).fill('<div class="skeleton-card"></div>').join("");
+    return;
+  }
+
+  if(list.length === 0){
+    grid.innerHTML = `<div class="empty-state">
+      <h3>Tidak ada negara ditemukan</h3>
+      <p>Coba ubah kata kunci pencarian atau filter kondisi cuaca.</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map((c, idx) => cardTemplate(c, idx)).join("");
+
+  grid.querySelectorAll(".w-card").forEach(card=>{
+    card.addEventListener("click", (e)=>{
+      spawnRipple(e, card);
+      const id = card.dataset.id;
+      const country = list.find(c => c.id === id);
+      if(country) openModal(country);
+    });
+  });
+}
+
+function cardTemplate(c, idx){
+  const w = c.weather;
+  const cond = w.condition;
+  const aq = aqiLabel(w.aqi);
+  return `
+  <article class="w-card" data-id="${c.id}" style="animation-delay:${Math.min(idx*45,400)}ms;">
+    <div class="w-scene ${cond.scene}">
+      ${buildSceneMarkup(w.conditionKey, false)}
+      <div class="scene-icon">${cond.icon}</div>
+    </div>
+    <div class="w-body">
+      <div class="w-country">${escapeHtml(c.name)}</div>
+      <div class="w-condition">${cond.label}</div>
+      <div class="w-temp">${w.temp}<small>°C</small></div>
+      <div class="w-stats-mini">
+        <div class="mini-stat"><span class="mi-ico">💧</span>Humidity <b>${w.humidity}%</b></div>
+        <div class="mini-stat"><span class="mi-ico">💨</span>Wind <b>${w.windSpeed} km/j</b></div>
+        <div class="mini-stat"><span class="mi-ico">🧭</span>Pressure <b>${w.pressure} hPa</b></div>
+        <div class="mini-stat"><span class="mi-ico">👁️</span>Visib. <b>${w.visibility} km</b></div>
+        <div class="mini-stat"><span class="mi-ico">🔆</span>UV <b>${w.uv}</b></div>
+        <div class="mini-stat"><span class="mi-ico">🌡️</span>Feels <b>${w.feelsLike}°C</b></div>
+        <div class="mini-stat"><span class="mi-ico">🌅</span>Sunrise <b>${w.sunrise}</b></div>
+        <div class="mini-stat"><span class="mi-ico">🌇</span>Sunset <b>${w.sunset}</b></div>
+        <div class="mini-stat"><span class="mi-ico">🌧️</span>Rain <b>${w.rainChance}%</b></div>
+        <div class="mini-stat"><span class="mi-ico">🫧</span>AQI <b style="color:${aq.color}">${w.aqi}</b></div>
+      </div>
+    </div>
+  </article>`;
+}
+
+/* =========================================================================
+   BAGIAN 10 — MODAL DETAIL NEGARA
+   ========================================================================= */
+function openModal(country){
+  const w = country.weather;
+  const cond = w.condition;
+  const aq = aqiLabel(w.aqi);
+
+  const hero = document.getElementById("modalHero");
+  hero.className = "modal-hero " + cond.scene;
+  hero.innerHTML = `
+    <button class="modal-close" id="modalClose">✕</button>
+    ${buildSceneMarkup(w.conditionKey, true)}
+    <div class="scene-icon" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:3;">${cond.icon}</div>
+  `;
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+
+  const desc = country.description && country.description.trim() !== ""
+    ? country.description
+    : "Belum ada deskripsi untuk negara ini.";
+
+  const now = new Date();
+  const updated = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+  document.getElementById("modalContent").innerHTML = `
+    <div class="modal-title fade-in">${escapeHtml(country.name)}</div>
+    <div class="modal-updated fade-in">Diperbarui pukul ${updated} • sumber: Firestore realtime</div>
+    <p class="modal-desc fade-in">${escapeHtml(desc)}</p>
+
+    <div class="modal-temp-row fade-in">
+      <div class="big-temp">${w.temp}°C</div>
+      <div class="cond-badge">${cond.icon} ${cond.label}</div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-item slide-in"><div class="dl">Feels Like</div><div class="dv">${w.feelsLike}°C</div></div>
+      <div class="detail-item slide-in"><div class="dl">Humidity</div><div class="dv">${w.humidity}%</div></div>
+      <div class="detail-item slide-in"><div class="dl">Wind Speed</div><div class="dv">${w.windSpeed} km/j</div></div>
+      <div class="detail-item slide-in"><div class="dl">Pressure</div><div class="dv">${w.pressure} hPa</div></div>
+      <div class="detail-item slide-in"><div class="dl">UV Index</div><div class="dv">${w.uv}</div></div>
+      <div class="detail-item slide-in"><div class="dl">Visibility</div><div class="dv">${w.visibility} km</div></div>
+      <div class="detail-item slide-in"><div class="dl">Dew Point</div><div class="dv">${w.dewPoint}°C</div></div>
+      <div class="detail-item slide-in"><div class="dl">Chance of Rain</div><div class="dv">${w.rainChance}%</div></div>
+      <div class="detail-item slide-in"><div class="dl">Air Quality</div><div class="dv" style="color:${aq.color}">${w.aqi} · ${aq.text}</div></div>
+      <div class="detail-item slide-in"><div class="dl">Sunrise</div><div class="dv">${w.sunrise}</div></div>
+      <div class="detail-item slide-in"><div class="dl">Sunset</div><div class="dv">${w.sunset}</div></div>
+    </div>
+  `;
+
+  document.getElementById("modalOverlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal(){
+  document.getElementById("modalOverlay").classList.remove("open");
+  document.body.style.overflow = "";
+}
+document.getElementById("modalOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "modalOverlay") closeModal();
+});
+document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closeModal(); });
+
+/* =========================================================================
+   BAGIAN 11 — RIPPLE EFFECT (dipakai tombol & kartu)
+   ========================================================================= */
+function spawnRipple(e, el){
+  const rect = el.getBoundingClientRect();
+  const ripple = document.createElement("span");
+  const size = Math.max(rect.width, rect.height);
+  ripple.className = "ripple";
+  ripple.style.width = ripple.style.height = size + "px";
+  ripple.style.left = (e.clientX - rect.left - size/2) + "px";
+  ripple.style.top = (e.clientY - rect.top - size/2) + "px";
+  const prevPos = getComputedStyle(el).position;
+  if(prevPos === "static") el.style.position = "relative";
+  el.style.overflow = el.style.overflow || "hidden";
+  el.appendChild(ripple);
+  setTimeout(()=> ripple.remove(), 650);
+}
+document.querySelectorAll(".icon-btn, .theme-toggle").forEach(btn=>{
+  btn.addEventListener("click", (e)=> spawnRipple(e, btn));
+});
+
+/* =========================================================================
+   BAGIAN 12 — SEARCH, SORT, DARK MODE, REFRESH
+   ========================================================================= */
+document.getElementById("searchInput").addEventListener("input", (e)=>{
+  state.search = e.target.value;
+  renderGrid();
+});
+
+document.getElementById("sortSelect").addEventListener("change", (e)=>{
+  state.sortBy = e.target.value;
+  renderGrid();
+});
+
+document.getElementById("themeToggle").addEventListener("click", ()=>{
+  state.darkMode = !state.darkMode;
+  document.documentElement.setAttribute("data-theme", state.darkMode ? "dark" : "light");
+  document.querySelector("#themeToggle .knob").textContent = state.darkMode ? "🌙" : "☀️";
+  showToast(state.darkMode ? "Mode gelap diaktifkan" : "Mode terang diaktifkan");
+});
+
+document.getElementById("refreshBtn").addEventListener("click", (e)=>{
+  spawnRipple(e, e.currentTarget);
+  manualRefresh();
+});
+
+function manualRefresh(){
+  const btn = document.getElementById("refreshBtn");
+  btn.classList.add("spinning");
+  renderGrid();
+  setTimeout(()=>{
+    btn.classList.remove("spinning");
+    showToast("Data cuaca disegarkan");
+  }, 650);
+}
+
+/* =========================================================================
+   BAGIAN 13 — TOAST NOTIFIKASI
+   ========================================================================= */
+let toastTimer = null;
+function showToast(msg){
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> toast.classList.remove("show"), 2200);
+}
+
+/* =========================================================================
+   BAGIAN 14 — SCROLL TO TOP
+   ========================================================================= */
+const scrollBtn = document.getElementById("scrollTopBtn");
+window.addEventListener("scroll", ()=>{
+  if(window.scrollY > 400) scrollBtn.classList.add("show");
+  else scrollBtn.classList.remove("show");
+});
+scrollBtn.addEventListener("click", (e)=>{
+  spawnRipple(e, scrollBtn);
+  window.scrollTo({ top:0, behavior:"smooth" });
+});
+
+/* =========================================================================
+   BAGIAN 15 — PULL TO REFRESH (mobile / touch)
+   ========================================================================= */
+let touchStartY = 0;
+let pulling = false;
+const ptrIndicator = document.getElementById("ptrIndicator");
+const PTR_THRESHOLD = 80;
+
+document.addEventListener("touchstart", (e)=>{
+  if(window.scrollY === 0){
+    touchStartY = e.touches[0].clientY;
+    pulling = true;
+  }
+}, { passive:true });
+
+document.addEventListener("touchmove", (e)=>{
+  if(!pulling) return;
+  const diff = e.touches[0].clientY - touchStartY;
+  if(diff > 0 && window.scrollY === 0){
+    const dist = Math.min(diff, 120);
+    ptrIndicator.classList.add("visible");
+    ptrIndicator.style.transform = `translate(-50%, ${dist - 60}px)`;
+    if(dist > PTR_THRESHOLD){
+      ptrIndicator.classList.add("spin");
+    }else{
+      ptrIndicator.classList.remove("spin");
+    }
+  }
+}, { passive:true });
+
+document.addEventListener("touchend", (e)=>{
+  if(!pulling) return;
+  pulling = false;
+  const diff = (e.changedTouches[0].clientY - touchStartY);
+  ptrIndicator.style.transform = "translate(-50%, -60px)";
+  ptrIndicator.classList.remove("visible");
+  if(diff > PTR_THRESHOLD){
+    manualRefresh();
+  }
+  ptrIndicator.classList.remove("spin");
+}, { passive:true });
+
+/* =========================================================================
+   BAGIAN 16 — JAM FOOTER (live clock)
+   ========================================================================= */
+function tickClock(){
+  const el = document.getElementById("footClock");
+  const now = new Date();
+  el.textContent = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+/* =========================================================================
+   BAGIAN 17 — UTIL
+   ========================================================================= */
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
+}
+
+/* =========================================================================
+   BAGIAN 18 — KONEKSI FIRESTORE REALTIME
+   Mengambil seluruh dokumen pada collection "countries" secara realtime.
+   Data cuaca TIDAK diambil dari Firestore — dihasilkan otomatis dari nama.
+   ========================================================================= */
+function startRealtimeListener(){
+  if(!db){
+    showToast("Firebase belum dikonfigurasi. Isi firebaseConfig di bagian atas skrip.");
+    state.loaded = true;
+    renderGrid();
+    return;
+  }
+
+  try{
+    const countriesRef = collection(db, "countries");
+    const q = query(countriesRef, orderBy("createdAt", "desc"));
+
+    onSnapshot(q, (snapshot)=>{
+      state.countries = snapshot.docs.map(doc=>{
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name || "Negara Tanpa Nama",
+          description: data.description || "",
+          createdAt: data.createdAt || null
+        };
+      });
+      state.loaded = true;
+      renderFilters();
+      renderGrid();
+    }, (error)=>{
+      console.error("Gagal memuat data Firestore:", error);
+      showToast("Gagal memuat data. Periksa koneksi / konfigurasi Database");
+      state.loaded = true;
+      renderGrid();
+    });
+  }catch(err){
+    console.error(err);
+    state.loaded = true;
+    renderGrid();
+  }
+}
+
+/* =========================================================================
+   BAGIAN 19 — INISIALISASI APLIKASI
+   ========================================================================= */
+function init(){
+  renderFilters();
+  renderGrid();
+  startRealtimeListener();
+}
+init();
+
+  function scheduleHourlyUpdate() {
+  const now = new Date();
+  const msUntilNextHour =
+    (60 - now.getMinutes()) * 60 * 1000 -
+    now.getSeconds() * 1000 -
+    now.getMilliseconds();
+
+  setTimeout(() => {
+    renderGrid();          // Perbarui semua cuaca
+    scheduleHourlyUpdate(); // Jadwalkan lagi untuk jam berikutnya
+  }, msUntilNextHour);
+}
+
+scheduleHourlyUpdate();
+</script>
+</body>
+</html>

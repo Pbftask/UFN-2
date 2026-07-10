@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kabar Kini — Portal Berita Terkini</title>
+<meta name="description" content="Portal berita modern: politik, ekonomi, teknologi, olahraga, hiburan, kesehatan, dan dunia.">
+
+<!-- Google Fonts: Poppins (utama) + JetBrains Mono (utilitas untuk waktu/label) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* ============================================================
+   1. DESIGN TOKENS — palet warna, tipografi, radius, shadow
+   ============================================================ */
+:root{
+  /* --- Light theme --- */
+  --bg: #F7F8FB;
+  --surface: #FFFFFF;
+  --surface-2: #F0F2F7;
+  --ink: #12172B;
+  --ink-soft: #565C74;
+  --ink-faint: #8A90A6;
+  --line: #E7E9F2;
+  --accent: #D6293E;        /* merah editorial — breaking / like */
+  --accent-ink: #ffffff;
+  --accent-2: #E8A33D;      /* amber — sorotan */
+  --accent-soft: #FCE7E9;
+  --shadow: 0 8px 24px -12px rgba(18,23,43,.18);
+  --shadow-lg: 0 20px 48px -16px rgba(18,23,43,.24);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --font-ui: 'Poppins', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Warna kategori — dipakai sebagai "spine" konsisten di seluruh situs */
+  --cat-politik: #6C63FF;
+  --cat-ekonomi: #1FA37B;
+  --cat-teknologi: #1F6FEB;
+  --cat-olahraga: #E8A33D;
+  --cat-hiburan: #D6293E;
+  --cat-kesehatan: #17A398;
+  --cat-dunia: #7A5CFA;
+}
+body.dark{
+  --bg: #0B0E19;
+  --surface: #151A2B;
+  --surface-2: #1D2237;
+  --ink: #EDEFF7;
+  --ink-soft: #A6ACC4;
+  --ink-faint: #6B718C;
+  --line: #262C46;
+  --accent: #FF5468;
+  --accent-ink: #12172B;
+  --accent-2: #F0B25E;
+  --accent-soft: #33202A;
+  --shadow: 0 8px 24px -12px rgba(0,0,0,.5);
+  --shadow-lg: 0 24px 56px -16px rgba(0,0,0,.6);
+}
+
+/* ============================================================
+   2. RESET & BASE
+   ============================================================ */
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+html{ scroll-behavior:smooth; }
+body{
+  font-family:var(--font-ui);
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.55;
+  transition:background .35s ease, color .35s ease;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+img{ max-width:100%; display:block; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+input,textarea{ font-family:inherit; }
+ul{ list-style:none; }
+::selection{ background:var(--accent); color:var(--accent-ink); }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:4px; }
+.container{ max-width:1240px; margin:0 auto; padding:0 20px; }
+@media(prefers-reduced-motion: reduce){ *{ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+
+/* Scrollbar tipis */
+::-webkit-scrollbar{ width:9px; height:9px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:var(--line); border-radius:20px; }
+
+/* ============================================================
+   3. CONFIG BANNER (muncul jika Firebase belum dikonfigurasi)
+   ============================================================ */
+.config-banner{
+  background:linear-gradient(90deg,#3A1418,#5B1B22);
+  color:#FFD9DC; font-size:.82rem; text-align:center;
+  padding:9px 16px; display:none; font-weight:500;
+}
+.config-banner.show{ display:block; }
+.config-banner code{ background:rgba(255,255,255,.12); padding:1px 6px; border-radius:4px; font-family:var(--font-mono); }
+
+/* ============================================================
+   4. HEADER
+   ============================================================ */
+header.site-header{
+  position:sticky; top:0; z-index:100;
+  background:color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter:blur(14px) saturate(1.4);
+  border-bottom:1px solid var(--line);
+  transition:background .35s ease, border-color .35s ease;
+}
+.header-inner{
+  display:flex; align-items:center; gap:22px;
+  padding:14px 20px; max-width:1240px; margin:0 auto;
+}
+.logo{ display:flex; align-items:center; gap:9px; font-weight:800; font-size:1.32rem; letter-spacing:-.02em; flex-shrink:0; }
+.logo .dot{ color:var(--accent); }
+.logo-mark{
+  width:34px; height:34px; border-radius:9px;
+  background:linear-gradient(145deg, var(--accent), #8E1520);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:1rem; box-shadow:var(--shadow);
+}
+nav.main-nav{ display:flex; gap:4px; flex:1; overflow-x:auto; scrollbar-width:none; }
+nav.main-nav::-webkit-scrollbar{ display:none; }
+nav.main-nav button{
+  padding:8px 13px; border-radius:20px; font-size:.86rem; font-weight:500;
+  color:var(--ink-soft); white-space:nowrap; transition:.2s;
+  border:1px solid transparent;
+}
+nav.main-nav button:hover{ color:var(--ink); background:var(--surface-2); }
+nav.main-nav button.active{
+  color:var(--accent); background:var(--accent-soft); border-color:color-mix(in srgb, var(--accent) 30%, transparent); font-weight:600;
+}
+.header-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.search-box{
+  display:flex; align-items:center; gap:8px;
+  background:var(--surface-2); border:1px solid var(--line);
+  border-radius:20px; padding:8px 14px; width:210px; transition:.25s;
+}
+.search-box:focus-within{ width:260px; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+.search-box input{ background:none; border:none; color:var(--ink); font-size:.85rem; width:100%; }
+.search-box input::placeholder{ color:var(--ink-faint); }
+.search-box i{ color:var(--ink-faint); font-size:.85rem; }
+.icon-btn{
+  width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--surface-2); color:var(--ink-soft); font-size:.95rem; transition:.2s; flex-shrink:0;
+  border:1px solid var(--line);
+}
+.icon-btn:hover{ color:var(--accent); border-color:var(--accent); transform:translateY(-1px); }
+.hamburger{ display:none; }
+
+/* Breaking news ribbon */
+.breaking-bar{
+  background:var(--accent); color:var(--accent-ink);
+  display:flex; align-items:center; overflow:hidden; position:relative;
+}
+.breaking-tag{
+  background:#8E1520; color:#fff; font-weight:800; font-size:.72rem; letter-spacing:.06em;
+  padding:8px 16px; flex-shrink:0; display:flex; align-items:center; gap:6px; z-index:2;
+  text-transform:uppercase;
+}
+.breaking-track{ flex:1; overflow:hidden; white-space:nowrap; position:relative; height:34px; }
+.breaking-track ul{ display:inline-flex; gap:60px; position:absolute; white-space:nowrap; animation:marquee 28s linear infinite; padding-left:100%; align-items:center; height:100%; }
+.breaking-track:hover ul{ animation-play-state:paused; }
+.breaking-track li{ font-size:.83rem; font-weight:500; display:flex; align-items:center; gap:8px; }
+@keyframes marquee{ from{ transform:translateX(0); } to{ transform:translateX(-100%); } }
+
+/* ============================================================
+   5. LAYOUT UTAMA
+   ============================================================ */
+main{ padding:28px 0 80px; }
+.layout-grid{ display:grid; grid-template-columns:1fr 320px; gap:28px; align-items:start; }
+.section-title{
+  display:flex; align-items:center; gap:10px; margin:38px 0 18px;
+  font-size:1.18rem; font-weight:700; letter-spacing:-.01em;
+}
+.section-title i{ color:var(--accent); }
+.section-title::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+/* Category chip helper */
+.cat-chip{
+  display:inline-flex; align-items:center; gap:5px; font-size:.68rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.04em; padding:4px 10px; border-radius:20px; color:#fff;
+}
+.cat-chip::before{ content:'●'; font-size:.55rem; opacity:.85; }
+
+/* --- Hero headline --- */
+.hero{
+  position:relative; border-radius:20px; overflow:hidden; min-height:440px;
+  display:flex; align-items:flex-end; background:var(--surface-2); box-shadow:var(--shadow-lg);
+  cursor:pointer; isolation:isolate;
+}
+.hero img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; transition:transform .6s ease; }
+.hero:hover img{ transform:scale(1.045); }
+.hero::before{
+  content:''; position:absolute; inset:0; z-index:1;
+  background:linear-gradient(0deg, rgba(6,8,16,.92) 8%, rgba(6,8,16,.35) 55%, rgba(6,8,16,0) 85%);
+}
+.hero-content{ position:relative; z-index:2; padding:34px; color:#fff; max-width:760px; }
+.hero-content .cat-chip{ margin-bottom:14px; background:var(--accent); }
+.hero-content h1{ font-size:clamp(1.5rem,3.4vw,2.5rem); font-weight:800; line-height:1.18; letter-spacing:-.02em; margin-bottom:12px; }
+.hero-content p{ color:rgba(255,255,255,.82); font-size:.95rem; max-width:600px; margin-bottom:16px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.hero-meta{ display:flex; align-items:center; gap:16px; font-size:.82rem; color:rgba(255,255,255,.75); font-family:var(--font-mono); flex-wrap:wrap; }
+.hero-meta span{ display:flex; align-items:center; gap:6px; }
+
+/* --- News grid / cards --- */
+.news-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+.news-card{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  overflow:hidden; display:flex; flex-direction:column; box-shadow:var(--shadow);
+  transition:transform .28s ease, box-shadow .28s ease, border-color .28s; cursor:pointer;
+  border-left:4px solid var(--card-cat, var(--accent));
+  animation:fadeUp .5s ease both;
+}
+.news-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow-lg); border-color:var(--card-cat,var(--accent)); }
+.news-card .thumb{ width:100%; aspect-ratio:16/10; overflow:hidden; background:var(--surface-2); }
+.news-card .thumb img{ width:100%; height:100%; object-fit:cover; transition:transform .5s; }
+.news-card:hover .thumb img{ transform:scale(1.08); }
+.news-card .body{ padding:15px 16px 17px; display:flex; flex-direction:column; gap:9px; flex:1; }
+.news-card .cat-chip{ align-self:flex-start; }
+.news-card h3{ font-size:1.02rem; font-weight:700; line-height:1.34; letter-spacing:-.01em; }
+.news-card .excerpt{ font-size:.83rem; color:var(--ink-soft); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.news-card .meta{ margin-top:auto; display:flex; align-items:center; justify-content:space-between; font-size:.72rem; color:var(--ink-faint); font-family:var(--font-mono); padding-top:8px; border-top:1px dashed var(--line); }
+.news-card .meta .stat{ display:flex; align-items:center; gap:5px; }
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
+
+.load-sentinel{ height:1px; }
+.end-msg{ text-align:center; color:var(--ink-faint); font-size:.85rem; padding:24px 0; display:none; }
+.load-more-spin{ display:flex; justify-content:center; padding:20px 0; color:var(--ink-faint); font-size:1.3rem; }
+
+/* Skeleton loading */
+.skeleton{ position:relative; overflow:hidden; background:var(--surface-2); }
+.skeleton::after{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--ink) 6%, transparent), transparent);
+  animation:shimmer 1.4s infinite;
+}
+@keyframes shimmer{ from{ transform:translateX(-100%); } to{ transform:translateX(100%); } }
+.sk-card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+.sk-thumb{ aspect-ratio:16/10; }
+.sk-line{ height:11px; border-radius:6px; margin:14px 16px; }
+.sk-line.w60{ width:60%; }
+.sk-line.w40{ width:40%; margin-bottom:16px; }
+
+/* --- Sidebar --- */
+.sidebar{ display:flex; flex-direction:column; gap:24px; position:sticky; top:158px; }
+.widget{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); }
+.widget h4{ font-size:.95rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.widget h4 i{ color:var(--accent-2); }
+.popular-item{ display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); cursor:pointer; align-items:flex-start; }
+.popular-item:last-child{ border-bottom:none; padding-bottom:0; }
+.popular-rank{ font-family:var(--font-mono); font-weight:800; font-size:1.3rem; color:var(--line); width:26px; flex-shrink:0; transition:.2s; }
+.popular-item:hover .popular-rank{ color:var(--accent); }
+.popular-item .p-body h5{ font-size:.85rem; font-weight:600; line-height:1.35; margin-bottom:5px; }
+.popular-item .p-body .meta{ font-size:.7rem; color:var(--ink-faint); font-family:var(--font-mono); display:flex; gap:10px; }
+.cat-list{ display:flex; flex-wrap:wrap; gap:8px; }
+.cat-list button{
+  font-size:.78rem; padding:7px 12px; border-radius:20px; background:var(--surface-2); color:var(--ink-soft);
+  border:1px solid var(--line); font-weight:500; transition:.2s;
+}
+.cat-list button:hover{ border-color:var(--accent); color:var(--accent); }
+.cat-list button.active{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.newsletter-widget{ background:linear-gradient(145deg, var(--accent), #8E1520); color:#fff; }
+.newsletter-widget h4{ color:#fff; }
+.newsletter-widget p{ font-size:.82rem; opacity:.9; margin-bottom:12px; }
+.newsletter-widget input{ width:100%; padding:10px 12px; border-radius:8px; border:none; margin-bottom:8px; font-size:.83rem; }
+.newsletter-widget button.sub-btn{ width:100%; background:#fff; color:var(--accent); font-weight:700; padding:10px; border-radius:8px; font-size:.83rem; }
+
+/* ============================================================
+   6. ARTICLE VIEW
+   ============================================================ */
+.article-view{ display:none; }
+.article-view.show{ display:block; animation:fadeIn .4s ease; }
+.home-view.hide{ display:none; }
+@keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+.back-btn{ display:inline-flex; align-items:center; gap:8px; font-size:.85rem; font-weight:600; color:var(--ink-soft); margin-bottom:20px; padding:8px 14px; border-radius:20px; background:var(--surface); border:1px solid var(--line); }
+.back-btn:hover{ color:var(--accent); border-color:var(--accent); }
+.article-wrap{ display:grid; grid-template-columns:1fr 300px; gap:32px; align-items:start; }
+.article-header .cat-chip{ margin-bottom:14px; }
+.article-header h1{ font-size:clamp(1.5rem,3.6vw,2.35rem); font-weight:800; line-height:1.22; letter-spacing:-.02em; margin-bottom:16px; }
+.article-byline{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding-bottom:20px; margin-bottom:20px; border-bottom:1px solid var(--line); }
+.author-avatar{ width:42px; height:42px; border-radius:50%; background:linear-gradient(145deg,var(--accent-2),var(--accent)); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; }
+.author-info b{ font-size:.9rem; display:block; }
+.author-info span{ font-size:.75rem; color:var(--ink-faint); font-family:var(--font-mono); display:flex; gap:10px; flex-wrap:wrap; margin-top:2px; }
+.article-hero-img{ width:100%; border-radius:var(--radius); overflow:hidden; margin-bottom:22px; aspect-ratio:16/8; background:var(--surface-2); }
+.article-hero-img img{ width:100%; height:100%; object-fit:cover; }
+.article-body{ font-size:1.02rem; line-height:1.9; color:var(--ink); white-space:pre-line; }
+.article-body p{ margin-bottom:16px; }
+
+.action-bar{ display:flex; align-items:center; gap:10px; margin:26px 0; padding:14px 6px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+.action-btn{
+  display:flex; align-items:center; gap:7px; padding:9px 15px; border-radius:20px; background:var(--surface-2);
+  border:1px solid var(--line); font-size:.83rem; font-weight:600; color:var(--ink-soft); transition:.2s;
+}
+.action-btn:hover{ border-color:var(--accent); color:var(--accent); }
+.action-btn.like-btn.active{ background:var(--accent-soft); color:var(--accent); border-color:var(--accent); }
+.action-btn.like-btn i{ transition:transform .3s; }
+.action-btn.like-btn.pulse i{ animation:heartPulse .45s ease; }
+@keyframes heartPulse{ 0%{transform:scale(1);} 35%{transform:scale(1.5);} 60%{transform:scale(.9);} 100%{transform:scale(1);} }
+.action-btn.bookmark-btn.active{ background:#FFF3D6; color:#B9800E; border-color:#E8A33D; }
+body.dark .action-btn.bookmark-btn.active{ background:#33290F; color:#F0B25E; }
+
+/* Reactions */
+.reactions-box{ display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 8px; }
+.reaction-btn{
+  display:flex; align-items:center; gap:6px; padding:8px 13px; border-radius:20px;
+  background:var(--surface-2); border:1px solid var(--line); font-size:.85rem; font-weight:600; transition:.2s;
+}
+.reaction-btn span.emo{ font-size:1.05rem; transition:transform .25s; }
+.reaction-btn:hover span.emo{ transform:scale(1.25) rotate(-8deg); }
+.reaction-btn.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+.reaction-btn.bump span.emo{ animation:bump .4s ease; }
+@keyframes bump{ 0%{transform:scale(1);} 40%{transform:scale(1.5);} 100%{transform:scale(1);} }
+
+/* Comments */
+.comments-section{ margin-top:34px; }
+.comment-form{ background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:22px; }
+.comment-form .row{ display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.comment-form input, .comment-form textarea{
+  background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:10px 12px; color:var(--ink); font-size:.86rem; width:100%;
+}
+.comment-form textarea{ resize:vertical; min-height:70px; }
+.comment-form .actions{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+.reply-hint{ font-size:.78rem; color:var(--accent); display:flex; align-items:center; gap:6px; }
+.btn-primary{ background:var(--accent); color:var(--accent-ink); font-weight:700; padding:9px 18px; border-radius:20px; font-size:.85rem; display:inline-flex; align-items:center; gap:7px; transition:.2s; }
+.btn-primary:hover{ filter:brightness(1.08); transform:translateY(-1px); }
+.btn-ghost{ padding:9px 14px; border-radius:20px; font-size:.8rem; font-weight:600; color:var(--ink-faint); }
+.btn-ghost:hover{ color:var(--ink); }
+
+.comment-item{ padding:14px 0; border-bottom:1px solid var(--line); animation:fadeUp .4s ease both; }
+.comment-item .c-head{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.c-avatar{ width:34px; height:34px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.85rem; color:var(--accent); flex-shrink:0; border:1px solid var(--line); }
+.c-name{ font-weight:700; font-size:.87rem; }
+.c-time{ font-size:.72rem; color:var(--ink-faint); font-family:var(--font-mono); }
+.c-text{ font-size:.88rem; color:var(--ink); margin:4px 0 8px 44px; line-height:1.6; }
+.c-text .mention{ color:var(--accent); font-weight:600; }
+.c-actions{ display:flex; gap:14px; margin-left:44px; font-size:.76rem; color:var(--ink-faint); flex-wrap:wrap; }
+.c-actions button{ display:flex; align-items:center; gap:5px; font-weight:600; transition:.2s; }
+.c-actions button:hover{ color:var(--accent); }
+.c-actions button.liked{ color:var(--accent); }
+.c-actions button.liked i{ font-weight:900; }
+.replies{ margin-left:44px; border-left:2px solid var(--line); padding-left:16px; margin-top:10px; }
+.comment-count-badge{ font-family:var(--font-mono); font-size:.78rem; color:var(--ink-faint); }
+
+/* --- Sidebar in article --- */
+.toc-widget ul{ display:flex; flex-direction:column; gap:8px; }
+
+/* ============================================================
+   7. FLOATING ADD BUTTON + MODAL
+   ============================================================ */
+.fab{
+  position:fixed; bottom:26px; right:26px; width:58px; height:58px; border-radius:50%;
+  background:var(--accent); color:var(--accent-ink); font-size:1.4rem; display:flex; align-items:center; justify-content:center;
+  box-shadow:0 12px 28px -8px rgba(214,41,62,.55); z-index:200; transition:.25s;
+}
+.fab:hover{ transform:rotate(90deg) scale(1.06); }
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(6,8,16,.6); backdrop-filter:blur(3px); z-index:300;
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.show{ display:flex; animation:fadeIn .25s ease; }
+.modal-box{
+  background:var(--surface); border-radius:18px; width:100%; max-width:560px; max-height:88vh; overflow-y:auto;
+  padding:26px; box-shadow:var(--shadow-lg); animation:modalIn .3s ease;
+}
+@keyframes modalIn{ from{ opacity:0; transform:translateY(18px) scale(.97); } to{ opacity:1; transform:none; } }
+.modal-box h3{ font-size:1.15rem; font-weight:800; margin-bottom:18px; display:flex; align-items:center; justify-content:space-between; }
+.modal-box .field{ margin-bottom:14px; }
+.modal-box label{ font-size:.8rem; font-weight:600; color:var(--ink-soft); margin-bottom:6px; display:block; }
+.modal-box input, .modal-box select, .modal-box textarea{
+  width:100%; padding:11px 13px; border-radius:9px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); font-size:.88rem;
+}
+.modal-box textarea{ min-height:140px; resize:vertical; }
+.modal-box .preview-img{ width:100%; aspect-ratio:16/9; border-radius:9px; overflow:hidden; background:var(--surface-2); margin-top:8px; border:1px dashed var(--line); display:flex; align-items:center; justify-content:center; color:var(--ink-faint); font-size:.8rem; }
+.modal-box .preview-img img{ width:100%; height:100%; object-fit:cover; }
+.modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+.close-x{ font-size:1.1rem; color:var(--ink-faint); }
+.close-x:hover{ color:var(--accent); }
+
+/* Toast */
+#toast-wrap{ position:fixed; bottom:26px; left:26px; z-index:400; display:flex; flex-direction:column; gap:10px; }
+.toast{
+  background:var(--ink); color:var(--bg); padding:12px 18px; border-radius:10px; font-size:.85rem; font-weight:500;
+  display:flex; align-items:center; gap:10px; box-shadow:var(--shadow-lg); animation:toastIn .3s ease;
+}
+@keyframes toastIn{ from{ opacity:0; transform:translateX(-16px);} to{opacity:1; transform:none;} }
+.toast.out{ animation:toastOut .3s ease forwards; }
+@keyframes toastOut{ to{ opacity:0; transform:translateX(-16px); } }
+
+/* Empty state */
+.empty-state{ text-align:center; padding:60px 20px; color:var(--ink-faint); grid-column:1/-1; }
+.empty-state i{ font-size:2.2rem; margin-bottom:12px; display:block; }
+
+/* Footer */
+footer{ border-top:1px solid var(--line); padding:36px 0; margin-top:40px; text-align:center; color:var(--ink-faint); font-size:.82rem; }
+footer b{ color:var(--ink); }
+
+/* ============================================================
+   8. RESPONSIVE
+   ============================================================ */
+@media(max-width:980px){
+  .layout-grid{ grid-template-columns:1fr; }
+  .sidebar{ position:static; flex-direction:row; flex-wrap:wrap; }
+  .sidebar .widget{ flex:1; min-width:260px; }
+  .article-wrap{ grid-template-columns:1fr; }
+}
+@media(max-width:760px){
+  .search-box{ display:none; }
+  nav.main-nav{ display:none; }
+  .hamburger{ display:flex; }
+  .news-grid{ grid-template-columns:1fr; }
+  .hero{ min-height:340px; }
+  .header-inner{ padding:12px 16px; }
+  main{ padding-top:16px; }
+  .sidebar{ flex-direction:column; }
+}
+nav.main-nav.mobile-open{ display:flex; position:absolute; top:100%; left:0; right:0; background:var(--surface); flex-direction:column; padding:10px 16px 16px; border-bottom:1px solid var(--line); box-shadow:var(--shadow); }
+nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radius:8px; }
+
+.gok{
+  background:red;
+}
+
+  .online-counter{
+  display: flex;
+  flex-direction: row;
+  margin-top:5px;
+}
+
+.jumlah{
+  margin-left:5px;
+  margin-right: 5px;
+}
+  
+.opin{
+  background:#00ff1d;
+  color:transparent;
+  border-radius:50%;
+  width: 10px;
+  height:10px;
+  margin-left:125px;
+  margin-top:2px;
+}
+</style>
+</head>
+<body>
+
+<!-- Banner peringatan konfigurasi Firebase -->
+<div class="config-banner" id="configBanner">
+  ⚠️ Database belum dikonfigurasi. Isi objek <code>firebaseConfig</code> di bagian bawah file HTML ini agar data, komentar, like, dan reaksi dapat berfungsi.
+</div>
+
+<!-- ============================== HEADER ============================== -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark"><i class="fa-solid fa-bolt"></i></div>
+      Kabar<span class="dot">Kini</span>
+    </div>
+           
+    <nav class="main-nav" id="mainNav"></nav>
+    <div class="header-actions">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" placeholder="Cari berita...">
+      </div>
+      <button class="icon-btn" id="themeToggle" title="Ganti tema"><i class="fa-solid fa-moon"></i></button>
+
+      <button class="icon-btn hamburger" id="hamburgerBtn" title="Menu"><i class="fa-solid fa-bars"></i></button>
+      
+    </div>
+    
+  </div>
+  <div class="breaking-bar">
+    <div class="breaking-tag"><i class="fa-solid fa-tower-broadcast"></i> Breaking</div>
+    <div class="breaking-track"><ul id="breakingList"></ul></div>
+  </div>
+  <div class="online-counter">
+   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+</div>
+</header>
+
+<!-- ============================== HOME VIEW ============================== -->
+<main class="container">
+  <div class="home-view" id="homeView">
+
+    <div id="heroWrap"></div>
+
+    <div class="layout-grid">
+      <div>
+        <div class="section-title" id="listTitle"><i class="fa-solid fa-newspaper"></i> Berita Terbaru</div>
+        <div class="news-grid" id="newsGrid"></div>
+        <div class="load-sentinel" id="loadSentinel"></div>
+        <div class="load-more-spin" id="loadSpin" style="display:none;"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+        <div class="end-msg" id="endMsg">— Anda sudah mencapai akhir daftar berita —</div>
+      </div>
+
+      <aside class="sidebar">
+        <div class="widget">
+          <h4><i class="fa-solid fa-filter"></i> Filter Kategori</h4>
+          <div class="cat-list" id="catFilterList"></div>
+        </div>
+        <div class="widget">
+          <h4><i class="fa-solid fa-fire"></i> Berita Populer</h4>
+          <div id="popularList"></div>
+        </div>
+        <div class="widget newsletter-widget">
+          <h4><i class="fa-solid fa-envelope-open-text"></i> Newsletter</h4>
+          <p>Dapatkan ringkasan berita pilihan setiap pagi langsung ke email Anda.</p>
+          <input type="email" placeholder="Alamat email Anda">
+          <button class="sub-btn" id="subscribeBtn">Berlangganan</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ============================== ARTICLE VIEW ============================== -->
+  <div class="article-view" id="articleView">
+    <button class="back-btn" id="backBtn"><i class="fa-solid fa-arrow-left"></i> Kembali ke Beranda</button>
+    <div class="article-wrap">
+      <article>
+        <div class="article-header" id="articleHeader"></div>
+        <div class="article-hero-img" id="articleImg"></div>
+        <div class="article-body" id="articleBody"></div>
+
+        <div class="action-bar" id="actionBar"></div>
+        <div class="reactions-box" id="reactionsBox"></div>
+
+        <section class="comments-section">
+          <div class="section-title"><i class="fa-solid fa-comments"></i> Komentar <span class="comment-count-badge" id="commentCount"></span></div>
+          <div class="comment-form" id="mainCommentForm"></div>
+          <div id="commentsList"></div>
+        </section>
+      </article>
+
+      <aside class="sidebar">
+        <div class="widget toc-widget">
+          <h4><i class="fa-solid fa-fire"></i> Berita Populer</h4>
+          <div id="popularListArticle"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <p><b>KabarKini</b> — Portal berita modern. Dibangun dengan HTML, CSS, dan JavaScript murni + Firebase Firestore.</p>
+    <p style="margin-top:6px;">© 2026 KabarKini. Semua data disimpan secara real-time.</p>
+  </div>
+</footer>
+
+<!-- ============================== FLOATING ADD BUTTON ============================== -->
+<button class="fab" id="fabBtn" title="Tambah berita"><i class="fa-solid fa-plus"></i></button>
+
+<!-- Modal tambah/edit berita -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3><span id="modalTitle">Tambah Berita</span><button class="close-x" id="modalClose"><i class="fa-solid fa-xmark"></i></button></h3>
+    <form id="newsForm">
+      <div class="field">
+        <label>Judul Berita</label>
+        <input type="text" id="fTitle" required placeholder="Judul berita yang menarik">
+      </div>
+      <div class="field">
+        <label>URL Gambar</label>
+        <input type="url" id="fImage" required placeholder="https://contoh.com/gambar.jpg">
+        <div class="preview-img" id="imgPreview">Pratinjau gambar akan muncul di sini</div>
+      </div>
+      
+     <div onclick="window.location.href='https://imgbb.com/'" class="btn-primary">
+       Convert URL
+     </div>
+      
+
+      <div class="field">
+        <label>Nama Penulis</label>
+        <input type="text" id="fAuthor" required placeholder="Nama penulis">
+      </div>
+      <div class="field">
+        <label>Kategori</label>
+        <select id="fCategory" required></select>
+      </div>
+      <div class="field">
+        <label>Ringkasan Singkat</label>
+        <input type="text" id="fExcerpt" required placeholder="Ringkasan 1 kalimat untuk kartu berita">
+      </div>
+      <div class="field">
+        <label>Isi Berita Lengkap</label>
+        <textarea id="fContent" required placeholder="Tulis isi berita lengkap di sini..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="cancelFormBtn">Batal</button>
+        <button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> <span id="submitLabel">Publikasikan</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+
+<!-- ============================== FIREBASE SDK (compat) ============================== -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+  
+<script type="module">
+/* ================================================================
+   KONFIGURASI FIREBASE
+   Ganti seluruh nilai di bawah ini dengan konfigurasi proyek
+   Firebase Anda sendiri (Project Settings → General → Your apps).
+   ================================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const app = initializeApp(firebaseConfig);
+
+const rtdb = getDatabase(app);
+  
+
+let db = null;
+let firebaseReady = false;
+try{
+  if(firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY_HERE"){
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    firebaseReady = true;
+  } else {
+    document.getElementById('configBanner').classList.add('show');
+  }
+}catch(e){
+  console.error("Gagal inisialisasi Firebase:", e);
+  document.getElementById('configBanner').classList.add('show');
+}
+
+/* ================================================================
+   DATA KATEGORI
+   ================================================================ */
+const CATEGORIES = [
+  { id:'politik',    label:'Politik',    icon:'fa-landmark',        color:'var(--cat-politik)' },
+  { id:'ekonomi',    label:'Ekonomi',    icon:'fa-chart-line',      color:'var(--cat-ekonomi)' },
+  { id:'teknologi',  label:'Teknologi',  icon:'fa-microchip',       color:'var(--cat-teknologi)' },
+  { id:'olahraga',   label:'Olahraga',   icon:'fa-futbol',          color:'var(--cat-olahraga)' },
+  { id:'hiburan',    label:'Hiburan',    icon:'fa-clapperboard',    color:'var(--cat-hiburan)' },
+  { id:'kesehatan',  label:'Kesehatan',  icon:'fa-heart-pulse',     color:'var(--cat-kesehatan)' },
+  { id:'dunia',      label:'Dunia',      icon:'fa-earth-asia',      color:'var(--cat-dunia)' },
+];
+const REACTIONS = [
+  { id:'like',  emoji:'👍', label:'Suka' },
+  { id:'love',  emoji:'❤️', label:'Cinta' },
+  { id:'haha',  emoji:'😂', label:'Lucu' },
+  { id:'wow',   emoji:'😮', label:'Wow' },
+  { id:'sad',   emoji:'😢', label:'Sedih' },
+  { id:'angry', emoji:'😡', label:'Marah' },
+];
+function catInfo(id){ return CATEGORIES.find(c=>c.id===id) || CATEGORIES[0]; }
+
+/* ================================================================
+   IDENTITAS PENGGUNA (disimpan lokal agar like/reaksi/bookmark unik per user)
+   ================================================================ */
+function getUserId(){
+  let uid = localStorage.getItem('kk_uid');
+  if(!uid){
+    uid = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem('kk_uid', uid);
+  }
+  return uid;
+}
+const USER_ID = getUserId();
+
+/* ================================================================
+   STATE APLIKASI
+   ================================================================ */
+let allNews = null;          // array berita (null = belum dimuat / skeleton)
+let filteredNews = [];       // hasil setelah filter kategori + pencarian
+let activeCategory = 'semua';
+let searchQuery = '';
+let pageSize = 6;
+let currentPage = 1;
+let currentArticleId = null;
+let currentArticleUnsub = null;
+let commentsUnsub = null;
+let reactionUnsub = null;
+let bookmarkUnsub = null;
+let commentsCache = [];
+let replyTarget = null; // {id, name} saat membalas komentar
+
+/* ================================================================
+   UTILITAS
+   ================================================================ */
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.innerText = str ?? '';
+  return d.innerHTML;
+}
+function timeAgo(date){
+  if(!date) return '...';
+  const now = Date.now();
+  const diff = Math.max(0, Math.floor((now - date.getTime())/1000));
+  if(diff < 30) return 'Baru saja';
+  if(diff < 60) return diff + ' detik lalu';
+  const m = Math.floor(diff/60);
+  if(m < 60) return m + ' menit lalu';
+  const h = Math.floor(m/60);
+  if(h < 24) return h + ' jam lalu';
+  const d = Math.floor(h/24);
+  if(d < 7) return d + ' hari lalu';
+  return date.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+}
+function formatDateFull(date){
+  if(!date) return '...';
+  return date.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function readTime(text){
+  const words = (text||'').trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words/200));
+}
+function toDate(ts){
+  if(!ts) return null;
+  if(ts.toDate) return ts.toDate();
+  if(ts instanceof Date) return ts;
+  return new Date(ts);
+}
+function showToast(msg, icon='fa-circle-check'){
+  const wrap = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<i class="fa-solid ${icon}"></i> ${escapeHtml(msg)}`;
+  wrap.appendChild(t);
+  setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(), 300); }, 2600);
+}
+function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+
+/* ================================================================
+   TEMA (LIGHT / DARK)
+   ================================================================ */
+function initTheme(){
+  const saved = localStorage.getItem('kk_theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if(saved === 'dark' || (!saved && prefersDark)) document.body.classList.add('dark');
+  updateThemeIcon();
+}
+function updateThemeIcon(){
+  const icon = document.querySelector('#themeToggle i');
+  icon.className = document.body.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+}
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  document.body.classList.toggle('dark');
+  localStorage.setItem('kk_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+  updateThemeIcon();
+});
+initTheme();
+
+/* ================================================================
+   RENDER: NAVIGASI & FILTER KATEGORI
+   ================================================================ */
+function renderNav(){
+  const nav = document.getElementById('mainNav');
+  const catList = document.getElementById('catFilterList');
+  const options = [{ id:'semua', label:'Semua' }, ...CATEGORIES];
+
+  nav.innerHTML = options.map(c=>`<button data-cat="${c.id}" class="${activeCategory===c.id?'active':''}">${c.label}</button>`).join('');
+  nav.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ setCategory(btn.dataset.cat); nav.classList.remove('mobile-open'); });
+  });
+
+  catList.innerHTML = options.map(c=>`<button data-cat="${c.id}" class="${activeCategory===c.id?'active':''}">${c.label}</button>`).join('');
+  catList.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=> setCategory(btn.dataset.cat));
+  });
+
+  // Populate dropdown kategori di modal form
+  const sel = document.getElementById('fCategory');
+  sel.innerHTML = CATEGORIES.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+}
+function setCategory(cat){
+  activeCategory = cat;
+  currentPage = 1;
+  renderNav();
+  applyFilters();
+}
+document.getElementById('hamburgerBtn').addEventListener('click', ()=>{
+  document.getElementById('mainNav').classList.toggle('mobile-open');
+});
+
+/* Pencarian real-time (debounced) */
+document.getElementById('searchInput').addEventListener('input', debounce((e)=>{
+  searchQuery = e.target.value.trim().toLowerCase();
+  currentPage = 1;
+  applyFilters();
+}, 220));
+
+/* ================================================================
+   FIRESTORE: LISTENER BERITA (real-time)
+   ================================================================ */
+function listenNews(){
+  if(!firebaseReady){ allNews = []; renderSkeletonOrEmpty(); return; }
+  db.collection('news').orderBy('createdAt','desc').onSnapshot(snap=>{
+    allNews = snap.docs.map(d=>{
+      const v = d.data();
+      return { id:d.id, ...v, createdAtDate: toDate(v.createdAt), likedBy: v.likedBy || [], likes: v.likes || 0 };
+    });
+    applyFilters();
+    renderBreaking();
+    renderPopular();
+    // Jika artikel yang sedang dibuka ikut berubah, refresh tampilannya
+    if(currentArticleId){
+      const updated = allNews.find(n=>n.id===currentArticleId);
+      if(updated) renderArticleCore(updated);
+    }
+  }, err=>{
+    console.error(err);
+    showToast('Gagal memuat berita dari Firestore', 'fa-triangle-exclamation');
+  });
+}
+
+/* ================================================================
+   FILTER + PAGINASI (INFINITE SCROLL)
+   ================================================================ */
+function applyFilters(){
+  if(!allNews){ return; }
+  filteredNews = allNews.filter(n=>{
+    const matchCat = activeCategory==='semua' || n.category===activeCategory;
+    const matchSearch = !searchQuery || (n.title||'').toLowerCase().includes(searchQuery) || (n.excerpt||'').toLowerCase().includes(searchQuery) || (n.content||'').toLowerCase().includes(searchQuery);
+    return matchCat && matchSearch;
+  });
+  document.getElementById('listTitle').innerHTML = `<i class="fa-solid fa-newspaper"></i> ${searchQuery? 'Hasil pencarian "'+escapeHtml(searchQuery)+'"' : (activeCategory==='semua'?'Berita Terbaru':catInfo(activeCategory).label)}`;
+  renderHero();
+  renderGrid(true);
+}
+
+function renderSkeletonOrEmpty(){
+  const grid = document.getElementById('newsGrid');
+  grid.innerHTML = Array.from({length:6}).map(()=>`
+    <div class="sk-card skeleton-wrap">
+      <div class="sk-thumb skeleton"></div>
+      <div class="sk-line skeleton w40"></div>
+      <div class="sk-line skeleton w60"></div>
+    </div>`).join('');
+  document.getElementById('heroWrap').innerHTML = `<div class="hero skeleton" style="min-height:440px;"></div>`;
+}
+
+function renderHero(){
+  const wrap = document.getElementById('heroWrap');
+  if(!filteredNews.length){ wrap.innerHTML=''; return; }
+  const hero = filteredNews[0];
+  const c = catInfo(hero.category);
+  wrap.innerHTML = `
+    <div class="hero" data-id="${hero.id}">
+      <img src="${escapeHtml(hero.image)}" alt="${escapeHtml(hero.title)}" loading="lazy">
+      <div class="hero-content">
+        <span class="cat-chip" style="background:${c.color}">${c.label}</span>
+        <h1>${escapeHtml(hero.title)}</h1>
+        <p>${escapeHtml(hero.excerpt||'')}</p>
+        <div class="hero-meta">
+          <span><i class="fa-solid fa-pen-nib"></i> ${escapeHtml(hero.author)}</span>
+          <span><i class="fa-regular fa-clock"></i> ${timeAgo(hero.createdAtDate)}</span>
+          <span><i class="fa-solid fa-book-open"></i> ${readTime(hero.content)} menit baca</span>
+          <span><i class="fa-solid fa-heart"></i> ${hero.likes||0} suka</span>
+        </div>
+      </div>
+    </div>`;
+  wrap.querySelector('.hero').addEventListener('click', ()=> openArticle(hero.id));
+}
+
+function renderGrid(reset){
+  const grid = document.getElementById('newsGrid');
+  if(reset){ grid.innerHTML=''; currentPage = 1; }
+  const rest = filteredNews.slice(1); // item pertama sudah jadi headline
+  if(!rest.length){
+    grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-newspaper"></i>Belum ada berita yang cocok.<br>Coba kata kunci atau kategori lain.</div>`;
+    document.getElementById('endMsg').style.display='none';
+    return;
+  }
+  const end = currentPage * pageSize;
+  const slice = rest.slice(0, end);
+  grid.innerHTML = slice.map(cardHtml).join('');
+  grid.querySelectorAll('.news-card').forEach(el=>{
+    el.addEventListener('click', ()=> openArticle(el.dataset.id));
+  });
+  document.getElementById('endMsg').style.display = end >= rest.length ? 'block' : 'none';
+}
+
+function cardHtml(n){
+  const c = catInfo(n.category);
+  return `
+  <div class="news-card" data-id="${n.id}" style="--card-cat:${c.color}">
+    <div class="thumb"><img src="${escapeHtml(n.image)}" alt="${escapeHtml(n.title)}" loading="lazy"></div>
+    <div class="body">
+      <span class="cat-chip" style="background:${c.color}">${c.label}</span>
+      <h3>${escapeHtml(n.title)}</h3>
+      <p class="excerpt">${escapeHtml(n.excerpt||'')}</p>
+      <div class="meta">
+        <span class="stat"><i class="fa-regular fa-clock"></i> ${timeAgo(n.createdAtDate)}</span>
+        <span class="stat"><i class="fa-solid fa-heart"></i> ${n.likes||0}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* Infinite scroll via IntersectionObserver */
+const sentinel = document.getElementById('loadSentinel');
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting && allNews && filteredNews.length > 1){
+      const rest = filteredNews.slice(1);
+      if(currentPage * pageSize < rest.length){
+        document.getElementById('loadSpin').style.display='flex';
+        setTimeout(()=>{ // sedikit delay agar animasi loading terlihat natural
+          currentPage++;
+          renderGrid(false);
+          document.getElementById('loadSpin').style.display='none';
+        }, 400);
+      }
+    }
+  });
+}, { rootMargin:'200px' });
+io.observe(sentinel);
+
+/* ================================================================
+   BREAKING NEWS TICKER
+   ================================================================ */
+function renderBreaking(){
+  const list = document.getElementById('breakingList');
+  const latest = (allNews||[]).slice(0,8);
+  if(!latest.length){ list.innerHTML = '<li>Belum ada berita terkini.</li>'; return; }
+  const items = latest.map(n=>`<li data-id="${n.id}"><i class="fa-solid fa-circle" style="font-size:5px;"></i> ${escapeHtml(n.title)}</li>`).join('');
+  list.innerHTML = items + items; // duplikasi agar marquee looping mulus
+  list.querySelectorAll('li').forEach(li=>{
+    li.style.cursor='pointer';
+    li.addEventListener('click', ()=> li.dataset.id && openArticle(li.dataset.id));
+  });
+}
+
+/* ================================================================
+   SIDEBAR: BERITA POPULER (diurutkan berdasarkan jumlah like)
+   ================================================================ */
+function renderPopular(){
+  const top = [...(allNews||[])].sort((a,b)=>(b.likes||0)-(a.likes||0)).slice(0,5);
+  const html = top.length ? top.map((n,i)=>`
+    <div class="popular-item" data-id="${n.id}">
+      <div class="popular-rank">${String(i+1).padStart(2,'0')}</div>
+      <div class="p-body">
+        <h5>${escapeHtml(n.title)}</h5>
+        <div class="meta"><span><i class="fa-solid fa-heart"></i> ${n.likes||0}</span><span><i class="fa-regular fa-clock"></i> ${timeAgo(n.createdAtDate)}</span></div>
+      </div>
+    </div>`).join('') : `<p style="font-size:.82rem;color:var(--ink-faint);">Belum ada data.</p>`;
+  ['popularList','popularListArticle'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.innerHTML = html;
+    el.querySelectorAll('.popular-item').forEach(item=> item.addEventListener('click', ()=> openArticle(item.dataset.id)));
+  });
+}
+
+/* ================================================================
+   HALAMAN ARTIKEL
+   ================================================================ */
+function openArticle(id){
+  currentArticleId = id;
+  location.hash = 'artikel/' + id;
+  document.getElementById('homeView').classList.add('hide');
+  document.getElementById('articleView').classList.add('show');
+  window.scrollTo({top:0, behavior:'smooth'});
+
+  const n = (allNews||[]).find(x=>x.id===id);
+  if(n) renderArticleCore(n);
+
+  listenReactions(id);
+  listenComments(id);
+  listenBookmark(id);
+}
+document.getElementById('backBtn').addEventListener('click', closeArticle);
+function closeArticle(){
+  currentArticleId = null;
+  location.hash = '';
+  document.getElementById('homeView').classList.remove('hide');
+  document.getElementById('articleView').classList.remove('show');
+  if(reactionUnsub) reactionUnsub();
+  if(commentsUnsub) commentsUnsub();
+  if(bookmarkUnsub) bookmarkUnsub();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderArticleCore(n){
+  const c = catInfo(n.category);
+  document.getElementById('articleHeader').innerHTML = `
+    <span class="cat-chip" style="background:${c.color}">${c.label}</span>
+    <h1>${escapeHtml(n.title)}</h1>
+    <div class="article-byline">
+      <div class="author-avatar">${escapeHtml((n.author||'?').charAt(0).toUpperCase())}</div>
+      <div class="author-info">
+        <b>${escapeHtml(n.author)}</b>
+        <span>
+          <span><i class="fa-regular fa-calendar"></i> ${formatDateFull(n.createdAtDate)}</span>
+          <span><i class="fa-solid fa-book-open"></i> ${readTime(n.content)} menit baca</span>
+        </span>
+      </div>
+    </div>`;
+  document.getElementById('articleImg').innerHTML = `<img src="${escapeHtml(n.image)}" alt="${escapeHtml(n.title)}" loading="lazy">`;
+  document.getElementById('articleBody').innerHTML = (n.content||'').split(/\n+/).filter(Boolean).map(p=>`<p>${escapeHtml(p)}</p>`).join('');
+  renderActionBar(n);
+}
+
+function renderActionBar(n){
+  const liked = (n.likedBy||[]).includes(USER_ID);
+  const bar = document.getElementById('actionBar');
+  bar.innerHTML = `
+    <button class="action-btn like-btn ${liked?'active':''}" id="likeBtn"><i class="fa-solid fa-heart"></i> <span id="likeCount">${n.likes||0}</span> Suka</button>
+    <button class="action-btn bookmark-btn" id="bookmarkBtn"><i class="fa-regular fa-bookmark"></i> Simpan</button>
+    <button class="action-btn" id="shareBtn"><i class="fa-solid fa-share-nodes"></i> Bagikan</button>
+    <button class="action-btn" id="copyLinkBtn"><i class="fa-solid fa-link"></i> Salin Tautan</button>
+  `;
+  document.getElementById('likeBtn').addEventListener('click', ()=> toggleLike(n.id));
+  document.getElementById('shareBtn').addEventListener('click', ()=> shareArticle(n));
+  document.getElementById('copyLinkBtn').addEventListener('click', ()=> copyLink(n.id));
+  document.getElementById('bookmarkBtn').addEventListener('click', ()=> toggleBookmark(n.id));
+
+  // render reaksi
+  const rBox = document.getElementById('reactionsBox');
+  rBox.innerHTML = REACTIONS.map(r=>`
+    <button class="reaction-btn" data-r="${r.id}"><span class="emo">${r.emoji}</span> <span class="r-label">${r.label}</span> <span class="r-count" data-count="${r.id}">0</span></button>
+  `).join('');
+  rBox.querySelectorAll('.reaction-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> setReaction(n.id, btn.dataset.r, btn));
+  });
+}
+
+/* --- LIKE ARTIKEL (Firestore, satu kali per user, real-time) --- */
+async function toggleLike(newsId){
+  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+  const ref = db.collection('news').doc(newsId);
+  const btn = document.getElementById('likeBtn');
+  try{
+    await db.runTransaction(async(tx)=>{
+      const doc = await tx.get(ref);
+      const data = doc.data() || {};
+      const likedBy = data.likedBy || [];
+      const already = likedBy.includes(USER_ID);
+      const newLikedBy = already ? likedBy.filter(u=>u!==USER_ID) : [...likedBy, USER_ID];
+      tx.update(ref, { likedBy:newLikedBy, likes: newLikedBy.length });
+    });
+    btn.classList.add('pulse');
+    setTimeout(()=>btn.classList.remove('pulse'), 450);
+  }catch(e){ console.error(e); showToast('Gagal memproses like', 'fa-triangle-exclamation'); }
+}
+
+/* --- REAKSI ARTIKEL (koleksi "reactions", 1 doc per berita) --- */
+function listenReactions(newsId){
+  if(reactionUnsub) reactionUnsub();
+  if(!firebaseReady) return;
+  reactionUnsub = db.collection('reactions').doc(newsId).onSnapshot(doc=>{
+    const data = doc.data() || {};
+    const counts = data.counts || {};
+    const userMap = data.userReactions || {};
+    const myReaction = userMap[USER_ID];
+    REACTIONS.forEach(r=>{
+      const el = document.querySelector(`.r-count[data-count="${r.id}"]`);
+      if(el) el.textContent = counts[r.id] || 0;
+      const btn = document.querySelector(`.reaction-btn[data-r="${r.id}"]`);
+      if(btn) btn.classList.toggle('active', myReaction===r.id);
+    });
+  });
+}
+async function setReaction(newsId, type, btnEl){
+  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+  const ref = db.collection('reactions').doc(newsId);
+  try{
+    await db.runTransaction(async(tx)=>{
+      const doc = await tx.get(ref);
+      const data = doc.exists ? doc.data() : { counts:{}, userReactions:{} };
+      const counts = data.counts || {};
+      const userReactions = data.userReactions || {};
+      const prev = userReactions[USER_ID];
+      if(prev === type){
+        // batalkan reaksi yang sama
+        counts[type] = Math.max(0,(counts[type]||0)-1);
+        delete userReactions[USER_ID];
+      } else {
+        if(prev) counts[prev] = Math.max(0,(counts[prev]||0)-1);
+        counts[type] = (counts[type]||0)+1;
+        userReactions[USER_ID] = type;
+      }
+      tx.set(ref, { counts, userReactions }, { merge:true });
+    });
+    btnEl.classList.add('bump');
+    setTimeout(()=>btnEl.classList.remove('bump'), 400);
+  }catch(e){ console.error(e); showToast('Gagal mengirim reaksi', 'fa-triangle-exclamation'); }
+}
+
+/* --- BOOKMARK (koleksi "bookmarks") --- */
+function listenBookmark(newsId){
+  if(bookmarkUnsub) bookmarkUnsub();
+  if(!firebaseReady) return;
+  const docId = USER_ID + '_' + newsId;
+  bookmarkUnsub = db.collection('bookmarks').doc(docId).onSnapshot(doc=>{
+    const btn = document.getElementById('bookmarkBtn');
+    if(!btn) return;
+    const exists = doc.exists;
+    btn.classList.toggle('active', exists);
+    btn.innerHTML = exists ? '<i class="fa-solid fa-bookmark"></i> Tersimpan' : '<i class="fa-regular fa-bookmark"></i> Simpan';
+  });
+}
+async function toggleBookmark(newsId){
+  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+  const docId = USER_ID + '_' + newsId;
+  const ref = db.collection('bookmarks').doc(docId);
+  const doc = await ref.get();
+  if(doc.exists){
+    await ref.delete();
+    showToast('Dihapus dari simpanan', 'fa-bookmark');
+  } else {
+    await ref.set({ userId:USER_ID, newsId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    showToast('Berita disimpan ke bookmark', 'fa-bookmark');
+  }
+}
+
+/* --- SHARE & COPY LINK --- */
+function shareArticle(n){
+  const url = location.origin + location.pathname + '#artikel/' + n.id;
+  if(navigator.share){
+    navigator.share({ title:n.title, text:n.excerpt||'', url }).catch(()=>{});
+  } else {
+    copyLink(n.id);
+  }
+}
+function copyLink(id){
+  const url = location.origin + location.pathname + '#artikel/' + id;
+  navigator.clipboard.writeText(url).then(()=> showToast('Tautan disalin ke clipboard', 'fa-link'))
+    .catch(()=> showToast('Gagal menyalin tautan', 'fa-triangle-exclamation'));
+}
+
+/* ================================================================
+   KOMENTAR (real-time, balasan berjenjang, like komentar, edit/hapus)
+   ================================================================ */
+function listenComments(newsId){
+  if(commentsUnsub) commentsUnsub();
+  renderCommentForm(null);
+  if(!firebaseReady){ document.getElementById('commentsList').innerHTML=''; return; }
+  commentsUnsub = db.collection('comments').where('newsId','==',newsId)
+    .onSnapshot(snap=>{
+      commentsCache = snap.docs.map(d=>{
+        const v = d.data();
+        return { id:d.id, ...v, createdAtDate: toDate(v.createdAt), likedBy: v.likedBy || [] };
+      });
+      commentsCache.sort((a,b)=> (b.createdAtDate?.getTime()||0) - (a.createdAtDate?.getTime()||0));
+      document.getElementById('commentCount').textContent = '(' + commentsCache.length + ')';
+      renderComments();
+    }, err=>{ console.error(err); });
+}
+
+function renderCommentForm(replyTo){
+  replyTarget = replyTo;
+  const wrap = document.getElementById('mainCommentForm');
+  wrap.innerHTML = `
+    ${replyTo ? `<div class="reply-hint"><i class="fa-solid fa-reply"></i> Membalas <b>@${escapeHtml(replyTo.name)}</b> <button type="button" id="cancelReply" style="margin-left:8px;color:var(--ink-faint);text-decoration:underline;">batal</button></div>` : ''}
+    <form id="commentForm" style="margin-top:${replyTo?'10px':'0'}">
+      <div class="row">
+        <input type="text" id="cName" placeholder="Nama Anda" required style="max-width:220px;">
+      </div>
+      <textarea id="cText" placeholder="${replyTo? 'Tulis balasan Anda...' : 'Tulis komentar Anda...'}" required>${replyTo? '@'+replyTo.name+' ' : ''}</textarea>
+      <div class="actions">
+        <span style="font-size:.75rem;color:var(--ink-faint);"><i class="fa-solid fa-circle-info"></i> Nama & komentar tersimpan publik</span>
+        <button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> Kirim</button>
+      </div>
+    </form>`;
+  document.getElementById('commentForm').addEventListener('submit', submitComment);
+  if(replyTo) document.getElementById('cancelReply').addEventListener('click', ()=> renderCommentForm(null));
+}
+
+async function submitComment(e){
+  e.preventDefault();
+  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+  const name = document.getElementById('cName').value.trim();
+  const text = document.getElementById('cText').value.trim();
+  if(!name || !text) return;
+  try{
+    await db.collection('comments').add({
+      newsId: currentArticleId,
+      name, text,
+      parentId: replyTarget ? replyTarget.id : null,
+      likedBy: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    renderCommentForm(null);
+    showToast('Komentar terkirim', 'fa-comment');
+  }catch(err){ console.error(err); showToast('Gagal mengirim komentar', 'fa-triangle-exclamation'); }
+}
+
+function renderComments(){
+  const list = document.getElementById('commentsList');
+  const roots = commentsCache.filter(c=>!c.parentId);
+  if(!roots.length){
+    list.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comment-dots"></i>Belum ada komentar. Jadilah yang pertama!</div>`;
+    return;
+  }
+  list.innerHTML = roots.map(c=>commentNode(c)).join('');
+  bindCommentEvents(list);
+}
+
+function commentNode(c, depth=0){
+  const children = commentsCache.filter(x=>x.parentId===c.id);
+  const liked = (c.likedBy||[]).includes(USER_ID);
+  const textHtml = escapeHtml(c.text).replace(/(^|\s)(@[\w.]+)/g, '$1<span class="mention">$2</span>');
+  return `
+  <div class="comment-item" data-id="${c.id}">
+    <div class="c-head">
+      <div class="c-avatar">${escapeHtml((c.name||'?').charAt(0).toUpperCase())}</div>
+      <div>
+        <span class="c-name">${escapeHtml(c.name)}</span>
+        <div class="c-time">${timeAgo(c.createdAtDate)}</div>
+      </div>
+    </div>
+    <div class="c-text" data-textfor="${c.id}">${textHtml}</div>
+    <div class="c-actions">
+      <button class="like-c ${liked?'liked':''}" data-id="${c.id}"><i class="fa-solid fa-heart"></i> <span>${(c.likedBy||[]).length}</span></button>
+      ${depth < 3 ? `<button class="reply-c" data-id="${c.id}" data-name="${escapeHtml(c.name)}"><i class="fa-solid fa-reply"></i> Balas</button>` : ''}
+      <button class="edit-c" data-id="${c.id}"><i class="fa-solid fa-pen"></i> Edit</button>
+      <button class="del-c" data-id="${c.id}"><i class="fa-solid fa-trash"></i> Hapus</button>
+    </div>
+    ${children.length ? `<div class="replies">${children.map(ch=>commentNode(ch, depth+1)).join('')}</div>` : ''}
+  </div>`;
+}
+
+function bindCommentEvents(list){
+  list.querySelectorAll('.like-c').forEach(btn=> btn.addEventListener('click', ()=> toggleCommentLike(btn.dataset.id)));
+  list.querySelectorAll('.reply-c').forEach(btn=> btn.addEventListener('click', ()=>{
+    renderCommentForm({ id:btn.dataset.id, name:btn.dataset.name });
+    document.getElementById('mainCommentForm').scrollIntoView({behavior:'smooth', block:'center'});
+  }));
+  list.querySelectorAll('.edit-c').forEach(btn=> btn.addEventListener('click', ()=> startEditComment(btn.dataset.id)));
+  list.querySelectorAll('.del-c').forEach(btn=> btn.addEventListener('click', ()=> deleteComment(btn.dataset.id)));
+}
+
+async function toggleCommentLike(id){
+  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+  const ref = db.collection('comments').doc(id);
+  try{
+    await db.runTransaction(async(tx)=>{
+      const doc = await tx.get(ref);
+      const data = doc.data() || {};
+      const likedBy = data.likedBy || [];
+      const already = likedBy.includes(USER_ID);
+      const updated = already ? likedBy.filter(u=>u!==USER_ID) : [...likedBy, USER_ID];
+      tx.update(ref, { likedBy: updated });
+    });
+  }catch(e){ console.error(e); }
+}
+
+function startEditComment(id){
+  const c = commentsCache.find(x=>x.id===id);
+  if(!c) return;
+  const target = document.querySelector(`.c-text[data-textfor="${id}"]`);
+  target.innerHTML = `
+    <textarea id="edit-${id}" style="width:100%;min-height:60px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--ink);">${escapeHtml(c.text)}</textarea>
+    <div style="margin-top:6px;display:flex;gap:8px;">
+      <button class="btn-primary" style="padding:6px 12px;font-size:.78rem;" id="save-${id}"><i class="fa-solid fa-check"></i> Simpan</button>
+      <button class="btn-ghost" style="padding:6px 12px;font-size:.78rem;" id="cancel-${id}">Batal</button>
+    </div>`;
+  document.getElementById(`save-${id}`).addEventListener('click', async ()=>{
+    const newText = document.getElementById(`edit-${id}`).value.trim();
+    if(!newText) return;
+    try{
+      await db.collection('comments').doc(id).update({ text:newText, editedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      showToast('Komentar diperbarui', 'fa-pen');
+    }catch(e){ console.error(e); showToast('Gagal memperbarui komentar', 'fa-triangle-exclamation'); }
+  });
+  document.getElementById(`cancel-${id}`).addEventListener('click', renderComments);
+}
+
+async function deleteComment(id){
+  if(!confirm('Hapus komentar ini? Balasan di dalamnya juga akan terhapus.')) return;
+  try{
+    // hapus komentar beserta seluruh balasan turunannya
+    const toDelete = [id, ...collectDescendants(id)];
+    const batch = db.batch();
+    toDelete.forEach(cid=> batch.delete(db.collection('comments').doc(cid)));
+    await batch.commit();
+    showToast('Komentar dihapus', 'fa-trash');
+  }catch(e){ console.error(e); showToast('Gagal menghapus komentar', 'fa-triangle-exclamation'); }
+}
+function collectDescendants(id){
+  const direct = commentsCache.filter(c=>c.parentId===id).map(c=>c.id);
+  return direct.concat(direct.flatMap(collectDescendants));
+}
+
+/* ================================================================
+   FLOATING BUTTON: TAMBAH / EDIT BERITA
+   ================================================================ */
+const modalOverlay = document.getElementById('modalOverlay');
+let editingNewsId = null;
+
+document.getElementById('fabBtn').addEventListener('click', ()=> openNewsModal(null));
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('cancelFormBtn').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e)=>{ if(e.target===modalOverlay) closeModal(); });
+
+function openNewsModal(newsToEdit){
+  editingNewsId = newsToEdit ? newsToEdit.id : null;
+  document.getElementById('modalTitle').textContent = newsToEdit ? 'Edit Berita' : 'Tambah Berita';
+  document.getElementById('submitLabel').textContent = newsToEdit ? 'Simpan Perubahan' : 'Publikasikan';
+  document.getElementById('fTitle').value = newsToEdit?.title || '';
+  document.getElementById('fImage').value = newsToEdit?.image || '';
+  document.getElementById('fAuthor').value = newsToEdit?.author || '';
+  document.getElementById('fCategory').value = newsToEdit?.category || CATEGORIES[0].id;
+  document.getElementById('fExcerpt').value = newsToEdit?.excerpt || '';
+  document.getElementById('fContent').value = newsToEdit?.content || '';
+  updateImgPreview();
+  modalOverlay.classList.add('show');
+}
+function closeModal(){ modalOverlay.classList.remove('show'); editingNewsId = null; }
+document.getElementById('fImage').addEventListener('input', updateImgPreview);
+function updateImgPreview(){
+  const url = document.getElementById('fImage').value.trim();
+  const box = document.getElementById('imgPreview');
+  box.innerHTML = url ? `<img src="${escapeHtml(url)}" alt="pratinjau" onerror="this.parentElement.innerHTML='URL gambar tidak valid';">` : 'Pratinjau gambar akan muncul di sini';
+}
+
+document.getElementById('newsForm').addEventListener('submit', async(e)=>{
+  e.preventDefault();
+  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+  const payload = {
+    title: document.getElementById('fTitle').value.trim(),
+    image: document.getElementById('fImage').value.trim(),
+    author: document.getElementById('fAuthor').value.trim(),
+    category: document.getElementById('fCategory').value,
+    excerpt: document.getElementById('fExcerpt').value.trim(),
+    content: document.getElementById('fContent').value.trim(),
+  };
+  try{
+    if(editingNewsId){
+      await db.collection('news').doc(editingNewsId).update(payload);
+      showToast('Berita berhasil diperbarui', 'fa-check');
+    } else {
+      await db.collection('news').add({
+        ...payload, likes:0, likedBy:[], createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast('Berita berhasil dipublikasikan', 'fa-check');
+    }
+    closeModal();
+  }catch(err){ console.error(err); showToast('Gagal menyimpan berita', 'fa-triangle-exclamation'); }
+});
+
+/* ================================================================
+   ROUTING SEDERHANA VIA HASH (#artikel/ID)
+   ================================================================ */
+function handleRoute(){
+  const hash = location.hash.replace('#','');
+  if(hash.startsWith('artikel/')){
+    const id = hash.split('/')[1];
+    if(id) openArticle(id);
+  } else {
+    closeArticle();
+  }
+}
+window.addEventListener('hashchange', handleRoute);
+
+/* ================================================================
+   NEWSLETTER (demo lokal — tidak terhubung Firestore sesuai brief)
+   ================================================================ */
+document.getElementById('subscribeBtn').addEventListener('click', (e)=>{
+  const input = e.target.previousElementSibling;
+  if(input.value.trim()){ showToast('Terima kasih telah berlangganan!', 'fa-envelope-circle-check'); input.value=''; }
+  else showToast('Masukkan alamat email terlebih dahulu', 'fa-triangle-exclamation');
+});
+
+/* ================================================================
+   INISIALISASI
+   ================================================================ */
+renderNav();
+renderSkeletonOrEmpty();
+listenNews();
+handleRoute();
+
+function updateMarkerLabels(){
+
+    markerElements.forEach(el=>{
+
+        const type = el.dataset.type;
+
+        if(type==="provinsi"){
+
+            if(state.scale < 2.5){
+                el.classList.add("hide-label");
+            }else{
+                el.classList.remove("hide-label");
+            }
+
+        }
+
+    });
+
+}
+
+// ================= ONLINE USER =================
+
+let userId = localStorage.getItem("ufn_user_id");
+
+if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem("ufn_user_id", userId);
+}
+
+const userRef = ref(rtdb, "online/" + userId);
+
+set(userRef, true);
+
+onDisconnect(userRef).remove();
+
+onValue(ref(rtdb, "online"), (snapshot) => {
+    const jumlah = snapshot.exists()
+        ? Object.keys(snapshot.val()).length
+        : 0;
+
+    document.getElementById("onlineCount").textContent = jumlah;
+});
+
+
+</script>
+</body>
+</html>
