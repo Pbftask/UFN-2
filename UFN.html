@@ -24,6 +24,7 @@ body{
 header{
     padding:18px;
     text-align:center;
+    height: 75px;
     border-bottom:1px solid rgba(255,255,255,.08);
 }
 
@@ -42,11 +43,12 @@ header p{
     grid-template-columns:repeat(3,1fr);
     gap:15px;
     padding:20px;
+    margin-top:20px
 }
 
 .enve{
     background:#1b2942;
-    border:2px solid #ffc300;
+    border:1px solid #fff;
     border-radius:8px 16px;
     padding:18px 10px;
     text-align:center;
@@ -85,7 +87,10 @@ footer{
 .online-counter{
   display: flex;
   flex-direction: row;
-  margin-top:5px;
+  background: #0f172a;
+  margin-top:-9px;
+  width: 80px;
+  border:1px solid #6b7280;
 }
 
 .jumlah{
@@ -99,29 +104,45 @@ footer{
   border-radius:50%;
   width: 10px;
   height:10px;
-  margin-left:125px;
-  margin-top:2px;
+  margin-left:1px;
+  margin-top:3px;
 }
 
-.enve{
-  position:relative;
-}
+
 
 .badge{
   position:absolute;
-  top:-6px;
-  right:-6px;
-  background:#ef4444;
-  color:#fff;
-  font-size:11px;
-  font-weight:bold;
-  min-width:18px;
-  height:18px;
-  border-radius:9px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0 4px;
+  background:#ff0000;
+  width:15px;
+  height: 15px;
+  border-radius:50%;
+  text-align: center;
+  justify-content: center;
+  font-size:15px;
+  margin-top:-27px;
+  margin-left: 23px
+}
+
+.inbox{
+  background: #21356b;
+  width: 35px;
+  height: 25px;
+  border:2px solid white;
+  margin-top:-51px;
+  border-radius:5px;
+}
+
+.inbox a{
+    color:#fff;
+    text-decoration:none;
+    font-size:20px;
+    display:block;
+    width:100%;
+    height:100%;
+}
+
+.inbox:active{
+    transform:scale(.90);
 }
 </style>
 
@@ -135,6 +156,12 @@ footer{
       <div class="online-counter">
    <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
 </div>
+      <div class="inbox">
+        <a href="Inbox.html">
+            <i class="fa-solid fa-envelope"></i>
+        </a>
+        <div class="badge" id="inboxBadge" style="display:none;">0</div>
+    </div>
 </header>
 
 <div class="lemari">
@@ -180,13 +207,12 @@ footer{
         </a>
         <span>tambang</span>
     </div>
-
+  
     <div class="enve">
-        <a href="Inbox.html">
-            <i class="fa-solid fa-envelope"></i>
+        <a href="matauang.html">
+            <i class="fa-solid fa-money-bill"></i>
         </a>
-        <span>Inbox</span>
-        <div class="badge" id="inboxBadge" style="display:none;">0</div>
+        <span>Mata uang</span>
     </div>
 
 </div>
