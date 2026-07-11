@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EFA · Bursa Mata Uang Internasional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A1120;
+    --bg-2:#0D1526;
+    --panel:rgba(255,255,255,0.045);
+    --panel-solid:#121B2E;
+    --border:rgba(255,255,255,0.09);
+    --text:#E9EEF7;
+    --text-dim:#8494AD;
+    --gold:#D9B26A;
+    --gold-dim:rgba(217,178,106,0.15);
+    --green:#34D399;
+    --green-dim:rgba(52,211,153,0.14);
+    --red:#FB7185;
+    --red-dim:rgba(251,113,133,0.14);
+    --radius:16px;
+    --shadow:0 8px 30px rgba(0,0,0,0.35);
+  }
+  [data-theme="light"]{
+    --bg:#F3F5FA;
+    --bg-2:#EAEDF5;
+    --panel:rgba(255,255,255,0.65);
+    --panel-solid:#FFFFFF;
+    --border:rgba(16,24,40,0.09);
+    --text:#101828;
+    --text-dim:#5B6B85;
+    --gold:#9A6B24;
+    --gold-dim:rgba(154,107,36,0.12);
+    --green:#0D9166;
+    --green-dim:rgba(13,145,102,0.12);
+    --red:#D63A56;
+    --red-dim:rgba(214,58,86,0.12);
+    --shadow:0 8px 24px rgba(16,24,40,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at top, var(--bg-2), var(--bg) 60%);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    transition:background .3s ease, color .3s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1,h2,h3,.display{font-family:'Sora',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit;}
+
+  /* ===== Topbar ===== */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:16px 20px;position:sticky;top:0;z-index:40;
+    background:rgba(10,17,32,0.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border);
+  }
+  [data-theme="light"] .topbar{background:rgba(243,245,250,0.7);}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:.2px;}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold);}
+  .brand small{display:block;font-family:'Inter';font-weight:500;font-size:11px;color:var(--text-dim);letter-spacing:.4px;}
+  .top-actions{display:flex;align-items:center;gap:8px;}
+  .icon-btn{
+    width:38px;height:38px;border-radius:11px;border:1px solid var(--border);
+    background:var(--panel);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--text);font-size:16px;transition:.2s;
+  }
+  .icon-btn:hover{border-color:var(--gold);}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--gold), #C79A4F);
+    color:#1A1305;border:none;font-weight:700;font-size:13.5px;
+    padding:10px 16px;border-radius:11px;cursor:pointer;display:flex;align-items:center;gap:6px;
+    box-shadow:0 4px 14px rgba(217,178,106,0.25);transition:.2s;
+    white-space:nowrap;
+  }
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(217,178,106,0.35);}
+
+  /* ===== Ticker tape (signature element) ===== */
+  .ticker-wrap{
+    border-bottom:1px solid var(--border);
+    background:var(--panel-solid);
+    overflow:hidden;position:relative;height:38px;
+  }
+  .ticker-wrap::before,.ticker-wrap::after{
+    content:'';position:absolute;top:0;bottom:0;width:40px;z-index:2;pointer-events:none;
+  }
+  .ticker-wrap::before{left:0;background:linear-gradient(90deg,var(--panel-solid),transparent);}
+  .ticker-wrap::after{right:0;background:linear-gradient(270deg,var(--panel-solid),transparent);}
+  .ticker-track{
+    display:flex;align-items:center;gap:28px;white-space:nowrap;
+    animation:scrollTicker 40s linear infinite;
+    height:100%;width:max-content;padding-left:20px;
+  }
+  .ticker-wrap:hover .ticker-track{animation-play-state:paused;}
+  .ticker-item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-dim);}
+  .ticker-item .led{width:6px;height:6px;border-radius:50%;background:var(--green);flex:none;}
+  .ticker-item .led.down{background:var(--red);}
+  .ticker-item .led.flat{background:var(--text-dim);}
+  .ticker-item b{color:var(--text);font-family:'JetBrains Mono';font-weight:600;}
+  @keyframes scrollTicker{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 20px 80px;}
+
+  /* ===== EFA hero ===== */
+  .hero{
+    display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:26px;
+  }
+  @media (max-width:760px){.hero{grid-template-columns:1fr;}}
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:22px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:var(--shadow);
+  }
+  .efa-card{position:relative;overflow:hidden;}
+  .efa-card::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 85% 0%, var(--gold-dim), transparent 55%);
+    pointer-events:none;
+  }
+  .efa-badge{
+    display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+    color:var(--gold);background:var(--gold-dim);padding:5px 11px;border-radius:100px;
+    letter-spacing:.6px;text-transform:uppercase;margin-bottom:14px;
+  }
+  .efa-rate{font-size:40px;font-weight:800;margin:0 0 4px;letter-spacing:-.5px;}
+  .efa-rate span{color:var(--gold);}
+  .efa-sub{color:var(--text-dim);font-size:13.5px;margin:0;line-height:1.5;max-width:36ch;}
+  .efa-meta{display:flex;gap:22px;margin-top:18px;flex-wrap:wrap;}
+  .efa-meta div b{display:block;font-size:15px;font-family:'JetBrains Mono';font-weight:600;}
+  .efa-meta div span{font-size:11.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;}
+
+  /* Converter */
+  .conv-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);margin:0 0 14px;}
+  .conv-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  select,input{
+    background:var(--panel-solid);border:1px solid var(--border);color:var(--text);
+    border-radius:10px;padding:10px 11px;font-size:13.5px;font-family:'Inter';width:100%;outline:none;
+  }
+  select:focus,input:focus{border-color:var(--gold);}
+  .swap-btn{
+    width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--panel-solid);
+    color:var(--gold);cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;font-size:15px;
+  }
+  .conv-result{
+    margin-top:8px;padding:12px 14px;border-radius:11px;background:var(--gold-dim);
+    font-family:'JetBrains Mono';font-weight:600;font-size:15px;color:var(--gold);
+  }
+
+  /* ===== Chart summary ===== */
+  .chart-card{margin-bottom:26px;}
+  .chart-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  .chart-modes{display:flex;gap:6px;background:var(--panel-solid);border:1px solid var(--border);border-radius:10px;padding:3px;}
+  .mode-btn{
+    background:transparent;border:none;color:var(--text-dim);font-size:12px;font-weight:600;
+    padding:7px 12px;border-radius:8px;cursor:pointer;transition:.15s;
+  }
+  .mode-btn.active{background:var(--gold-dim);color:var(--gold);}
+  #trendChart{width:100%;display:block;}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .legend-chip{
+    display:flex;align-items:center;gap:6px;background:var(--panel-solid);border:1px solid var(--border);
+    color:var(--text);font-family:'JetBrains Mono';font-size:11.5px;font-weight:600;
+    padding:5px 10px;border-radius:100px;cursor:pointer;transition:.15s;
+  }
+  .legend-chip span{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .chart-empty{color:var(--text-dim);font-size:13px;text-align:center;padding:30px 10px;margin:0;}
+
+  /* ===== Controls bar ===== */
+  .controls{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;
+  }
+  .search-box{position:relative;flex:1;min-width:180px;}
+  .search-box input{padding-left:36px;}
+  .search-box::before{
+    content:'⌕';position:absolute;left:12px;top:50%;transform:translateY(-50%);
+    color:var(--text-dim);font-size:15px;
+  }
+  .controls select{width:auto;min-width:130px;}
+  .section-title{display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px;}
+  .section-title h2{font-size:16px;margin:0;}
+  .count-pill{font-size:12px;color:var(--text-dim);background:var(--panel);border:1px solid var(--border);padding:4px 10px;border-radius:100px;}
+
+  /* ===== Currency grid ===== */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+  .cur-card{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:17px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:.2s;position:relative;
+    animation:fadeIn .35s ease;
+  }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .cur-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+  .cur-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+  .cur-code{font-family:'JetBrains Mono';font-weight:700;font-size:17px;letter-spacing:.5px;}
+  .cur-sym{color:var(--text-dim);font-size:13px;}
+  .cur-name{font-size:13.5px;font-weight:600;margin:2px 0 1px;}
+  .cur-country{font-size:12px;color:var(--text-dim);}
+  .cur-value{font-family:'JetBrains Mono';font-size:21px;font-weight:700;margin:12px 0 6px;}
+  .cur-value small{font-size:12px;color:var(--text-dim);font-weight:500;}
+  .badge{
+    display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;
+    padding:3px 9px;border-radius:100px;
+  }
+  .badge.up{color:var(--green);background:var(--green-dim);}
+  .badge.down{color:var(--red);background:var(--red-dim);}
+  .badge.flat{color:var(--text-dim);background:rgba(132,148,173,0.12);}
+  .badge.new{color:var(--gold);background:var(--gold-dim);}
+  .cur-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+  .cur-time{font-size:11px;color:var(--text-dim);}
+
+  .empty{
+    text-align:center;padding:60px 20px;color:var(--text-dim);border:1px dashed var(--border);border-radius:16px;
+  }
+  .empty h3{color:var(--text);margin-bottom:6px;}
+
+  /* ===== Modal ===== */
+  .overlay{
+    position:fixed;inset:0;background:rgba(4,8,16,0.6);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;z-index:80;padding:16px;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--panel-solid);border:1px solid var(--border);border-radius:18px;
+    width:100%;max-width:420px;padding:24px;box-shadow:var(--shadow);
+    max-height:92vh;overflow-y:auto;
+  }
+  .modal h3{margin:0 0 4px;}
+  .modal p.hint{color:var(--text-dim);font-size:13px;margin:0 0 18px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--text-dim);}
+  .modal-actions{display:flex;gap:10px;margin-top:18px;}
+  .btn-ghost{
+    flex:1;background:transparent;border:1px solid var(--border);color:var(--text);
+    padding:11px;border-radius:11px;cursor:pointer;font-weight:600;font-size:13.5px;
+  }
+  .modal .btn-primary{flex:1;justify-content:center;padding:11px;}
+  .field-error{color:var(--red);font-size:12px;margin-top:5px;display:none;}
+
+  /* ===== Toast ===== */
+  .toast-stack{position:fixed;bottom:20px;right:20px;z-index:100;display:flex;flex-direction:column;gap:8px;max-width:90vw;}
+  .toast{
+    background:var(--panel-solid);border:1px solid var(--border);color:var(--text);
+    padding:12px 16px;border-radius:11px;font-size:13.5px;box-shadow:var(--shadow);
+    animation:slideIn .25s ease; max-width:320px;
+  }
+  .toast.err{border-color:var(--red);color:var(--red);}
+  .toast.ok{border-color:var(--green);color:var(--green);}
+  @keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
+
+  .cfg-warning{
+    background:var(--red-dim);border:1px solid var(--red);color:var(--red);
+    padding:12px 16px;border-radius:12px;font-size:13px;margin-bottom:20px;line-height:1.5;
+  }
+</style>
+</head>
+<body data-theme="dark">
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <div>
+        EFA <span style="font-weight:500;color:var(--text-dim)">· Bursa Alkaf</span>
+        <small>Sistem mata uang internasional dunia fiksi</small>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="themeToggle" title="Ganti tema">🌙</button>
+      <button class="btn-primary" id="openAdd">+ Tambah Mata Uang</button>
+    </div>
+  </div>
+
+  <div class="ticker-wrap">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <div class="wrap">
+
+    <div id="cfgWarning" class="cfg-warning" style="display:none">
+      ⚠ Firebase belum dikonfigurasi. Buka file ini, cari <code>firebaseConfig</code> di bagian bawah, lalu isi dengan konfigurasi project Firestore Anda (mis. project <b>puki-678bf</b>) agar data bisa tersinkron ke semua pengguna.
+    </div>
+
+    <div class="hero">
+      <div class="card efa-card">
+        <span class="efa-badge">Mata uang acuan global</span>
+        <h1 class="efa-rate">1 EFA = <span>1.00 EFA</span></h1>
+        <p class="efa-sub">EFA (Economy Fictional Alkaf) adalah standar tetap yang menjadi perantara konversi seluruh mata uang di dunia ini. Nilainya tidak pernah berubah.</p>
+        <div class="efa-meta">
+          <div><b id="statTotal" class="mono">0</b><span>Mata Uang Terdaftar</span></div>
+          <div><b id="statLastSync" class="mono">—</b><span>Pembaruan Global Terakhir</span></div>
+          <div><b id="statNextSync" class="mono">—</b><span>Pembaruan Berikutnya</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="conv-title">Konversi Antar Mata Uang</p>
+        <div class="conv-row">
+          <select id="convFrom"></select>
+        </div>
+        <div class="conv-row">
+          <input id="convAmount" type="number" value="1" min="0" step="any">
+          <button class="swap-btn" id="convSwap" title="Tukar">⇅</button>
+        </div>
+        <div class="conv-row">
+          <select id="convTo"></select>
+        </div>
+        <div class="conv-result" id="convResult">Menunggu data mata uang…</div>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="chart-head">
+        <p class="conv-title" style="margin:0">Ringkasan Tren Semua Mata Uang</p>
+        <div class="chart-modes">
+          <button class="mode-btn active" data-mode="pct" type="button">% Perubahan</button>
+          <button class="mode-btn" data-mode="log" type="button">Nilai (skala log)</button>
+        </div>
+      </div>
+      <canvas id="trendChart" height="220"></canvas>
+      <p class="chart-empty" id="chartEmpty" style="display:none">Grafik akan tampil begitu riwayat data mulai terkumpul — sejak mata uang didaftarkan dan setiap pembaruan harian pukul 00.00.</p>
+      <div class="legend" id="chartLegend"></div>
+    </div>
+
+    <div class="controls">
+      <div class="search-box"><input id="searchInput" placeholder="Cari nama, kode, atau negara…"></div>
+      <select id="filterStatus">
+        <option value="all">Semua Status</option>
+        <option value="naik">Naik</option>
+        <option value="turun">Turun</option>
+        <option value="stabil">Stabil</option>
+        <option value="baru">Baru</option>
+      </select>
+      <select id="sortBy">
+        <option value="name-asc">Nama A–Z</option>
+        <option value="name-desc">Nama Z–A</option>
+        <option value="value-desc">Nilai Tertinggi</option>
+        <option value="value-asc">Nilai Terendah</option>
+        <option value="change-desc">Perubahan Tertinggi</option>
+        <option value="change-asc">Perubahan Terendah</option>
+      </select>
+    </div>
+
+    <div class="section-title">
+      <h2>Daftar Mata Uang</h2>
+      <span class="count-pill" id="visibleCount">0 mata uang</span>
+    </div>
+
+    <div class="grid" id="currencyGrid"></div>
+    <div class="empty" id="emptyState" style="display:none">
+      <h3>Belum ada mata uang</h3>
+      <p>Jadilah negara pertama yang mendaftarkan mata uangnya ke bursa EFA.</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="addOverlay">
+    <div class="modal">
+      <h3>Daftarkan Mata Uang Baru</h3>
+      <p class="hint">Data akan langsung tersinkron secara realtime ke seluruh pengguna di dunia.</p>
+      <form id="addForm">
+        <div class="field">
+          <label>Nama Mata Uang</label>
+          <input id="fName" placeholder="mis. Accorian Crown" required>
+        </div>
+        <div class="field">
+          <label>Kode Mata Uang (2–6 huruf, unik)</label>
+          <input id="fCode" placeholder="mis. ACC" maxlength="6" required style="text-transform:uppercase">
+          <div class="field-error" id="errCode"></div>
+        </div>
+        <div class="field">
+          <label>Simbol</label>
+          <input id="fSymbol" placeholder="mis. ₳" maxlength="4" required>
+        </div>
+        <div class="field">
+          <label>Nama Negara</label>
+          <input id="fCountry" placeholder="mis. Accoria" required>
+        </div>
+        <div class="field">
+          <label>Nilai Awal terhadap EFA</label>
+          <input id="fValue" type="number" min="0.0001" step="any" placeholder="mis. 2200" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" id="closeAdd">Batal</button>
+          <button type="submit" class="btn-primary" id="submitAdd">Daftarkan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+<script type="module">
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore, collection, collectionGroup, doc, onSnapshot, runTransaction,
+  getDocs, writeBatch, serverTimestamp, Timestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+/* =========================================================
+   1. KONFIGURASI FIREBASE
+   Ganti nilai di bawah dengan konfigurasi project Firestore
+   Anda (bisa project Firebase yang sama dengan ORECRAFT / UFN,
+   selama Firestore sudah diaktifkan di project tersebut).
+========================================================= */
+const firebaseConfig = {
+  apiKey: "GANTI_DENGAN_API_KEY_ANDA",
+  authDomain: "puki-678bf.firebaseapp.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.appspot.com",
+  messagingSenderId: "GANTI_DENGAN_SENDER_ID",
+  appId: "GANTI_DENGAN_APP_ID"
+};
+
+let app, db;
+let firebaseReady = false;
+try {
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  firebaseReady = firebaseConfig.apiKey !== "GANTI_DENGAN_API_KEY_ANDA";
+} catch (e) {
+  firebaseReady = false;
+}
+if (!firebaseReady) {
+  document.getElementById('cfgWarning').style.display = 'block';
+}
+
+const CURRENCIES_COL = 'currencies';
+const META_DOC = 'meta_dailyUpdate'; // stored inside 'meta' collection, doc 'dailyUpdate'
+
+/* =========================================================
+   2. STATE
+========================================================= */
+let currencies = {};      // code -> data
+let metaInfo = { lastUpdateDate: null, updatedAt: null };
+let historyByCode = {};   // code -> [{date, value, changePercent}] ascending by date
+let chartMode = 'pct';    // 'pct' or 'log'
+let hiddenCodes = new Set();
+const CHART_PALETTE = ['#5EEAD4','#F59E0B','#818CF8','#FB7185','#34D399','#F472B6','#38BDF8','#A78BFA','#FBBF24','#4ADE80'];
+
+/* =========================================================
+   3. UTIL
+========================================================= */
+function fmtT(n){
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return Number(n).toLocaleString('id-ID', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+}
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function relTime(ts){
+  if (!ts) return '—';
+  const date = ts.toDate ? ts.toDate() : new Date(ts);
+  const diffSec = Math.floor((Date.now() - date.getTime())/1000);
+  if (diffSec < 60) return 'baru saja';
+  if (diffSec < 3600) return `${Math.floor(diffSec/60)} menit lalu`;
+  if (diffSec < 86400) return `${Math.floor(diffSec/3600)} jam lalu`;
+  return `${Math.floor(diffSec/86400)} hari lalu`;
+}
+function toast(msg, type=''){
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toastStack').appendChild(el);
+  setTimeout(()=>{ el.remove(); }, 3800);
+}
+function statusOf(pct){
+  if (pct === null || pct === undefined) return 'baru';
+  if (pct > 0.01) return 'naik';
+  if (pct < -0.01) return 'turun';
+  return 'stabil';
+}
+function statusLabel(s){
+  return { naik:'▲ Naik', turun:'▼ Turun', stabil:'● Stabil', baru:'✦ Baru' }[s] || s;
+}
+
+/* =========================================================
+   4. RENDER: TICKER
+========================================================= */
+function renderTicker(){
+  const track = document.getElementById('tickerTrack');
+  const list = Object.values(currencies);
+  if (!list.length){ track.innerHTML = '<div class="ticker-item"><span>Belum ada mata uang terdaftar…</span></div>'; return; }
+  const build = (arr) => arr.map(c => {
+    const st = statusOf(c.changePercent);
+    const ledClass = st === 'naik' ? '' : st === 'turun' ? 'down' : 'flat';
+    return `<div class="ticker-item"><span class="led ${ledClass}"></span>${c.code} <b>${fmtT(c.value)} EFA</b></div>`;
+  }).join('');
+  // duplicate list for seamless loop
+  track.innerHTML = build(list) + build(list);
+}
+
+/* =========================================================
+   5. RENDER: STATS
+========================================================= */
+function renderStats(){
+  document.getElementById('statTotal').textContent = Object.keys(currencies).length;
+  document.getElementById('statLastSync').textContent = metaInfo.updatedAt ? relTime(metaInfo.updatedAt) : 'Belum pernah';
+  updateCountdown();
+}
+function updateCountdown(){
+  const now = new Date();
+  const next = new Date(now);
+  next.setHours(24,0,0,0);
+  const diff = next.getTime() - now.getTime();
+  const h = String(Math.floor(diff/3600000)).padStart(2,'0');
+  const m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+  const s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+  document.getElementById('statNextSync').textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateCountdown, 1000);
+
+/* =========================================================
+   6. RENDER: CONVERTER SELECTS
+========================================================= */
+function renderConverterOptions(){
+  const fromSel = document.getElementById('convFrom');
+  const toSel = document.getElementById('convTo');
+  const prevFrom = fromSel.value, prevTo = toSel.value;
+  const opts = ['<option value="EFA">EFA — Economy Fictional Alkaf</option>']
+    .concat(Object.values(currencies)
+      .sort((a,b)=>a.code.localeCompare(b.code))
+      .map(c => `<option value="${c.code}">${c.code} — ${c.name}</option>`));
+  fromSel.innerHTML = opts.join('');
+  toSel.innerHTML = opts.join('');
+  if (prevFrom) fromSel.value = prevFrom; else fromSel.value = 'EFA';
+  if (prevTo && Object.keys(currencies).includes(prevTo)) toSel.value = prevTo;
+  else { const first = Object.keys(currencies)[0]; if (first) toSel.value = first; }
+  runConversion();
+}
+function rateOf(code){
+  if (code === 'EFA') return 1;
+  return currencies[code] ? currencies[code].value : null;
+}
+function runConversion(){
+  const from = document.getElementById('convFrom').value;
+  const to = document.getElementById('convTo').value;
+  const amount = parseFloat(document.getElementById('convAmount').value) || 0;
+  const rFrom = rateOf(from), rTo = rateOf(to);
+  const resultEl = document.getElementById('convResult');
+  if (rFrom === null || rTo === null || !rTo){
+    resultEl.textContent = 'Menunggu data mata uang…';
+    return;
+  }
+  const inEfa = amount * rFrom;
+  const result = inEfa / rTo;
+  resultEl.textContent = `${fmtT(amount)} ${from} = ${fmtT(result)} ${to}`;
+}
+['convFrom','convTo','convAmount'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', runConversion);
+  document.getElementById(id).addEventListener('change', runConversion);
+});
+document.getElementById('convSwap').addEventListener('click', ()=>{
+  const f = document.getElementById('convFrom'), t = document.getElementById('convTo');
+  const tmp = f.value; f.value = t.value; t.value = tmp;
+  runConversion();
+});
+
+/* =========================================================
+   7. RENDER: CURRENCY GRID (search / filter / sort)
+========================================================= */
+function renderGrid(){
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const filter = document.getElementById('filterStatus').value;
+  const sortBy = document.getElementById('sortBy').value;
+
+  let list = Object.values(currencies);
+
+  if (search){
+    list = list.filter(c =>
+      c.name.toLowerCase().includes(search) ||
+      c.code.toLowerCase().includes(search) ||
+      c.country.toLowerCase().includes(search)
+    );
+  }
+  if (filter !== 'all'){
+    list = list.filter(c => statusOf(c.changePercent) === filter);
+  }
+  list.sort((a,b)=>{
+    switch(sortBy){
+      case 'name-asc': return a.name.localeCompare(b.name);
+      case 'name-desc': return b.name.localeCompare(a.name);
+      case 'value-desc': return b.value - a.value;
+      case 'value-asc': return a.value - b.value;
+      case 'change-desc': return (b.changePercent||0) - (a.changePercent||0);
+      case 'change-asc': return (a.changePercent||0) - (b.changePercent||0);
+      default: return 0;
+    }
+  });
+
+  const grid = document.getElementById('currencyGrid');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('visibleCount').textContent = `${list.length} mata uang`;
+
+  if (!Object.keys(currencies).length){
+    grid.innerHTML = ''; empty.style.display = 'block';
+    empty.querySelector('h3').textContent = 'Belum ada mata uang';
+    empty.querySelector('p').textContent = 'Jadilah negara pertama yang mendaftarkan mata uangnya ke bursa EFA.';
+    return;
+  }
+  if (!list.length){
+    grid.innerHTML = ''; empty.style.display = 'block';
+    empty.querySelector('h3').textContent = 'Tidak ditemukan';
+    empty.querySelector('p').textContent = 'Coba ubah kata kunci pencarian atau filter status.';
+    return;
+  }
+  empty.style.display = 'none';
+
+  grid.innerHTML = list.map(c => {
+    const st = statusOf(c.changePercent);
+    const pctText = c.changePercent === null || c.changePercent === undefined
+      ? statusLabel('baru')
+      : `${statusLabel(st)} ${Math.abs(c.changePercent).toFixed(2)}%`;
+    return `
+      <div class="cur-card">
+        <div class="cur-top">
+          <div>
+            <div class="cur-code">${c.code}</div>
+            <div class="cur-name">${escapeHtml(c.name)}</div>
+            <div class="cur-country">${escapeHtml(c.country)}</div>
+          </div>
+          <div class="cur-sym mono">${escapeHtml(c.symbol)}</div>
+        </div>
+        <div class="cur-value">${fmtT(c.value)} <small>EFA</small></div>
+        <div class="cur-foot">
+          <span class="badge ${st}">${pctText}</span>
+          <span class="cur-time">${relTime(c.updatedAt)}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+['searchInput','filterStatus','sortBy'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', renderGrid);
+  document.getElementById(id).addEventListener('change', renderGrid);
+});
+
+/* =========================================================
+   7b. RENDER: CHART RINGKASAN SEMUA MATA UANG
+========================================================= */
+function codeColor(code){
+  const codes = Object.keys(historyByCode).sort();
+  const idx = codes.indexOf(code);
+  return CHART_PALETTE[idx % CHART_PALETTE.length];
+}
+function cssVar(name, fallback){
+  const v = getComputedStyle(document.body).getPropertyValue(name);
+  return v && v.trim() ? v.trim() : fallback;
+}
+function buildLegend(codes){
+  return codes.map(code=>{
+    const dim = hiddenCodes.has(code) ? 'opacity:0.35' : '';
+    return `<button class="legend-chip" data-code="${code}" style="${dim}"><span style="background:${codeColor(code)}"></span>${code}</button>`;
+  }).join('');
+}
+function renderChart(){
+  const canvas = document.getElementById('trendChart');
+  const emptyEl = document.getElementById('chartEmpty');
+  const legendEl = document.getElementById('chartLegend');
+  const codes = Object.keys(historyByCode).filter(c => historyByCode[c] && historyByCode[c].length).sort();
+
+  if (!codes.length){
+    canvas.style.display = 'none';
+    emptyEl.style.display = 'block';
+    legendEl.innerHTML = '';
+    return;
+  }
+  canvas.style.display = 'block';
+  emptyEl.style.display = 'none';
+  legendEl.innerHTML = buildLegend(codes);
+
+  const dateSet = new Set();
+  codes.forEach(c => historyByCode[c].forEach(p => dateSet.add(p.date)));
+  const dates = Array.from(dateSet).sort().slice(-20);
+
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const H = 220;
+  canvas.width = Math.max(rect.width, 1) * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const W = rect.width;
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 46, padR = 12, padT = 14, padB = 24;
+  const plotW = Math.max(W - padL - padR, 10), plotH = H - padT - padB;
+  const visibleCodes = codes.filter(c => !hiddenCodes.has(c));
+
+  const seriesData = {};
+  visibleCodes.forEach(code => {
+    const points = historyByCode[code];
+    const byDate = {};
+    points.forEach(p => byDate[p.date] = p);
+    const baseValue = points[0].value;
+    seriesData[code] = dates.map(d => {
+      const p = byDate[d];
+      if (!p) return null;
+      return chartMode === 'pct' ? ((p.value - baseValue) / baseValue) * 100 : Math.log10(p.value);
+    });
+  });
+
+  const allVals = [];
+  Object.values(seriesData).forEach(arr => arr.forEach(v => { if (v !== null && !isNaN(v)) allVals.push(v); }));
+
+  const textDim = cssVar('--text-dim', '#8494AD');
+  const border = cssVar('--border', 'rgba(255,255,255,0.1)');
+  const gold = cssVar('--gold', '#D9B26A');
+  ctx.font = '10px Inter, sans-serif';
+
+  if (!allVals.length){
+    ctx.fillStyle = textDim;
+    ctx.fillText('Belum cukup data untuk ditampilkan.', padL, H/2);
+    return;
+  }
+
+  let minV = Math.min(...allVals), maxV = Math.max(...allVals);
+  if (chartMode === 'pct'){ minV = Math.min(minV, 0); maxV = Math.max(maxV, 0); }
+  if (minV === maxV){ minV -= 1; maxV += 1; }
+  const pad = (maxV - minV) * 0.1;
+  minV -= pad; maxV += pad;
+
+  const xFor = (i) => padL + (dates.length <= 1 ? plotW/2 : (i/(dates.length-1)) * plotW);
+  const yFor = (v) => padT + plotH - ((v - minV)/(maxV - minV)) * plotH;
+
+  ctx.strokeStyle = border;
+  ctx.lineWidth = 1;
+  const gridLines = 4;
+  for (let g = 0; g <= gridLines; g++){
+    const v = minV + (maxV - minV) * (g / gridLines);
+    const y = yFor(v);
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = textDim;
+    const label = chartMode === 'pct' ? `${v.toFixed(1)}%` : Math.pow(10, v).toFixed(v > 2 ? 0 : 1);
+    ctx.fillText(label, 4, y + 3);
+  }
+
+  if (chartMode === 'pct'){
+    const y0 = yFor(0);
+    ctx.strokeStyle = gold;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath(); ctx.moveTo(padL, y0); ctx.lineTo(W - padR, y0); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.fillStyle = textDim;
+  [0, Math.floor((dates.length-1)/2), dates.length-1].forEach(i => {
+    if (i < 0 || i >= dates.length) return;
+    const x = xFor(i);
+    ctx.fillText(dates[i].slice(5), Math.max(padL, Math.min(W - padR - 24, x - 14)), H - 8);
+  });
+
+  visibleCodes.forEach(code => {
+    const arr = seriesData[code];
+    ctx.strokeStyle = codeColor(code);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    let started = false;
+    arr.forEach((v, i) => {
+      if (v === null) return;
+      const x = xFor(i), y = yFor(v);
+      if (!started){ ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
+    });
+    ctx.stroke();
+    for (let i = arr.length - 1; i >= 0; i--){
+      if (arr[i] !== null){
+        ctx.fillStyle = codeColor(code);
+        ctx.beginPath(); ctx.arc(xFor(i), yFor(arr[i]), 3, 0, Math.PI*2); ctx.fill();
+        break;
+      }
+    }
+  });
+}
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    chartMode = btn.dataset.mode;
+    renderChart();
+  });
+});
+document.getElementById('chartLegend').addEventListener('click', (e) => {
+  const chip = e.target.closest('.legend-chip');
+  if (!chip) return;
+  const code = chip.dataset.code;
+  if (hiddenCodes.has(code)) hiddenCodes.delete(code); else hiddenCodes.add(code);
+  renderChart();
+});
+let chartResizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(chartResizeTimer);
+  chartResizeTimer = setTimeout(renderChart, 150);
+});
+
+/* =========================================================
+   8. FIRESTORE: REALTIME LISTENERS
+========================================================= */
+function startListeners(){
+  if (!firebaseReady) return;
+
+  onSnapshot(collection(db, CURRENCIES_COL), (snap) => {
+    currencies = {};
+    snap.forEach(d => { currencies[d.id] = { code: d.id, ...d.data() }; });
+    renderTicker();
+    renderStats();
+    renderConverterOptions();
+    renderGrid();
+  }, (err) => {
+    toast('Gagal menyinkronkan data: ' + err.message, 'err');
+  });
+
+  onSnapshot(doc(db, 'meta', 'dailyUpdate'), (snap) => {
+    if (snap.exists()){
+      const d = snap.data();
+      metaInfo = { lastUpdateDate: d.lastUpdateDate || null, updatedAt: d.updatedAt || null };
+    }
+    renderStats();
+  });
+
+  onSnapshot(collectionGroup(db, 'history'), (snap) => {
+    const byCode = {};
+    snap.forEach(d => {
+      const code = d.ref.parent.parent.id;
+      const data = d.data();
+      if (!byCode[code]) byCode[code] = [];
+      byCode[code].push(data);
+    });
+    Object.keys(byCode).forEach(code => byCode[code].sort((a,b)=> a.date.localeCompare(b.date)));
+    historyByCode = byCode;
+    renderChart();
+  }, (err) => {
+    console.error('Gagal memuat riwayat grafik', err);
+  });
+}
+
+/* =========================================================
+   9. DAILY AUTO-UPDATE (±2% s/d ±5%, sekali per hari, atomik)
+   Klien mana pun yang pertama aktif setelah 00.00 akan
+   "mengklaim" tanggal tersebut lewat transaction, sehingga
+   hasilnya tetap sama untuk semua pengguna.
+========================================================= */
+async function tryDailyUpdate(){
+  if (!firebaseReady) return;
+  const today = todayStr();
+  const metaRef = doc(db, 'meta', 'dailyUpdate');
+  let claimed = false;
+
+  try {
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(metaRef);
+      const last = snap.exists() ? snap.data().lastUpdateDate : null;
+      if (last === today) return;
+      tx.set(metaRef, { lastUpdateDate: today, updatedAt: serverTimestamp() }, { merge: true });
+      claimed = true;
+    });
+  } catch(e){
+    return; // transaction lost the race, someone else is/has updated
+  }
+
+  if (!claimed) return;
+
+  try {
+    const snap = await getDocs(collection(db, CURRENCIES_COL));
+    if (snap.empty) return;
+    const batch = writeBatch(db);
+    snap.forEach(d => {
+      const data = d.data();
+      const magnitude = Math.random() * 3 + 2; // 2..5
+      const direction = Math.random() < 0.5 ? -1 : 1;
+      const pct = magnitude * direction;
+      let newValue = data.value * (1 + pct / 100);
+      if (!(newValue > 0)) newValue = data.value; // jaga nilai tidak pernah 0/negatif
+      newValue = Math.round(newValue * 100) / 100;
+      batch.update(d.ref, {
+        prevValue: data.value,
+        value: newValue,
+        changePercent: Math.round(pct * 100) / 100,
+        updatedAt: serverTimestamp()
+      });
+      const histRef = doc(db, CURRENCIES_COL, d.id, 'history', today);
+      batch.set(histRef, {
+        date: today,
+        value: newValue,
+        changePercent: Math.round(pct * 100) / 100
+      });
+    });
+    await batch.commit();
+  } catch(e){
+    console.error('Gagal menjalankan pembaruan harian', e);
+  }
+}
+
+/* =========================================================
+   10. TAMBAH MATA UANG (unik via transaction)
+========================================================= */
+const overlay = document.getElementById('addOverlay');
+document.getElementById('openAdd').addEventListener('click', ()=>{
+  if (!firebaseReady){ toast('Firebase belum dikonfigurasi.', 'err'); return; }
+  overlay.classList.add('show');
+});
+document.getElementById('closeAdd').addEventListener('click', ()=> overlay.classList.remove('show'));
+overlay.addEventListener('click', (e)=>{ if (e.target === overlay) overlay.classList.remove('show'); });
+
+document.getElementById('fCode').addEventListener('input', (e)=>{
+  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g,'');
+});
+
+document.getElementById('addForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const errEl = document.getElementById('errCode');
+  errEl.style.display = 'none';
+
+  const name = document.getElementById('fName').value.trim();
+  const code = document.getElementById('fCode').value.trim().toUpperCase();
+  const symbol = document.getElementById('fSymbol').value.trim();
+  const country = document.getElementById('fCountry').value.trim();
+  const value = parseFloat(document.getElementById('fValue').value);
+
+  if (code.length < 2 || code.length > 6){
+    errEl.textContent = 'Kode harus terdiri dari 2–6 huruf.'; errEl.style.display='block'; return;
+  }
+  if (code === 'EFA'){
+    errEl.textContent = 'Kode EFA sudah dipakai sebagai mata uang acuan global.'; errEl.style.display='block'; return;
+  }
+  if (!(value > 0)){
+    errEl.textContent = 'Nilai awal harus lebih besar dari 0.'; errEl.style.display='block'; return;
+  }
+
+  const submitBtn = document.getElementById('submitAdd');
+  submitBtn.disabled = true; submitBtn.textContent = 'Menyimpan…';
+
+  try {
+    const ref = doc(db, CURRENCIES_COL, code);
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (snap.exists()) throw new Error('DUPLICATE');
+      const initialValue = Math.round(value*100)/100;
+      tx.set(ref, {
+        name, symbol, country,
+        value: initialValue,
+        prevValue: null,
+        changePercent: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      const histRef = doc(db, CURRENCIES_COL, code, 'history', todayStr());
+      tx.set(histRef, { date: todayStr(), value: initialValue, changePercent: 0 });
+    });
+    toast(`Mata uang ${code} berhasil didaftarkan.`, 'ok');
+    document.getElementById('addForm').reset();
+    overlay.classList.remove('show');
+  } catch(err){
+    if (err.message === 'DUPLICATE'){
+      errEl.textContent = `Kode ${code} sudah digunakan negara lain. Pilih kode lain.`;
+      errEl.style.display = 'block';
+    } else {
+      toast('Gagal menyimpan: ' + err.message, 'err');
+    }
+  } finally {
+    submitBtn.disabled = false; submitBtn.textContent = 'Daftarkan';
+  }
+});
+
+/* =========================================================
+   11. THEME TOGGLE
+========================================================= */
+const themeBtn = document.getElementById('themeToggle');
+function applyTheme(t){
+  document.body.setAttribute('data-theme', t);
+  themeBtn.textContent = t === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem('efa-theme', t);
+}
+applyTheme(localStorage.getItem('efa-theme') || 'dark');
+themeBtn.addEventListener('click', ()=>{
+  const cur = document.body.getAttribute('data-theme');
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+});
+
+/* =========================================================
+   12. INIT
+========================================================= */
+startListeners();
+tryDailyUpdate();
+setInterval(tryDailyUpdate, 60 * 1000); // cek tiap menit, jaga-jaga jika tab dibuka lintas hari
+renderTicker(); renderStats(); renderConverterOptions(); renderGrid(); renderChart();
+</script>
+</body>
+</html>
