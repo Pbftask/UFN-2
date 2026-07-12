@@ -687,6 +687,46 @@ function uid8(){
 function nameKey(name){
   return name.trim().toLowerCase().replace(/\s+/g,' ').replace(/[.#$\[\]]/g,'_');
 }
+// One-time (per player) cleanup for country names that were already duplicated
+// before name-uniqueness was enforced. The oldest account keeps its original
+// name; newer duplicates get an auto-suffix like " (2)", " (3)" so the
+// leaderboard no longer shows the same name twice.
+function resolveNameCollisions(){
+  db.ref('players').once('value').then(snap=>{
+    const all = snap.val() || {};
+    const groups = {};
+    Object.entries(all).forEach(([uid,p])=>{
+      if(!p || !p.countryName) return;
+      const k = nameKey(p.countryName);
+      if(!k) return;
+      (groups[k] = groups[k]||[]).push({uid, p});
+    });
+    Object.values(groups).forEach(group=>{
+      if(group.length<2) return;
+      group.sort((a,b)=>(a.p.createdAt||0)-(b.p.createdAt||0));
+      db.ref('nameIndex/'+nameKey(group[0].p.countryName)).transaction(cur=> cur || group[0].uid);
+      for(let i=1;i<group.length;i++){
+        const dup = group[i];
+        if(dup.p.nameDeduped) continue; // already resolved previously
+        const originalName = dup.p.countryName;
+        const newName = originalName + ' ('+(i+1)+')';
+        const newKey = nameKey(newName);
+        db.ref('players/'+dup.uid+'/countryName').transaction(cur=>{
+          if(cur !== originalName) return; // changed meanwhile, abort
+          return newName;
+        }).then(res=>{
+          if(res.committed){
+            db.ref('players/'+dup.uid+'/nameDeduped').set(true);
+            db.ref('nameIndex/'+newKey).transaction(cur=> cur || dup.uid);
+            if(dup.uid===CUR_UID){
+              showToast('Nama negara Anda diubah otomatis menjadi "'+newName+'" karena sama dengan negara lain','info','fa-signature');
+            }
+          }
+        });
+      }
+    });
+  });
+}
 function showToast(msg, type='info', icon='fa-circle-info'){
   const wrap=document.getElementById('toastWrap');
   const el=document.createElement('div');
@@ -943,6 +983,7 @@ function enterGame(uidVal){
   listenAllPlayers();
   listenNotifications();
   listenWars();
+  resolveNameCollisions();
   buildBuildingsGrid();
   buildUnitsGrid();
   buildResearchGrid();
