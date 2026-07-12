@@ -387,6 +387,33 @@ body::before{
 .small-muted{color:var(--txt-2);font-size:12px;}
 .flex-between{display:flex;align-items:center;justify-content:space-between;}
 .mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}
+
+  .popup{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.box{
+    width:300px;
+    background:#222;
+    color:#fff;
+    padding:20px;
+    border-radius:15px;
+    text-align:center;
+}
+
+.box button{
+    margin:8px;
+    padding:10px 18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -433,6 +460,19 @@ body::before{
 
 <!-- ============ APP ============ -->
 <div id="app">
+  <!-- Popup -->
+<div id="musicPopup" class="popup">
+  <div class="box">
+    <h2>Musik Latar</h2>
+    <p>Aktifkan musik untuk pengalaman bermain yang lebih seru.</p>
+
+    <button onclick="playMusic()">Putar Musik</button>
+  </div>
+</div>
+
+<!-- Audio -->
+<audio id="bgMusic" src="militers.mp3" loop></audio>
+  
   <div class="sidebar-overlay" id="sideOverlay" onclick="toggleSidebar(false)"></div>
   <div class="sidebar glass" id="sidebar">
     <div class="brand"><i class="fa-solid fa-shield-halved"></i><span>WARCOM</span></div>
@@ -645,6 +685,17 @@ body::before{
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
+
+
+window.playMusic = function () {
+    const music = document.getElementById("bgMusic");
+    music.play();
+    document.getElementById("musicPopup").style.display = "none";
+};
+
+window.closePopup = function () {
+    document.getElementById("musicPopup").style.display = "none";
+};
 /* ==========================================================================
    FIREBASE CONFIG
    Proyek ini menggunakan Firebase Realtime Database yang sama dengan
