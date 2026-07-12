@@ -246,6 +246,19 @@ body::before{
 .item-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;gap:8px;}
 .cost{font-family:var(--font-mono);font-size:13px;color:var(--gold);}
 
+/* missions */
+.mission-tabs{display:flex;gap:8px;margin-bottom:16px;}
+.mission-card{padding:16px; display:flex; flex-direction:column; gap:10px; transition:.2s;}
+.mission-card:hover{border-color:rgba(46,230,214,0.35);}
+.mission-card.done{border-color:rgba(55,224,143,0.4);}
+.mission-top{display:flex;align-items:center;gap:12px;}
+.mission-icon{width:44px;height:44px;border-radius:11px;background:rgba(46,230,214,0.1);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:18px;flex-shrink:0;}
+.mission-card.done .mission-icon{background:rgba(55,224,143,0.14);color:var(--ok);}
+.mission-name{font-weight:700;font-size:14px;}
+.mission-reward{font-size:11px;color:var(--gold);font-family:var(--font-mono);}
+.mission-progress-text{font-size:11px;color:var(--txt-2);display:flex;justify-content:space-between;margin-top:2px;}
+.mission-card .progress{margin-top:0;}
+
 .qty-row{display:flex;align-items:center;gap:8px;}
 .qty-row input{width:64px;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--glass-brd);background:rgba(255,255,255,0.03);color:var(--txt-0);}
 
@@ -430,6 +443,7 @@ body::before{
     <div class="nav-item" data-page="alliance" onclick="goPage('alliance')"><i class="fa-solid fa-people-group"></i> Aliansi</div>
     <div class="nav-item" data-page="ranking" onclick="goPage('ranking')"><i class="fa-solid fa-ranking-star"></i> Peringkat</div>
     <div class="nav-item" data-page="war" onclick="goPage('war')"><i class="fa-solid fa-explosion"></i> Deklarasi Perang</div>
+    <div class="nav-item" data-page="missions" onclick="goPage('missions')"><i class="fa-solid fa-list-check"></i> Misi<span class="badge" id="missionNavBadge" style="position:static;margin-left:auto;display:none;"></span></div>
     <div class="nav-sep">Akun</div>
     <div class="nav-item" onclick="logout()"><i class="fa-solid fa-power-off"></i> Keluar</div>
     <div class="sidebar-foot mono" id="uidFooter"></div>
@@ -579,6 +593,15 @@ body::before{
       <div class="section-title"><i class="fa-solid fa-scroll"></i>Perang Berlangsung</div>
       <div class="card glass" id="activeWars"><div class="empty-state"><i class="fa-solid fa-dove"></i>Tidak ada perang aktif</div></div>
     </div>
+
+    <!-- ===== MISSIONS ===== -->
+    <div class="page" id="page-missions">
+      <div class="section-title"><i class="fa-solid fa-calendar-day"></i>Misi Harian<span class="small-muted" id="dailyResetInfo" style="margin-left:auto;font-weight:400;"></span></div>
+      <div class="grid grid-3" id="dailyMissionsGrid"></div>
+
+      <div class="section-title"><i class="fa-solid fa-calendar-week"></i>Misi Mingguan<span class="small-muted" id="weeklyResetInfo" style="margin-left:auto;font-weight:400;"></span></div>
+      <div class="grid grid-3" id="weeklyMissionsGrid"></div>
+    </div>
   </div>
 </div>
 
@@ -661,6 +684,9 @@ function uid8(){
   for(let i=0;i<7;i++) s+=chars[Math.floor(Math.random()*chars.length)];
   return s;
 }
+function nameKey(name){
+  return name.trim().toLowerCase().replace(/\s+/g,' ').replace(/[.#$\[\]]/g,'_');
+}
 function showToast(msg, type='info', icon='fa-circle-info'){
   const wrap=document.getElementById('toastWrap');
   const el=document.createElement('div');
@@ -739,6 +765,34 @@ const STRATEGIES = [
 function costFor(base, growth, level){ return Math.round(base * Math.pow(growth, level)); }
 
 /* ==========================================================================
+   MISSIONS CONFIG
+   ========================================================================== */
+const DAILY_MISSIONS = [
+  {key:'login',          name:'Login Harian',                 icon:'fa-right-to-bracket',  target:1,    reward:500},
+  {key:'tax3',           name:'Kumpulkan Pajak 3 Kali',        icon:'fa-sack-dollar',       target:3,    reward:1000},
+  {key:'upgrade1',       name:'Upgrade 1 Bangunan',            icon:'fa-industry',          target:1,    reward:2500},
+  {key:'army50',         name:'Produksi 50 Tentara',           icon:'fa-person-rifle',      target:50,   reward:1500},
+  {key:'tank5',          name:'Produksi 5 Tank',               icon:'fa-truck-monster',     target:5,    reward:2000},
+  {key:'jet2',           name:'Produksi 2 Jet Tempur',         icon:'fa-jet-fighter',       target:2,    reward:3000},
+  {key:'drone10',        name:'Produksi 10 Drone',             icon:'fa-drone',             target:10,   reward:2000},
+  {key:'research1',      name:'Selesaikan 1 Penelitian',       icon:'fa-flask',             target:1,    reward:3000},
+  {key:'donateAlliance', name:'Donasi ke Aliansi',             icon:'fa-hand-holding-dollar', target:1,  reward:1500},
+  {key:'chat5',          name:'Kirim 5 Pesan Aliansi',         icon:'fa-comments',          target:5,    reward:500},
+  {key:'warWin1',        name:'Menangkan 1 Perang',            icon:'fa-trophy',            target:1,    reward:10000},
+  {key:'warJoin3',       name:'Ikut 3 Perang',                 icon:'fa-crosshairs',        target:3,    reward:5000},
+  {key:'destroyPower100',name:'Hancurkan 100 Total Power Musuh', icon:'fa-burst',           target:100,  reward:4000},
+  {key:'levelUp1',       name:'Naik 1 Level Militer',          icon:'fa-chart-line',        target:1,    reward:7500},
+  {key:'online30',       name:'Online 30 Menit',               icon:'fa-stopwatch',         target:1800, reward:1000, isTime:true}
+];
+const WEEKLY_MISSIONS = [
+  {key:'warWin10',  name:'Menang 10 Perang',                 icon:'fa-trophy',              target:10,     reward:50000},
+  {key:'upgrade5',  name:'Upgrade Bangunan 5 Kali',          icon:'fa-industry',             target:5,      reward:40000},
+  {key:'unit1000',  name:'Produksi 1.000 Unit',              icon:'fa-people-carry-box',     target:1000,   reward:35000},
+  {key:'donate100k',name:'Donasi 100.000 T ke Aliansi',      icon:'fa-hand-holding-dollar',  target:100000, reward:30000},
+  {key:'login7',    name:'Login 7 Hari Berturut-turut',      icon:'fa-calendar-check',       target:7,      reward:25000}
+];
+
+/* ==========================================================================
    STATE
    ========================================================================== */
 let CUR_UID = null;
@@ -748,6 +802,9 @@ let productionTickHandle = null;
 let currentEnemyForPrep = null;
 let selectedStrategy = null;
 let activeWarListeners = {};
+let missionResetTracker = {daily:null, weekly:null};
+let localOnlineSeconds = 0;
+let prevPlayerLevel = null;
 
 /* ==========================================================================
    LOADING / LOGIN FLOW
@@ -796,6 +853,11 @@ function defaultPlayer(countryName){
     production: {},
     allianceId: null,
     stats: { wins:0, losses:0 },
+    missions: {
+      daily: { date: todayStr(), progress: {login:1}, claimed: {} },
+      weekly: { week: weekKey(), progress: {login7:1}, claimed: {} }
+    },
+    loginStreak: { last: todayStr(), count: 1 },
     createdAt: Date.now()
   };
 }
@@ -803,16 +865,57 @@ function defaultPlayer(countryName){
 function createNewPlayer(){
   const country = document.getElementById('inpCountry').value.trim();
   if(!country){ showToast('Nama negara wajib diisi','err','fa-triangle-exclamation'); return; }
-  const newUid = uid8();
-  const p = defaultPlayer(country);
-  db.ref('players/'+newUid).set(p).then(()=>{
-    const box=document.getElementById('newUidBox');
-    box.style.display='block';
-    box.innerHTML = `<i class="fa-solid fa-key"></i> UID Komandan Anda: <b>${newUid}</b><br>Simpan UID ini untuk login kembali!`;
-    showToast('Negara berhasil didirikan!','ok','fa-shield-halved');
-    setTimeout(()=> enterGame(newUid), 1600);
+  const key = nameKey(country);
+  if(!key){ showToast('Nama negara tidak valid','err','fa-triangle-exclamation'); return; }
+  const btn = document.querySelector('#tabNew .btn');
+  if(btn) btn.disabled = true;
+
+  // 1) Scan all existing players directly. This catches legacy accounts created before
+  //    name-uniqueness was enforced, which were never registered in nameIndex.
+  db.ref('players').once('value').then(snap=>{
+    const all = snap.val() || {};
+    const taken = Object.values(all).some(p => p && p.countryName && nameKey(p.countryName) === key);
+    if(taken){
+      if(btn) btn.disabled = false;
+      showToast('Nama negara sudah dipakai, silakan pilih nama lain','err','fa-triangle-exclamation');
+      return;
+    }
+    // Lazily backfill nameIndex from legacy players so future checks stay fast & race-safe.
+    Object.entries(all).forEach(([uid,p])=>{
+      if(p && p.countryName){
+        const k = nameKey(p.countryName);
+        if(k) db.ref('nameIndex/'+k).transaction(cur=> cur ? undefined : uid);
+      }
+    });
+
+    const newUid = uid8();
+    // 2) Atomic claim as a second line of defense against two people registering
+    //    the exact same new name at the exact same instant.
+    db.ref('nameIndex/'+key).transaction(cur=>{
+      if(cur) return; // abort: name already taken
+      return newUid;
+    }).then(res=>{
+      if(!res.committed){
+        if(btn) btn.disabled = false;
+        showToast('Nama negara sudah dipakai, silakan pilih nama lain','err','fa-triangle-exclamation');
+        return;
+      }
+      const p = defaultPlayer(country);
+      db.ref('players/'+newUid).set(p).then(()=>{
+        const box=document.getElementById('newUidBox');
+        box.style.display='block';
+        box.innerHTML = `<i class="fa-solid fa-key"></i> UID Komandan Anda: <b>${newUid}</b><br>Simpan UID ini untuk login kembali!`;
+        showToast('Negara berhasil didirikan!','ok','fa-shield-halved');
+        setTimeout(()=> enterGame(newUid), 1600);
+      }).catch(err=>{
+        if(btn) btn.disabled = false;
+        db.ref('nameIndex/'+key).remove();
+        showToast('Gagal membuat negara: '+err.message,'err','fa-triangle-exclamation');
+      });
+    });
   }).catch(err=>{
-    showToast('Gagal membuat negara: '+err.message,'err','fa-triangle-exclamation');
+    if(btn) btn.disabled = false;
+    showToast('Gagal memeriksa nama: '+err.message,'err','fa-triangle-exclamation');
   });
 }
 
@@ -865,11 +968,19 @@ function listenPlayer(){
     if(!player.buildings) player.buildings = {};
     if(!player.research) player.research = {};
     if(!player.stats) player.stats = {wins:0, losses:0};
+    if(!player.missions) player.missions = {daily:{date:null,progress:{},claimed:{}}, weekly:{week:null,progress:{},claimed:{}}};
+    if(prevPlayerLevel!==null && (player.level||1) > prevPlayerLevel){
+      incrementMission('daily','levelUp1', (player.level||1)-prevPlayerLevel);
+    }
+    prevPlayerLevel = player.level||1;
+    checkMissionPeriods();
     renderDashboard();
     buildBuildingsGrid();
     buildUnitsGrid();
     buildResearchGrid();
     renderQueue();
+    if(document.getElementById('page-missions').classList.contains('active')) renderMissions();
+    else updateMissionBadge();
   });
 }
 
@@ -897,9 +1008,13 @@ function gameTick(){
     ref.child('money').transaction(m => (m||0) + gained);
     ref.child('lastIncomeCollected').set(now);
     showToast(`Pajak diterima: +${fmtT(gained)}`, 'ok', 'fa-coins');
+    incrementMission('daily','tax3',1);
   }
   // production queue completion
   checkProductionQueue();
+  // online-time mission (checked every second, synced every 10s)
+  localOnlineSeconds++;
+  if(localOnlineSeconds % 10 === 0) incrementMission('daily','online30', 10);
 }
 
 /* ==========================================================================
@@ -942,7 +1057,8 @@ const PAGE_TITLES = {
   research:['Penelitian','Kembangkan teknologi militer'],
   alliance:['Aliansi','Kerja sama antar negara'],
   ranking:['Peringkat Dunia','Klasemen kekuatan global realtime'],
-  war:['Deklarasi Perang','Pilih lawan dan tentukan strategi']
+  war:['Deklarasi Perang','Pilih lawan dan tentukan strategi'],
+  missions:['Misi','Selesaikan misi dan klaim hadiah']
 };
 function goPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -953,6 +1069,7 @@ function goPage(name){
   if(name==='ranking') renderRanking('power');
   if(name==='war') renderEnemyList();
   if(name==='alliance') renderAlliancePage();
+  if(name==='missions') renderMissions();
 }
 
 /* ==========================================================================
@@ -990,6 +1107,8 @@ function upgradeBuilding(key){
     if(res.committed){
       ref.child('buildings/'+key+'/level').set(lvl+1);
       showToast(b.name+' naik ke level '+(lvl+1),'ok','fa-arrow-up');
+      incrementMission('daily','upgrade1',1);
+      incrementMission('weekly','upgrade5',1);
     } else {
       showToast('Dana tidak cukup','err','fa-triangle-exclamation');
     }
@@ -1044,6 +1163,9 @@ function checkProductionQueue(){
       ref.child('units/'+item.type).transaction(n=> (n||0) + item.qty);
       ref.child('production/'+qId).remove();
       showToast(`Produksi selesai: ${item.qty} unit`,'ok','fa-check-double');
+      const missionMap = {army:'army50', tank:'tank5', jet:'jet2', drone:'drone10'};
+      if(missionMap[item.type]) incrementMission('daily', missionMap[item.type], item.qty);
+      incrementMission('weekly','unit1000', item.qty);
     }
   });
 }
@@ -1102,6 +1224,7 @@ function researchUpgrade(key){
     if(res.committed){
       ref.child('research/'+key+'/level').set(lvl+1);
       showToast(r.name+' naik ke level '+(lvl+1),'ok','fa-flask');
+      incrementMission('daily','research1',1);
     } else showToast('Dana tidak cukup','err','fa-triangle-exclamation');
   });
 }
@@ -1231,6 +1354,7 @@ function sendAllianceChat(){
   db.ref('alliances/'+player.allianceId+'/chat/'+msgId).set({
     uid: CUR_UID, name: player.countryName, text, time: Date.now()
   });
+  incrementMission('daily','chat5',1);
   input.value='';
 }
 function donateAllianceMoney(){
@@ -1245,6 +1369,8 @@ function donateAllianceMoney(){
     if(res.committed){
       db.ref('alliances/'+player.allianceId+'/money').transaction(m=>(m||0)+amt);
       showToast('Donasi dana berhasil','ok','fa-hand-holding-dollar');
+      incrementMission('daily','donateAlliance',1);
+      incrementMission('weekly','donate100k',amt);
     }
   });
 }
@@ -1410,6 +1536,7 @@ function submitWarPrep(){
     db.ref('wars/'+warId).update(updates);
     closeModal('warPrepModal');
     showToast('Strategi tersimpan, menunggu lawan...','ok','fa-check');
+    incrementMission('daily','warJoin3',1);
   });
 }
 
@@ -1532,6 +1659,21 @@ function applyWarResults(warId, winnerUid, loserUid, w){
     });
   }
 
+  if(winnerUid===CUR_UID){
+    incrementMission('daily','warWin1',1);
+    incrementMission('weekly','warWin10',1);
+    let destroyedPower = 0;
+    if(loserPrep){
+      Object.entries(loserPrep.units).forEach(([type,qty])=>{
+        if(qty>0){
+          const u = UNITS.find(x=>x.key===type);
+          if(u) destroyedPower += u.power * Math.round(qty*0.3);
+        }
+      });
+    }
+    if(destroyedPower>0) incrementMission('daily','destroyPower100', destroyedPower);
+  }
+
   if(winnerUid===CUR_UID || loserUid===CUR_UID){
     showWarSimulationModal(warId);
   }
@@ -1582,6 +1724,124 @@ function showWarSimulationModal(warId){
       </div>`;
     }, (w.log||[]).length*900 + 400);
   });
+}
+
+/* ==========================================================================
+   MISSIONS
+   ========================================================================== */
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function yesterdayStr(){
+  const d = new Date();
+  d.setDate(d.getDate()-1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function weekKey(){
+  const d = new Date();
+  const onejan = new Date(d.getFullYear(),0,1);
+  const week = Math.ceil((((d-onejan)/86400000) + onejan.getDay()+1)/7);
+  return d.getFullYear()+'-W'+week;
+}
+// Checks daily/weekly periods and resets progress when a new period starts.
+// Also updates the consecutive-login streak used by the weekly "login7" mission.
+function checkMissionPeriods(){
+  if(!player) return;
+  const ref = db.ref('players/'+CUR_UID);
+  const m = player.missions || {};
+  const today = todayStr();
+  const wk = weekKey();
+
+  if(missionResetTracker.daily !== today){
+    missionResetTracker.daily = today;
+    if(m.daily?.date !== today){
+      const streak = player.loginStreak || {last:null, count:0};
+      const newCount = streak.last === yesterdayStr() ? (streak.count||0)+1 : 1;
+      ref.child('loginStreak').set({last: today, count: newCount});
+      ref.child('missions/daily').set({date: today, progress: {login:1}, claimed: {}});
+      ref.child('missions/weekly/progress/login7').set(Math.min(newCount,7));
+      localOnlineSeconds = 0;
+    }
+  }
+  if(missionResetTracker.weekly !== wk){
+    missionResetTracker.weekly = wk;
+    if(m.weekly?.week !== wk){
+      const streak = player.loginStreak || {count:0};
+      ref.child('missions/weekly').set({week: wk, progress: {login7: Math.min(streak.count||1,7)}, claimed: {}});
+    }
+  }
+}
+function incrementMission(period, key, amount){
+  if(!player || !CUR_UID || !amount) return;
+  db.ref('players/'+CUR_UID+'/missions/'+period+'/progress/'+key).transaction(v=>(v||0)+amount);
+}
+function claimMission(period, key){
+  const list = period==='daily' ? DAILY_MISSIONS : WEEKLY_MISSIONS;
+  const def = list.find(x=>x.key===key);
+  if(!def || !player) return;
+  const m = player.missions?.[period] || {};
+  const progress = m.progress?.[key] || 0;
+  if(progress < def.target){ showToast('Misi belum selesai','err','fa-triangle-exclamation'); return; }
+  if(m.claimed?.[key]){ showToast('Hadiah sudah diklaim','info','fa-circle-info'); return; }
+  const ref = db.ref('players/'+CUR_UID);
+  ref.child('missions/'+period+'/claimed/'+key).transaction(v=>{
+    if(v) return; // abort if already claimed
+    return true;
+  }).then(res=>{
+    if(res.committed){
+      ref.child('money').transaction(mo=>(mo||0)+def.reward);
+      showToast(def.name+' selesai! +'+fmtT(def.reward),'ok','fa-gift');
+    } else {
+      showToast('Hadiah sudah diklaim','info','fa-circle-info');
+    }
+  });
+}
+function missionCardHTML(def, period){
+  const m = player.missions?.[period] || {};
+  const progress = Math.min(def.target, m.progress?.[def.key] || 0);
+  const claimed = !!m.claimed?.[def.key];
+  const done = progress >= def.target;
+  const pct = Math.min(100, (progress/def.target)*100);
+  const progressLabel = def.isTime ? Math.floor(progress/60)+'m/'+Math.floor(def.target/60)+'m' : fmtNum(progress)+'/'+fmtNum(def.target);
+  let btn;
+  if(claimed) btn = `<button class="btn small ghost" disabled>Diklaim</button>`;
+  else if(done) btn = `<button class="btn small" onclick="claimMission('${period}','${def.key}')"><i class="fa-solid fa-gift"></i> Klaim</button>`;
+  else btn = `<button class="btn small ghost" disabled>Belum Selesai</button>`;
+  return `<div class="mission-card glass ${done?'done':''}">
+    <div class="mission-top">
+      <div class="mission-icon"><i class="fa-solid ${def.icon}"></i></div>
+      <div><div class="mission-name">${def.name}</div><div class="mission-reward"><i class="fa-solid fa-coins"></i> +${fmtT(def.reward)}</div></div>
+    </div>
+    <div class="progress"><span style="width:${pct}%"></span></div>
+    <div class="mission-progress-text"><span>${progressLabel}</span><span>${done?(claimed?'Selesai':'Siap diklaim'):'Berlangsung'}</span></div>
+    ${btn}
+  </div>`;
+}
+function renderMissions(){
+  if(!player) return;
+  checkMissionPeriods();
+  document.getElementById('dailyMissionsGrid').innerHTML = DAILY_MISSIONS.map(d=>missionCardHTML(d,'daily')).join('');
+  document.getElementById('weeklyMissionsGrid').innerHTML = WEEKLY_MISSIONS.map(d=>missionCardHTML(d,'weekly')).join('');
+  document.getElementById('dailyResetInfo').textContent = 'Reset setiap hari pukul 00:00';
+  document.getElementById('weeklyResetInfo').textContent = 'Reset setiap awal pekan';
+  updateMissionBadge();
+}
+function updateMissionBadge(){
+  if(!player) return;
+  const m = player.missions || {};
+  let readyCount = 0;
+  DAILY_MISSIONS.forEach(d=>{
+    const progress = m.daily?.progress?.[d.key] || 0;
+    if(progress >= d.target && !m.daily?.claimed?.[d.key]) readyCount++;
+  });
+  WEEKLY_MISSIONS.forEach(d=>{
+    const progress = m.weekly?.progress?.[d.key] || 0;
+    if(progress >= d.target && !m.weekly?.claimed?.[d.key]) readyCount++;
+  });
+  const badge = document.getElementById('missionNavBadge');
+  if(readyCount>0){ badge.style.display='flex'; badge.textContent = readyCount; }
+  else badge.style.display='none';
 }
 
 /* ==========================================================================
