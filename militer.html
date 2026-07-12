@@ -2,1557 +2,1596 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WAR EMPIRE — Sistem Militer Multiplayer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WARCOM // Sistem Militer Multiplayer</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+/* ============ TOKENS ============ */
 :root{
-  --bg-1:#040711;
-  --bg-2:#0a1128;
-  --bg-3:#0d1b3e;
-  --accent:#3d8bff;
-  --accent2:#7c4dff;
-  --danger:#ff4d6d;
-  --success:#33e6a8;
-  --warn:#ffc857;
-  --glass-bg:rgba(255,255,255,0.05);
-  --glass-border:rgba(255,255,255,0.12);
-  --text-1:#eaf0ff;
-  --text-2:#9db0d8;
+  --bg-0:#060b14;
+  --bg-1:#0a1220;
+  --bg-2:#0d1830;
+  --navy:#0e1e3d;
+  --steel:#1b2c4f;
+  --glass:rgba(20,34,64,0.45);
+  --glass-brd:rgba(120,170,255,0.14);
+  --accent:#2ee6d6;
+  --accent-2:#4d8dff;
+  --alert:#ff3b5c;
+  --alert-glow:rgba(255,59,92,0.45);
+  --gold:#ffb92e;
+  --txt-0:#eaf2ff;
+  --txt-1:#9fb3d1;
+  --txt-2:#5f7396;
+  --ok:#37e08f;
   --radius:16px;
+  --font-display:'Chakra Petch', sans-serif;
+  --font-body:'Rajdhani', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
 }
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial,sans-serif;}
+*{box-sizing:border-box; margin:0; padding:0;}
 html,body{height:100%;}
 body{
+  font-family:var(--font-body);
   background:
-    radial-gradient(circle at 15% 10%, rgba(61,139,255,0.18), transparent 40%),
-    radial-gradient(circle at 85% 90%, rgba(124,77,255,0.18), transparent 45%),
-    linear-gradient(160deg,var(--bg-1),var(--bg-2) 45%,var(--bg-3));
-  color:var(--text-1);
+    radial-gradient(ellipse at 20% -10%, rgba(77,141,255,0.18), transparent 55%),
+    radial-gradient(ellipse at 90% 0%, rgba(46,230,214,0.10), transparent 45%),
+    linear-gradient(180deg,var(--bg-0), var(--bg-1) 40%, var(--bg-2));
+  color:var(--txt-0);
   min-height:100vh;
   overflow-x:hidden;
+  font-size:16px;
+  letter-spacing:.2px;
 }
 ::-webkit-scrollbar{width:8px;height:8px;}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:10px;}
+::-webkit-scrollbar-thumb{background:var(--steel);border-radius:8px;}
 ::-webkit-scrollbar-track{background:transparent;}
-
+h1,h2,h3,h4,.mono,.stat-num{font-family:var(--font-display);}
+.num{font-family:var(--font-mono);}
+button{font-family:var(--font-body);cursor:pointer;}
+input,select,textarea{font-family:var(--font-body);}
 a{color:inherit;text-decoration:none;}
-button{cursor:pointer;border:none;outline:none;font-family:inherit;}
-input,select,textarea{font-family:inherit;outline:none;}
+
+/* Grid texture overlay for "tactical HUD" feel */
+body::before{
+  content:"";
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(120,170,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120,170,255,0.035) 1px, transparent 1px);
+  background-size:36px 36px;
+  mask-image:radial-gradient(ellipse at 50% 0%, black, transparent 75%);
+}
 
 .glass{
-  background:var(--glass-bg);
-  border:1px solid var(--glass-border);
+  background:var(--glass);
+  border:1px solid var(--glass-brd);
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
   border-radius:var(--radius);
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-  box-shadow:0 8px 32px rgba(0,0,0,0.35);
+  box-shadow:0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
-/* ===== LOADING SCREEN ===== */
-#loading-screen{
-  position:fixed;inset:0;z-index:9999;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-  background:radial-gradient(circle at 50% 40%,#0b1740,#04060f 75%);
+/* ============ LOADING SCREEN ============ */
+#loadingScreen{
+  position:fixed; inset:0; z-index:9999;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:var(--bg-0);
+  gap:22px;
   transition:opacity .6s ease, visibility .6s ease;
 }
-#loading-screen.hide{opacity:0;visibility:hidden;pointer-events:none;}
-.logo-badge{
-  width:96px;height:96px;border-radius:24px;
+#loadingScreen.hide{opacity:0; visibility:hidden; pointer-events:none;}
+.load-emblem{
+  width:84px;height:84px;border-radius:50%;
+  border:2px solid var(--accent);
   display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  font-size:42px;box-shadow:0 0 60px rgba(61,139,255,0.55);
-  animation:pulseLogo 2s ease-in-out infinite;
+  font-size:34px;color:var(--accent);
+  box-shadow:0 0 40px rgba(46,230,214,0.35);
+  animation:spin 3s linear infinite, pulse 2s ease-in-out infinite;
+  position:relative;
 }
-@keyframes pulseLogo{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
-.loading-bar{width:260px;height:6px;border-radius:10px;background:rgba(255,255,255,0.08);overflow:hidden;}
-.loading-bar span{display:block;height:100%;width:30%;border-radius:10px;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  animation:loadmove 1.1s ease-in-out infinite;}
-@keyframes loadmove{0%{margin-left:-30%;}50%{margin-left:70%;}100%{margin-left:-30%;}}
-#loading-screen h2{letter-spacing:3px;font-weight:700;}
-#loading-screen p{color:var(--text-2);font-size:13px;}
-
-/* ===== APP LAYOUT ===== */
-#app{display:none;min-height:100vh;}
-#app.ready{display:flex;}
-
-.sidebar{
-  width:250px;flex-shrink:0;min-height:100vh;
-  padding:22px 16px;display:flex;flex-direction:column;gap:6px;
-  position:sticky;top:0;height:100vh;overflow-y:auto;
-  border-right:1px solid var(--glass-border);
-  background:rgba(6,10,26,0.55);
-  z-index:50;
+.load-emblem::after{
+  content:""; position:absolute; inset:-10px; border-radius:50%;
+  border:1px dashed rgba(46,230,214,0.35); animation:spin 8s linear infinite reverse;
 }
-.brand{display:flex;align-items:center;gap:10px;padding:6px 8px 22px 8px;}
-.brand .logo-badge{width:42px;height:42px;border-radius:12px;font-size:18px;animation:none;box-shadow:0 0 24px rgba(61,139,255,0.5);}
-.brand h1{font-size:16px;letter-spacing:1px;}
-.brand span{display:block;font-size:11px;color:var(--text-2);}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulse{0%,100%{box-shadow:0 0 20px rgba(46,230,214,0.25);}50%{box-shadow:0 0 46px rgba(46,230,214,0.55);}}
+.load-title{font-family:var(--font-display);font-weight:700;font-size:22px;letter-spacing:4px;color:var(--txt-0);}
+.load-sub{font-family:var(--font-mono);font-size:12px;color:var(--accent);letter-spacing:2px;}
+.load-bar{width:220px;height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+.load-bar span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent-2),var(--accent));animation:loadfill 1.6s ease forwards;}
+@keyframes loadfill{to{width:100%;}}
 
-.nav-item{
-  display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;
-  color:var(--text-2);font-size:14px;font-weight:500;transition:.2s;cursor:pointer;
+/* ============ LOGIN ============ */
+#loginScreen{
+  position:fixed; inset:0; z-index:500;
+  display:none; align-items:center; justify-content:center;
+  padding:20px;
 }
-.nav-item i{width:18px;text-align:center;}
-.nav-item:hover{background:rgba(255,255,255,0.06);color:var(--text-1);}
-.nav-item.active{background:linear-gradient(135deg,rgba(61,139,255,0.25),rgba(124,77,255,0.2));color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12);}
-.nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;display:none;}
-.nav-badge.show{display:inline-block;}
-
-.sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--glass-border);font-size:11px;color:var(--text-2);}
-.uid-tag{font-size:10px;opacity:.6;word-break:break-all;}
-
-.main{flex:1;min-width:0;padding:22px 26px 60px;}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
-.topbar h2{font-size:20px;display:flex;align-items:center;gap:10px;}
-.topbar-stats{display:flex;gap:10px;flex-wrap:wrap;}
-.pill{
-  display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:30px;
-  font-size:13px;font-weight:600;
+.login-card{
+  width:100%; max-width:420px; padding:34px 30px;
+  animation:riseIn .6s cubic-bezier(.2,.8,.2,1);
 }
-.pill i{color:var(--accent);}
-.pill.money i{color:var(--warn);}
-.pill.power i{color:var(--danger);}
-.pill.online i{color:var(--success);}
-.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);animation:blink 1.6s infinite;}
-@keyframes blink{50%{opacity:.3;}}
-
-.section{display:none;animation:fadeIn .35s ease;}
-.section.active{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-
-/* Grid */
-.grid{display:grid;gap:16px;}
-.grid.cols-4{grid-template-columns:repeat(4,1fr);}
-.grid.cols-3{grid-template-columns:repeat(3,1fr);}
-.grid.cols-2{grid-template-columns:repeat(2,1fr);}
-@media(max-width:1100px){.grid.cols-4{grid-template-columns:repeat(2,1fr);}.grid.cols-3{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:640px){.grid.cols-4,.grid.cols-3,.grid.cols-2{grid-template-columns:1fr;}}
-
-.stat-card{padding:18px;position:relative;overflow:hidden;}
-.stat-card::after{content:'';position:absolute;right:-20px;top:-20px;width:90px;height:90px;
-  background:radial-gradient(circle,rgba(61,139,255,0.25),transparent 70%);}
-.stat-card .icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));font-size:18px;margin-bottom:12px;}
-.stat-card .label{font-size:12px;color:var(--text-2);margin-bottom:4px;}
-.stat-card .value{font-size:24px;font-weight:800;}
-.stat-card .sub{font-size:11px;color:var(--success);margin-top:4px;}
-
-.card{padding:20px;}
-.card h3{font-size:15px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.card h3 i{color:var(--accent);}
-
-.progress-bar{height:9px;border-radius:20px;background:rgba(255,255,255,0.08);overflow:hidden;margin-top:8px;}
-.progress-bar span{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s ease;}
-
-.country-banner{display:flex;align-items:center;gap:18px;padding:20px;margin-bottom:20px;flex-wrap:wrap;}
-.flag-big{font-size:52px;width:80px;height:80px;border-radius:18px;display:flex;align-items:center;justify-content:center;
-  background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);}
-.country-banner .info h2{font-size:22px;margin-bottom:2px;}
-.country-banner .info span{color:var(--text-2);font-size:13px;}
-.level-badge{margin-left:auto;text-align:center;padding:10px 18px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));}
-.level-badge b{font-size:20px;display:block;}
-.level-badge small{font-size:10px;opacity:.85;}
-
-/* Unit grid */
-.unit-chip{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;text-align:center;}
-.unit-chip i{font-size:20px;color:var(--accent);}
-.unit-chip b{font-size:17px;}
-.unit-chip span{font-size:11px;color:var(--text-2);}
-
-/* Upgrade / research items */
-.item-row{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:rgba(255,255,255,0.03);
-  border:1px solid var(--glass-border);margin-bottom:10px;flex-wrap:wrap;}
-.item-row .ic{width:46px;height:46px;border-radius:12px;background:rgba(61,139,255,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--accent);flex-shrink:0;}
-.item-row .meta{flex:1;min-width:150px;}
-.item-row .meta b{font-size:14px;}
-.item-row .meta span{display:block;font-size:11px;color:var(--text-2);margin-top:2px;}
-.item-row .cost{font-size:12px;color:var(--warn);margin-right:6px;}
+@keyframes riseIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.login-head{text-align:center;margin-bottom:22px;}
+.login-head i{font-size:30px;color:var(--accent);text-shadow:0 0 20px rgba(46,230,214,.5);}
+.login-head h1{font-size:24px;letter-spacing:3px;margin-top:10px;}
+.login-head p{color:var(--txt-2);font-size:13px;letter-spacing:1px;margin-top:4px;}
+.tabs{display:flex;gap:6px;background:rgba(255,255,255,0.04);border-radius:12px;padding:5px;margin-bottom:20px;}
+.tab-btn{flex:1;padding:10px;border:none;background:transparent;color:var(--txt-1);border-radius:9px;font-weight:600;letter-spacing:.5px;transition:.25s;font-size:14px;}
+.tab-btn.active{background:linear-gradient(135deg,var(--accent-2),var(--accent));color:#04121a;box-shadow:0 4px 16px rgba(46,230,214,0.25);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:var(--txt-2);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;}
+.field input, .field select{
+  width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--glass-brd);
+  background:rgba(255,255,255,0.03); color:var(--txt-0); font-size:15px; outline:none; transition:.2s;
+}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(46,230,214,0.12);}
 .btn{
-  padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;transition:.2s;white-space:nowrap;
+  border:none;padding:13px 18px;border-radius:11px;font-weight:700;letter-spacing:.8px;font-size:14px;
+  background:linear-gradient(135deg,var(--accent-2),var(--accent)); color:#04121a; width:100%;
+  transition:transform .15s ease, box-shadow .15s ease; text-transform:uppercase;
 }
-.btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
-.btn.outline{background:transparent;border:1px solid var(--glass-border);color:var(--text-1);}
-.btn.danger{background:linear-gradient(135deg,#ff4d6d,#ff8a4d);}
-.btn.success{background:linear-gradient(135deg,#33e6a8,#3dd6ff);}
-.btn.small{padding:6px 12px;font-size:12px;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(46,230,214,0.25);}
+.btn:active{transform:translateY(0);}
+.btn.alert{background:linear-gradient(135deg,#ff5c76,var(--alert));}
+.btn.ghost{background:rgba(255,255,255,0.06);color:var(--txt-0);border:1px solid var(--glass-brd);}
+.btn.small{padding:8px 12px;font-size:12px;width:auto;}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+.uid-box{
+  margin-top:14px;padding:14px;border-radius:10px;background:rgba(46,230,214,0.08);
+  border:1px dashed rgba(46,230,214,0.4); font-family:var(--font-mono); font-size:13px; color:var(--accent); display:none;
+  word-break:break-all;
+}
 
-/* Production */
-.prod-select{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
-.prod-select select,.prod-select input{padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.06);
-  border:1px solid var(--glass-border);color:var(--text-1);}
-.queue-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.04);margin-bottom:8px;}
-.queue-item .qmeta{flex:1;}
-.queue-item .qmeta b{font-size:13px;}
-.timer-txt{font-size:12px;color:var(--warn);font-weight:700;}
+/* ============ APP SHELL ============ */
+#app{display:none; min-height:100vh; position:relative; z-index:1;}
+#app.show{display:flex;}
+.sidebar{
+  width:250px; flex-shrink:0; padding:20px 14px; display:flex; flex-direction:column; gap:6px;
+  position:sticky; top:0; height:100vh; overflow-y:auto; z-index:50;
+}
+.brand{display:flex;align-items:center;gap:10px;padding:10px 10px 20px;}
+.brand i{font-size:22px;color:var(--accent);}
+.brand span{font-family:var(--font-display);font-weight:700;letter-spacing:2px;font-size:16px;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--txt-1);
+  font-weight:600;font-size:14px;transition:.2s;border:1px solid transparent;
+}
+.nav-item i{width:18px;text-align:center;color:var(--txt-2);transition:.2s;}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--txt-0);}
+.nav-item.active{background:rgba(46,230,214,0.1);border-color:rgba(46,230,214,0.25);color:var(--accent);}
+.nav-item.active i{color:var(--accent);}
+.nav-sep{font-size:10px;color:var(--txt-2);letter-spacing:2px;margin:14px 10px 4px;text-transform:uppercase;opacity:.6;}
+.sidebar-foot{margin-top:auto;padding:12px 10px;font-size:11px;color:var(--txt-2);}
 
-/* Ranking */
-.rank-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
-.rank-tab{padding:8px 16px;border-radius:20px;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);font-size:12px;font-weight:600;color:var(--text-2);}
-.rank-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
-.rank-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;margin-bottom:8px;background:rgba(255,255,255,0.03);}
-.rank-row .pos{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;background:rgba(255,255,255,0.07);}
-.rank-row.top1 .pos{background:linear-gradient(135deg,#ffd700,#ffb703);color:#111;}
-.rank-row.top2 .pos{background:linear-gradient(135deg,#d8d8d8,#b0b0b0);color:#111;}
-.rank-row.top3 .pos{background:linear-gradient(135deg,#cd7f32,#a9612f);color:#111;}
-.rank-row .rflag{font-size:22px;}
-.rank-row .rname{flex:1;font-size:13px;font-weight:600;}
-.rank-row .rval{font-size:13px;color:var(--accent);font-weight:700;}
+.main{flex:1; min-width:0; padding:18px 22px 60px;}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;margin-bottom:20px;
+  flex-wrap:wrap;
+}
+.topbar-title{font-size:20px;letter-spacing:1px;}
+.topbar-title span{color:var(--txt-2);font-size:12px;display:block;letter-spacing:1px;font-family:var(--font-mono);margin-top:2px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.pill{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:99px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--glass-brd); font-size:13px; font-weight:600;
+}
+.pill i{color:var(--gold);}
+.online-dot{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.4;}}
+.icon-btn{
+  width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,0.04);border:1px solid var(--glass-brd);
+  display:flex;align-items:center;justify-content:center;color:var(--txt-1);position:relative;transition:.2s;
+}
+.icon-btn:hover{color:var(--accent);border-color:var(--accent);}
+.badge{
+  position:absolute;top:-5px;right:-5px;background:var(--alert);color:#fff;font-size:10px;font-weight:700;
+  min-width:16px;height:16px;border-radius:99px;display:flex;align-items:center;justify-content:center;padding:0 3px;
+}
 
-/* Alliance / chat */
-.chat-box{height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:12px;background:rgba(0,0,0,0.2);margin-bottom:12px;}
-.chat-msg{max-width:80%;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.06);font-size:13px;}
-.chat-msg b{color:var(--accent);font-size:11px;display:block;margin-bottom:2px;}
-.chat-input-row{display:flex;gap:8px;}
-.chat-input-row input{flex:1;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:#fff;}
+.page{display:none; animation:fadeUp .4s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 
-/* War list */
-.player-search{display:flex;gap:10px;margin-bottom:16px;}
-.player-search input{flex:1;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:#fff;}
-.enemy-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.03);margin-bottom:8px;}
-.enemy-row .rflag{font-size:26px;}
-.enemy-row .info{flex:1;}
-.enemy-row .info b{font-size:14px;}
-.enemy-row .info span{font-size:11px;color:var(--text-2);}
+/* stat cards */
+.grid{display:grid; gap:16px;}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+@media(max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:640px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr;}}
 
-/* Battle simulation */
-.battle-stage{position:relative;height:220px;border-radius:16px;overflow:hidden;margin-bottom:16px;
-  background:linear-gradient(180deg,#0a1230,#132048 60%,#1c2c1c);border:1px solid var(--glass-border);}
-.battle-stage .sky{position:absolute;inset:0;}
-.battle-unit{position:absolute;bottom:20px;font-size:26px;transition:left 2s linear;}
-.battle-unit.jet{bottom:auto;top:30px;font-size:22px;}
-.battle-unit.drone{bottom:auto;top:70px;font-size:18px;}
-.battle-unit.ship{bottom:10px;font-size:24px;}
-.explosion{position:absolute;font-size:30px;opacity:0;animation:boom 0.9s ease forwards;}
-@keyframes boom{0%{opacity:0;transform:scale(.3);}40%{opacity:1;transform:scale(1.3);}100%{opacity:0;transform:scale(1.6);}}
-.battle-log{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
-.log-entry{padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.04);border-left:3px solid var(--accent);
-  animation:logIn .4s ease;}
-@keyframes logIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:translateX(0);}}
-.log-entry b{display:block;font-size:12px;color:var(--warn);margin-bottom:3px;}
-.log-entry span{font-size:13px;color:var(--text-1);}
+.stat-card{padding:18px; position:relative; overflow:hidden;}
+.stat-card::before{
+  content:""; position:absolute; top:-30%; right:-30%; width:120px; height:120px; border-radius:50%;
+  background:radial-gradient(circle, rgba(46,230,214,0.14), transparent 70%);
+}
+.stat-card .lbl{font-size:12px;color:var(--txt-2);letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.stat-card .lbl i{color:var(--accent);}
+.stat-card .val{font-size:26px;font-weight:700;margin-top:8px;}
+.stat-card .sub{font-size:12px;color:var(--txt-2);margin-top:4px;}
 
-/* Toast */
-#toast-wrap{position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px;}
-.toast{padding:14px 18px;border-radius:12px;min-width:260px;display:flex;align-items:center;gap:10px;
-  animation:toastIn .35s ease, toastOut .4s ease 3.6s forwards;font-size:13px;}
-.toast i{font-size:16px;}
-.toast.success{border-left:4px solid var(--success);}
-.toast.error{border-left:4px solid var(--danger);}
-.toast.info{border-left:4px solid var(--accent);}
-.toast.warn{border-left:4px solid var(--warn);}
+.country-hero{
+  display:flex;align-items:center;gap:18px;padding:22px 24px;margin-bottom:18px; flex-wrap:wrap;
+}
+.country-hero h2{font-size:24px;letter-spacing:1px;}
+.country-hero .meta{color:var(--txt-2);font-size:13px;margin-top:4px;}
+.power-badge{
+  margin-left:auto;text-align:right; padding:10px 18px;border-radius:12px;background:rgba(46,230,214,0.08);
+  border:1px solid rgba(46,230,214,0.25);
+}
+.power-badge .n{font-size:22px;color:var(--accent);font-weight:700;}
+.power-badge .l{font-size:11px;color:var(--txt-2);letter-spacing:1px;}
+
+.section-title{display:flex;align-items:center;gap:10px;margin:26px 0 14px;font-size:16px;letter-spacing:1px;}
+.section-title i{color:var(--accent);}
+
+.card{padding:18px;}
+.progress{height:8px;border-radius:6px;background:rgba(255,255,255,0.06);overflow:hidden;margin-top:8px;}
+.progress span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent-2),var(--accent));transition:width .4s ease;}
+
+/* buildings/research/units cards */
+.item-card{
+  padding:16px; display:flex; flex-direction:column; gap:10px; transition:.2s;
+}
+.item-card:hover{border-color:rgba(46,230,214,0.35);}
+.item-top{display:flex;align-items:center;gap:12px;}
+.item-icon{width:44px;height:44px;border-radius:11px;background:rgba(46,230,214,0.1);display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:18px;flex-shrink:0;}
+.item-name{font-weight:700;font-size:14px;}
+.item-lvl{font-size:11px;color:var(--txt-2);}
+.item-desc{font-size:12px;color:var(--txt-2);line-height:1.5;}
+.item-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;gap:8px;}
+.cost{font-family:var(--font-mono);font-size:13px;color:var(--gold);}
+
+.qty-row{display:flex;align-items:center;gap:8px;}
+.qty-row input{width:64px;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--glass-brd);background:rgba(255,255,255,0.03);color:var(--txt-0);}
+
+.queue-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.03);margin-bottom:8px;}
+.queue-item i{color:var(--accent);}
+.queue-item .qi-info{flex:1;font-size:13px;}
+.queue-item .qi-timer{font-family:var(--font-mono);font-size:12px;color:var(--gold);}
+
+/* alliance */
+.chat-box{height:320px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.chat-msg{max-width:78%;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.05);font-size:13px;}
+.chat-msg.me{align-self:flex-end;background:rgba(46,230,214,0.14);}
+.chat-msg .who{font-size:11px;color:var(--accent);font-weight:700;margin-bottom:2px;}
+.chat-input-row{display:flex;gap:8px;margin-top:10px;}
+.chat-input-row input{flex:1;padding:11px 14px;border-radius:10px;border:1px solid var(--glass-brd);background:rgba(255,255,255,0.03);color:var(--txt-0);}
+.member-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.03);margin-bottom:8px;}
+.member-row .mi{flex:1;font-size:13px;}
+.member-row .mi small{display:block;color:var(--txt-2);font-size:11px;}
+
+/* ranking */
+.rank-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.rank-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.03);margin-bottom:8px;transition:.2s;}
+.rank-row:hover{background:rgba(255,255,255,0.06);}
+.rank-pos{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;background:rgba(255,255,255,0.05);font-size:13px;}
+.rank-pos.gold{background:linear-gradient(135deg,#ffd76a,#ffb92e);color:#3a2400;}
+.rank-pos.silver{background:linear-gradient(135deg,#e2e9f5,#b8c4d9);color:#1c2534;}
+.rank-pos.bronze{background:linear-gradient(135deg,#e0a374,#c07845);color:#2c1607;}
+.rank-info{flex:1;}
+.rank-info .n{font-weight:700;font-size:14px;}
+.rank-info .s{font-size:11px;color:var(--txt-2);}
+.rank-val{font-family:var(--font-mono);color:var(--accent);font-weight:700;}
+
+/* war */
+.enemy-card{padding:14px;display:flex;align-items:center;gap:12px;}
+.enemy-card .ei{flex:1;}
+.enemy-card .ei b{font-size:14px;}
+.enemy-card .ei small{color:var(--txt-2);font-size:11px;display:block;}
+
+.battlefield{
+  position:relative;height:220px;border-radius:14px;overflow:hidden;margin:16px 0;
+  background:linear-gradient(180deg,#0a1526 0%, #0d2e1f 60%, #142a12 100%);
+  border:1px solid var(--glass-brd);
+}
+.bf-side{position:absolute;bottom:0;width:50%;height:100%;}
+.bf-side.left{left:0;}
+.bf-side.right{right:0;transform:scaleX(-1);}
+.unit-icon{position:absolute;bottom:14px;font-size:22px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5));}
+.unit-icon.tank{animation:driveTank 4s linear infinite;}
+.unit-icon.jet{bottom:auto;top:30px;animation:flyJet 3.2s ease-in-out infinite;}
+.unit-icon.drone{bottom:auto;top:60px;animation:flyDrone 3.6s ease-in-out infinite;}
+.unit-icon.ship{bottom:20px;animation:sailShip 5s ease-in-out infinite;}
+@keyframes driveTank{0%{left:-10%;}50%{left:38%;}100%{left:-10%;}}
+@keyframes flyJet{0%{left:-10%;transform:translateY(0);}50%{left:40%;transform:translateY(-10px);}100%{left:-10%;transform:translateY(0);}}
+@keyframes flyDrone{0%{left:-5%;}50%{left:42%;}100%{left:-5%;}}
+@keyframes sailShip{0%,100%{left:2%;}50%{left:30%;}}
+.boom{position:absolute;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle,#fff6d0,#ffb92e 40%,var(--alert) 70%,transparent 75%);opacity:0;pointer-events:none;}
+.boom.show{animation:boomPop .7s ease forwards;}
+@keyframes boomPop{0%{opacity:0;transform:scale(.2);}30%{opacity:1;transform:scale(1.3);}100%{opacity:0;transform:scale(1.8);}}
+.vs-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--alert);text-shadow:0 0 14px var(--alert-glow);z-index:5;}
+
+.war-log{max-height:280px;overflow-y:auto;padding:6px;}
+.log-day{padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.03);margin-bottom:8px;opacity:0;transform:translateY(8px);animation:logIn .45s ease forwards;}
+@keyframes logIn{to{opacity:1;transform:translateY(0);}}
+.log-day .d{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:1px;}
+.log-day .t{font-size:13px;margin-top:3px;}
+
+.strategy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+@media(max-width:640px){.strategy-grid{grid-template-columns:repeat(2,1fr);}}
+.strat-opt{padding:12px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid var(--glass-brd);text-align:center;font-size:12px;transition:.2s;}
+.strat-opt i{display:block;font-size:18px;margin-bottom:6px;color:var(--txt-2);}
+.strat-opt:hover{border-color:var(--accent);}
+.strat-opt.sel{border-color:var(--accent);background:rgba(46,230,214,0.12);}
+.strat-opt.sel i{color:var(--accent);}
+
+/* modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(3,7,15,0.7);backdrop-filter:blur(6px);z-index:1000;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.show{display:flex;}
+.modal-box{width:100%;max-width:520px;max-height:88vh;overflow-y:auto;padding:24px;position:relative;animation:riseIn .35s ease;}
+.modal-box.wide{max-width:760px;}
+.modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.06);width:32px;height:32px;border-radius:9px;border:none;color:var(--txt-1);display:flex;align-items:center;justify-content:center;}
+.modal-title{font-size:18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.modal-title i{color:var(--accent);}
+
+/* toast */
+#toastWrap{position:fixed;top:18px;right:18px;z-index:2000;display:flex;flex-direction:column;gap:10px;max-width:340px;}
+.toast{
+  padding:14px 16px;border-radius:12px;display:flex;align-items:center;gap:12px;font-size:13px;
+  animation:toastIn .35s ease, toastOut .4s ease 3.6s forwards;
+}
 @keyframes toastIn{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
 @keyframes toastOut{to{opacity:0;transform:translateX(40px);}}
+.toast i{font-size:18px;}
+.toast.ok{border-left:3px solid var(--ok);}
+.toast.ok i{color:var(--ok);}
+.toast.err{border-left:3px solid var(--alert);}
+.toast.err i{color:var(--alert);}
+.toast.info{border-left:3px solid var(--accent-2);}
+.toast.info i{color:var(--accent-2);}
+.toast.war{border-left:3px solid var(--gold);}
+.toast.war i{color:var(--gold);}
 
-/* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(3,6,16,0.7);backdrop-filter:blur(4px);z-index:9998;
-  display:none;align-items:center;justify-content:center;padding:20px;}
-.modal-overlay.show{display:flex;}
-.modal-box{width:100%;max-width:460px;padding:24px;max-height:85vh;overflow-y:auto;}
-.modal-box h3{margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;font-size:17px;}
-.modal-box .close-x{cursor:pointer;color:var(--text-2);font-size:16px;}
-.form-group{margin-bottom:14px;}
-.form-group label{display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;}
-.form-group input,.form-group select{width:100%;padding:11px 12px;border-radius:10px;background:rgba(255,255,255,0.06);
-  border:1px solid var(--glass-border);color:#fff;}
-.form-group .range-row{display:flex;align-items:center;gap:10px;}
-.form-group .range-row input[type=range]{flex:1;}
-.strategy-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
-.strategy-opt{padding:10px;border-radius:10px;border:1px solid var(--glass-border);text-align:center;font-size:12px;cursor:pointer;background:rgba(255,255,255,0.03);}
-.strategy-opt.active{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;font-weight:700;}
+/* notif list */
+.notif-item{padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.03);margin-bottom:8px;font-size:13px;}
+.notif-item.unread{border-left:3px solid var(--accent);}
+.notif-item .nt{color:var(--txt-2);font-size:11px;margin-top:4px;}
+.notif-actions{display:flex;gap:8px;margin-top:8px;}
 
-.hamburger{display:none;width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.06);align-items:center;justify-content:center;font-size:16px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--txt-2);}
+.empty-state i{font-size:32px;margin-bottom:10px;display:block;opacity:.5;}
+
+/* mobile sidebar toggle */
+.menu-toggle{display:none;}
 @media(max-width:900px){
-  .sidebar{position:fixed;left:-260px;top:0;transition:.3s;z-index:200;}
-  .sidebar.open{left:0;}
-  .hamburger{display:flex;}
-  .main{padding:16px;}
+  .sidebar{position:fixed;left:0;top:0;height:100vh;transform:translateX(-105%);transition:.3s;background:var(--bg-1);}
+  .sidebar.open{transform:translateX(0);}
+  .menu-toggle{display:flex;}
+  .main{padding:14px;}
+  .grid-4{grid-template-columns:repeat(2,1fr);}
 }
-.empty-state{text-align:center;padding:40px 20px;color:var(--text-2);}
-.empty-state i{font-size:34px;margin-bottom:10px;display:block;opacity:.5;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;}
+.sidebar-overlay.show{display:block;}
+
+.small-muted{color:var(--txt-2);font-size:12px;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}
 </style>
 </head>
 <body>
 
-<div id="loading-screen">
-  <div class="logo-badge"><i class="fa-solid fa-shield-halved"></i></div>
-  <h2>WAR EMPIRE</h2>
-  <div class="loading-bar"><span></span></div>
-  <p id="loading-text">Menghubungkan ke server komando...</p>
-  <div id="name-entry" class="glass" style="display:none;flex-direction:column;gap:14px;padding:24px;width:100%;max-width:340px;">
-    <div style="text-align:center;">
-      <i class="fa-solid fa-flag" style="font-size:26px;color:var(--accent);"></i>
-      <h3 style="margin-top:8px;">Dirikan Negara Anda</h3>
-      <p style="font-size:12px;color:var(--text-2);margin-top:4px;">Masukkan nama negara untuk mulai bermain</p>
+<!-- ============ LOADING ============ -->
+<div id="loadingScreen">
+  <div class="load-emblem"><i class="fa-solid fa-shield-halved"></i></div>
+  <div class="load-title">WARCOM</div>
+  <div class="load-sub">MENGHUBUNGKAN KE JARINGAN KOMANDO...</div>
+  <div class="load-bar"><span></span></div>
+</div>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen">
+  <div class="login-card glass">
+    <div class="login-head">
+      <i class="fa-solid fa-globe"></i>
+      <h1>WARCOM</h1>
+      <p>SISTEM MILITER MULTIPLAYER GLOBAL</p>
     </div>
-    <input id="name-entry-input" placeholder="Contoh: Nusantara Union" maxlength="30"
-      style="padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:#fff;text-align:center;">
-    <button class="btn" id="name-entry-btn"><i class="fa-solid fa-flag-checkered"></i> Mulai Bermain</button>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabNewBtn" onclick="switchLoginTab('new')">Pemain Baru</button>
+      <button class="tab-btn" id="tabOldBtn" onclick="switchLoginTab('old')">Pemain Lama</button>
+    </div>
+
+    <div id="tabNew">
+      <div class="field">
+        <label>Nama Negara</label>
+        <input type="text" id="inpCountry" placeholder="cth. Republik Nusantara" maxlength="28">
+      </div>
+      <button class="btn" onclick="createNewPlayer()"><i class="fa-solid fa-shield-halved"></i> Dirikan Negara</button>
+      <div class="uid-box" id="newUidBox"></div>
+    </div>
+
+    <div id="tabOld" style="display:none;">
+      <div class="field">
+        <label>UID Komandan</label>
+        <input type="text" id="inpUid" placeholder="cth. CMD-XXXXXXX">
+      </div>
+      <button class="btn" onclick="loginExisting()"><i class="fa-solid fa-right-to-bracket"></i> Masuk</button>
+    </div>
   </div>
 </div>
 
-<div id="toast-wrap"></div>
-
+<!-- ============ APP ============ -->
 <div id="app">
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-    <div class="brand">
-      <div class="logo-badge"><i class="fa-solid fa-shield-halved"></i></div>
-      <div><h1>WAR EMPIRE</h1><span>Military Command</span></div>
-    </div>
-    <div class="nav-item active" data-section="dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</div>
-    <div class="nav-item" data-section="upgrade"><i class="fa-solid fa-building-shield"></i> Upgrade Markas</div>
-    <div class="nav-item" data-section="production"><i class="fa-solid fa-industry"></i> Produksi Unit</div>
-    <div class="nav-item" data-section="research"><i class="fa-solid fa-flask"></i> Penelitian</div>
-    <div class="nav-item" data-section="alliance"><i class="fa-solid fa-people-group"></i> Aliansi</div>
-    <div class="nav-item" data-section="ranking"><i class="fa-solid fa-ranking-star"></i> Ranking Dunia</div>
-    <div class="nav-item" data-section="war"><i class="fa-solid fa-crosshairs"></i> Deklarasi Perang
-      <span class="nav-badge" id="war-badge">!</span>
-    </div>
-    <div class="nav-item" data-section="battle"><i class="fa-solid fa-explosion"></i> Ruang Perang</div>
-    <div class="sidebar-footer">
-      <div>Komandan Aktif</div>
-      <div class="uid-tag" id="uid-tag">-</div>
-    </div>
+  <div class="sidebar-overlay" id="sideOverlay" onclick="toggleSidebar(false)"></div>
+  <div class="sidebar glass" id="sidebar">
+    <div class="brand"><i class="fa-solid fa-shield-halved"></i><span>WARCOM</span></div>
+    <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard')"><i class="fa-solid fa-gauge-high"></i> Dashboard</div>
+    <div class="nav-item" data-page="buildings" onclick="goPage('buildings')"><i class="fa-solid fa-industry"></i> Upgrade Markas</div>
+    <div class="nav-item" data-page="production" onclick="goPage('production')"><i class="fa-solid fa-people-carry-box"></i> Produksi Unit</div>
+    <div class="nav-item" data-page="research" onclick="goPage('research')"><i class="fa-solid fa-flask"></i> Penelitian</div>
+    <div class="nav-item" data-page="alliance" onclick="goPage('alliance')"><i class="fa-solid fa-people-group"></i> Aliansi</div>
+    <div class="nav-item" data-page="ranking" onclick="goPage('ranking')"><i class="fa-solid fa-ranking-star"></i> Peringkat</div>
+    <div class="nav-item" data-page="war" onclick="goPage('war')"><i class="fa-solid fa-explosion"></i> Deklarasi Perang</div>
+    <div class="nav-sep">Akun</div>
+    <div class="nav-item" onclick="logout()"><i class="fa-solid fa-power-off"></i> Keluar</div>
+    <div class="sidebar-foot mono" id="uidFooter"></div>
   </div>
 
-  <!-- MAIN -->
   <div class="main">
-    <div class="topbar">
+    <div class="topbar glass">
       <div style="display:flex;align-items:center;gap:12px;">
-        <div class="hamburger" id="hamburger"><i class="fa-solid fa-bars"></i></div>
-        <h2 id="topbar-title"><i class="fa-solid fa-gauge-high"></i> Dashboard</h2>
+        <div class="icon-btn menu-toggle" onclick="toggleSidebar(true)"><i class="fa-solid fa-bars"></i></div>
+        <div class="topbar-title" id="pageTitle">Dashboard<span id="pageSub">Ringkasan kekuatan negara</span></div>
       </div>
-      <div class="topbar-stats">
-        <div class="pill money glass"><i class="fa-solid fa-sack-dollar"></i> <span id="tb-money">0</span></div>
-        <div class="pill power glass"><i class="fa-solid fa-bolt"></i> <span id="tb-power">0</span></div>
-        <div class="pill online glass"><span class="dot"></span> <span id="tb-online">1</span> Online</div>
+      <div class="topbar-right">
+        <div class="pill"><i class="fa-solid fa-coins"></i> <span id="topMoney">0 T</span></div>
+        <div class="pill"><span class="online-dot"></span> Online</div>
+        <div class="icon-btn" onclick="openModal('notifModal')"><i class="fa-solid fa-bell"></i><span class="badge" id="notifBadge" style="display:none;">0</span></div>
       </div>
     </div>
 
     <!-- ===== DASHBOARD ===== -->
-    <div class="section active" id="section-dashboard"></div>
+    <div class="page active" id="page-dashboard">
+      <div class="country-hero glass">
+        <div style="font-size:34px;color:var(--accent);"><i class="fa-solid fa-shield-halved"></i></div>
+        <div>
+          <h2 id="dashCountry">-</h2>
+          <div class="meta"><span id="dashUidShort" class="num"></span> · Level Militer <b id="dashLevel">1</b></div>
+        </div>
+        <div class="power-badge">
+          <div class="n num" id="dashPower">0</div>
+          <div class="l">TOTAL POWER</div>
+        </div>
+      </div>
 
-    <!-- ===== UPGRADE ===== -->
-    <div class="section" id="section-upgrade"></div>
+      <div class="grid grid-4">
+        <div class="stat-card glass"><div class="lbl"><i class="fa-solid fa-sack-dollar"></i>Dana Militer</div><div class="val num" id="statMoney">0</div><div class="sub">Pajak/jam: <span id="statTax">-</span></div></div>
+        <div class="stat-card glass"><div class="lbl"><i class="fa-solid fa-user-shield"></i>Tentara</div><div class="val num" id="statArmy">0</div><div class="sub">Pasukan aktif</div></div>
+        <div class="stat-card glass"><div class="lbl"><i class="fa-solid fa-truck-monster"></i>Tank</div><div class="val num" id="statTank">0</div><div class="sub">Divisi lapis baja</div></div>
+        <div class="stat-card glass"><div class="lbl"><i class="fa-solid fa-jet-fighter"></i>Jet Tempur</div><div class="val num" id="statJet">0</div><div class="sub">Skuadron udara</div></div>
+        <div class="stat-card glass"><div class="lbl"><i class="fa-solid fa-ship"></i>Kapal Perang</div><div class="val num" id="statShip">0</div><div class="sub">Armada laut</div></div>
+        <div class="stat-card glass"><div class="lbl"><i class="fa-solid fa-drone"></i>Drone</div><div class="val num" id="statDrone">0</div><div class="sub">Unit pengintai/serang</div></div>
+        <div class="stat-card glass"><div class="lbl"><i class="fa-solid fa-rocket"></i>Rudal</div><div class="val num" id="statMissile">0</div><div class="sub">Hulu ledak siap</div></div>
+        <div class="stat-card glass"><div class="lbl"><i class="fa-solid fa-ranking-star"></i>Peringkat Dunia</div><div class="val num" id="statRank">-</div><div class="sub">Berdasarkan Total Power</div></div>
+      </div>
+
+      <div class="section-title"><i class="fa-solid fa-chart-line"></i>Progres Level Militer</div>
+      <div class="card glass">
+        <div class="flex-between"><span class="small-muted">Level <b id="lvlNow">1</b></span><span class="small-muted" id="lvlExp">0 / 1000 EXP</span></div>
+        <div class="progress"><span id="lvlBar" style="width:0%"></span></div>
+      </div>
+    </div>
+
+    <!-- ===== BUILDINGS ===== -->
+    <div class="page" id="page-buildings">
+      <div class="section-title"><i class="fa-solid fa-industry"></i>Upgrade Bangunan Markas</div>
+      <div class="grid grid-3" id="buildingsGrid"></div>
+    </div>
 
     <!-- ===== PRODUCTION ===== -->
-    <div class="section" id="section-production"></div>
+    <div class="page" id="page-production">
+      <div class="section-title"><i class="fa-solid fa-people-carry-box"></i>Produksi Unit Militer</div>
+      <div class="grid grid-3" id="unitsGrid"></div>
+      <div class="section-title"><i class="fa-solid fa-hourglass-half"></i>Antrian Produksi</div>
+      <div class="card glass" id="queueBox"><div class="empty-state"><i class="fa-solid fa-inbox"></i>Belum ada produksi berjalan</div></div>
+    </div>
 
     <!-- ===== RESEARCH ===== -->
-    <div class="section" id="section-research"></div>
+    <div class="page" id="page-research">
+      <div class="section-title"><i class="fa-solid fa-flask"></i>Laboratorium Penelitian</div>
+      <div class="grid grid-3" id="researchGrid"></div>
+    </div>
 
     <!-- ===== ALLIANCE ===== -->
-    <div class="section" id="section-alliance"></div>
+    <div class="page" id="page-alliance">
+      <div id="allianceNone">
+        <div class="section-title"><i class="fa-solid fa-people-group"></i>Aliansi</div>
+        <div class="grid grid-2">
+          <div class="card glass">
+            <h3><i class="fa-solid fa-people-group"></i> Buat Aliansi</h3>
+            <div class="field mt12"><label>Nama Aliansi</label><input type="text" id="inpAllianceName" placeholder="cth. Pakta Nusantara"></div>
+            <button class="btn" onclick="createAlliance()"><i class="fa-solid fa-plus"></i> Buat</button>
+          </div>
+          <div class="card glass">
+            <h3><i class="fa-solid fa-right-to-bracket"></i> Gabung Aliansi</h3>
+            <div class="field mt12"><label>ID Aliansi</label><input type="text" id="inpJoinAlliance" placeholder="Masukkan ID Aliansi"></div>
+            <button class="btn" onclick="joinAlliance()"><i class="fa-solid fa-user-plus"></i> Gabung</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="allianceView" style="display:none;">
+        <div class="country-hero glass">
+          <div style="font-size:34px;color:var(--accent);"><i class="fa-solid fa-people-group"></i></div>
+          <div>
+            <h2 id="allianceName">-</h2>
+            <div class="meta">ID: <span id="allianceId" class="num"></span> · Anggota: <span id="allianceCount">0</span></div>
+          </div>
+          <button class="btn alert small" style="margin-left:auto;" onclick="leaveAlliance()"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
+        </div>
+        <div class="grid grid-2">
+          <div class="card glass">
+            <h3><i class="fa-solid fa-comments"></i> Chat Aliansi</h3>
+            <div class="chat-box" id="allianceChat"></div>
+            <div class="chat-input-row">
+              <input type="text" id="chatInput" placeholder="Ketik pesan..." onkeydown="if(event.key==='Enter')sendAllianceChat()">
+              <button class="btn small" onclick="sendAllianceChat()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+          </div>
+          <div>
+            <div class="card glass mt16" style="margin-top:0;">
+              <h3><i class="fa-solid fa-hand-holding-dollar"></i> Donasi</h3>
+              <div class="field mt12"><label>Jumlah Dana (T)</label><input type="number" id="donateMoney" placeholder="0"></div>
+              <button class="btn small" onclick="donateAllianceMoney()"><i class="fa-solid fa-coins"></i> Donasi Dana</button>
+              <div class="field mt12"><label>Unit</label>
+                <select id="donateUnitType">
+                  <option value="army">Tentara</option><option value="tank">Tank</option><option value="jet">Jet Tempur</option>
+                  <option value="ship">Kapal Perang</option><option value="drone">Drone</option><option value="missile">Rudal</option>
+                </select>
+              </div>
+              <div class="field"><label>Jumlah</label><input type="number" id="donateUnitQty" placeholder="0"></div>
+              <button class="btn small ghost" onclick="donateAllianceUnit()"><i class="fa-solid fa-boxes-packing"></i> Donasi Unit</button>
+            </div>
+            <div class="card glass mt16">
+              <h3><i class="fa-solid fa-list"></i> Anggota</h3>
+              <div id="allianceMembers" class="mt12"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- ===== RANKING ===== -->
-    <div class="section" id="section-ranking"></div>
+    <div class="page" id="page-ranking">
+      <div class="section-title"><i class="fa-solid fa-ranking-star"></i>Peringkat Dunia</div>
+      <div class="rank-tabs" id="rankTabs">
+        <button class="btn small" data-cat="power" onclick="renderRanking('power')">Total Power</button>
+        <button class="btn small ghost" data-cat="level" onclick="renderRanking('level')">Level Militer</button>
+        <button class="btn small ghost" data-cat="wins" onclick="renderRanking('wins')">Jumlah Kemenangan</button>
+        <button class="btn small ghost" data-cat="ratio" onclick="renderRanking('ratio')">Rasio Menang</button>
+      </div>
+      <div class="card glass" id="rankList"></div>
+    </div>
 
     <!-- ===== WAR ===== -->
-    <div class="section" id="section-war"></div>
+    <div class="page" id="page-war">
+      <div class="section-title"><i class="fa-solid fa-explosion"></i>Deklarasi Perang</div>
+      <div class="grid grid-3" id="enemyList"></div>
 
-    <!-- ===== BATTLE ===== -->
-    <div class="section" id="section-battle"></div>
+      <div class="section-title"><i class="fa-solid fa-scroll"></i>Perang Berlangsung</div>
+      <div class="card glass" id="activeWars"><div class="empty-state"><i class="fa-solid fa-dove"></i>Tidak ada perang aktif</div></div>
+    </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal-box glass" id="modal-box"></div>
+<!-- ============ MODALS ============ -->
+<div class="modal-overlay" id="notifModal">
+  <div class="modal-box glass">
+    <button class="modal-close" onclick="closeModal('notifModal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title"><i class="fa-solid fa-bell"></i>Notifikasi</div>
+    <div id="notifList"><div class="empty-state"><i class="fa-solid fa-inbox"></i>Tidak ada notifikasi</div></div>
+  </div>
 </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
-/* ============================================================
-   WAR EMPIRE — Sistem Militer Multiplayer
-   Firebase Realtime Database + Anonymous Auth (Vanilla JS)
-   ============================================================ */
+<div class="modal-overlay" id="warPrepModal">
+  <div class="modal-box wide glass">
+    <button class="modal-close" onclick="closeModal('warPrepModal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title"><i class="fa-solid fa-fist-raised"></i>Persiapan Perang</div>
+    <div class="small-muted mt8" id="prepWarInfo"></div>
+    <div class="grid grid-3 mt16" id="prepUnitInputs"></div>
+    <div class="section-title" style="margin-top:20px;"><i class="fa-solid fa-chess"></i>Pilih Strategi</div>
+    <div class="strategy-grid" id="strategyGrid"></div>
+    <button class="btn mt16" onclick="submitWarPrep()"><i class="fa-solid fa-check"></i> Siap Bertempur</button>
+  </div>
+</div>
 
-/* ---------- 1. FIREBASE CONFIG ----------
-   GANTI dengan konfigurasi project Firebase Anda sendiri.
-   Buat project di https://console.firebase.google.com
-   Aktifkan: Authentication > Anonymous, dan Realtime Database.
---------------------------------------------------------------*/
+<div class="modal-overlay" id="warSimModal">
+  <div class="modal-box wide glass">
+    <button class="modal-close" onclick="closeModal('warSimModal')"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-title"><i class="fa-solid fa-explosion"></i>Simulasi Perang</div>
+    <div class="battlefield" id="battlefield">
+      <div class="vs-badge">VS</div>
+    </div>
+    <div class="war-log" id="warLog"></div>
+    <div id="warResultBox" class="mt16"></div>
+  </div>
+</div>
+
+<div id="toastWrap"></div>
+
+<!-- ============ FIREBASE ============ -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<script>
+/* ==========================================================================
+   FIREBASE CONFIG
+   Proyek ini menggunakan Firebase Realtime Database yang sama dengan
+   ekosistem lain (ORECRAFT / Simulator Presiden / UFN Hub).
+   >>> GANTI nilai di bawah ini dengan config asli project "puki-678bf"
+   milik Anda (apiKey, appId, dsb bisa disalin dari project Firebase
+   yang sudah dipakai di ORECRAFT / Kirim). databaseURL contoh mengikuti
+   pola default Firebase Realtime Database untuk region asia-southeast1.
+   ========================================================================== */
 const firebaseConfig = {
-  apiKey: "AIzaSyBBT-3vGZYlb2A8_F93XsFHX54F-HuJyAU",
-  authDomain: "ptube-6bd97.firebaseapp.com",
-  databaseURL: "https://ptube-6bd97-default-rtdb.firebaseio.com",
-  projectId: "ptube-6bd97",
-  storageBucket: "ptube-6bd97.firebasestorage.app",
-  messagingSenderId: "282752218641",
-  appId: "1:282752218641:web:1230361a932c283518e3b0"
+  apiKey: "AIzaSyCP96vLGpHSXJhKjs4Vz4rnSrOiR7tEamM",
+  authDomain: "militer-f37cc.firebaseapp.com",
+  projectId: "militer-f37cc",
+  storageBucket: "militer-f37cc.firebasestorage.app",
+  messagingSenderId: "276738463430",
+  appId: "1:276738463430:web:21caebc270211fdea429c7"
 };
 
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.database();
 
-let CURRENT_UID = null;
-let PLAYER = null;          // realtime cache of current player's data
-let ALL_PLAYERS = {};       // cache for ranking / enemy search
-let MY_ALLIANCE_ID = null;
-let numberAnimFrames = {};
-
-/* Ikon generik pengganti bendera, dipakai di seluruh UI */
-const COUNTRY_ICON = '<i class="fa-solid fa-flag"></i>';
-
-/* ---------- BUILDING / RESEARCH / UNIT DEFINITIONS ---------- */
-const BUILDINGS = {
-  hq:        {name:"Markas Besar",    icon:"fa-building-flag",  base:500,  mult:1.18, powerPerLvl:12},
-  academy:   {name:"Akademi Militer", icon:"fa-graduation-cap",  base:350,  mult:1.16, powerPerLvl:8},
-  tankFactory:{name:"Pabrik Tank",    icon:"fa-truck-monster",   base:400,  mult:1.17, powerPerLvl:9},
-  jetFactory:{name:"Pabrik Jet",      icon:"fa-jet-fighter",     base:600,  mult:1.19, powerPerLvl:11},
-  shipyard:  {name:"Galangan Kapal",  icon:"fa-ship",             base:550,  mult:1.18, powerPerLvl:10},
-  lab:       {name:"Laboratorium",    icon:"fa-flask-vial",      base:450,  mult:1.17, powerPerLvl:9},
-  intel:     {name:"Intelijen",       icon:"fa-user-secret",     base:300,  mult:1.15, powerPerLvl:7},
-  cyber:     {name:"Siber",           icon:"fa-network-wired",   base:500,  mult:1.18, powerPerLvl:10},
-  radarBld:  {name:"Radar",           icon:"fa-satellite-dish",  base:350,  mult:1.16, powerPerLvl:8},
-  armory:    {name:"Gudang Senjata",  icon:"fa-warehouse",       base:400,  mult:1.17, powerPerLvl:9}
-};
-
-const RESEARCH = {
-  armor:     {name:"Armor",        icon:"fa-shield",          base:600, mult:1.2, powerPerLvl:14},
-  accuracy:  {name:"Akurasi",      icon:"fa-bullseye",        base:600, mult:1.2, powerPerLvl:14},
-  speed:     {name:"Kecepatan",    icon:"fa-gauge",           base:550, mult:1.19, powerPerLvl:12},
-  aiCombat:  {name:"AI Tempur",    icon:"fa-brain",           base:800, mult:1.22, powerPerLvl:18},
-  radarR:    {name:"Radar",        icon:"fa-satellite-dish",  base:550, mult:1.19, powerPerLvl:12},
-  droneAI:   {name:"Drone AI",     icon:"fa-drone",           base:700, mult:1.21, powerPerLvl:16},
-  tankEngine:{name:"Mesin Tank",   icon:"fa-gear",            base:600, mult:1.2, powerPerLvl:14},
-  jetEngine: {name:"Mesin Jet",    icon:"fa-fan",             base:650, mult:1.2, powerPerLvl:15},
-  satellite: {name:"Satelit",      icon:"fa-satellite",       base:750, mult:1.21, powerPerLvl:17},
-  logistics: {name:"Logistik",     icon:"fa-truck-ramp-box",  base:500, mult:1.18, powerPerLvl:11}
-};
-
-const UNITS = {
-  soldier:  {name:"Tentara",             icon:"fa-person-rifle",  cost:20,   time:5,   power:1,   emoji:"🪖"},
-  tank:     {name:"Tank",                icon:"fa-truck-monster", cost:250,  time:30,  power:12,  emoji:"🛡️"},
-  apc:      {name:"Kendaraan Lapis Baja",icon:"fa-truck-front",   cost:180,  time:25,  power:8,   emoji:"🚚"},
-  artillery:{name:"Artileri",            icon:"fa-bahai",         cost:300,  time:35,  power:14,  emoji:"💣"},
-  heli:     {name:"Helikopter",          icon:"fa-helicopter",    cost:400,  time:40,  power:16,  emoji:"🚁"},
-  jet:      {name:"Jet Tempur",          icon:"fa-jet-fighter",   cost:600,  time:60,  power:22,  emoji:"✈️"},
-  drone:    {name:"Drone",               icon:"fa-drone",         cost:150,  time:20,  power:6,   emoji:"🛸"},
-  ship:     {name:"Kapal Perang",        icon:"fa-ship",          cost:800,  time:90,  power:28,  emoji:"🚢"},
-  submarine:{name:"Kapal Selam",         icon:"fa-water",         cost:900,  time:100, power:30,  emoji:"🌊"},
-  missile:  {name:"Rudal",               icon:"fa-rocket",        cost:500,  time:45,  power:20,  emoji:"🚀"}
-};
-
-const STRATEGIES = {
-  quick:   {name:"Serangan Cepat", atkMult:1.15, defMult:0.9,  icon:"fa-bolt"},
-  total:   {name:"Serangan Total", atkMult:1.3,  defMult:0.75, icon:"fa-burst"},
-  hold:    {name:"Bertahan",       atkMult:0.8,  defMult:1.35, icon:"fa-shield-halved"},
-  land:    {name:"Invasi Darat",   atkMult:1.1,  defMult:1.0,  icon:"fa-person-military-rifle"},
-  air:     {name:"Serangan Udara", atkMult:1.2,  defMult:0.95, icon:"fa-fighter-jet"},
-  naval:   {name:"Serangan Laut",  atkMult:1.15, defMult:0.95, icon:"fa-anchor"}
-};
-
-/* ---------- UTILITIES ---------- */
-function fmt(n){
+/* ==========================================================================
+   HELPERS
+   ========================================================================== */
+function fmtT(n){
   n = Math.floor(n||0);
-  if(n>=1e9) return (n/1e9).toFixed(2)+"B";
-  if(n>=1e6) return (n/1e6).toFixed(2)+"M";
-  if(n>=1e3) return (n/1e3).toFixed(1)+"K";
-  return n.toString();
+  if(Math.abs(n) >= 1e12) return (n/1e12).toFixed(2).replace(/\.00$/,'') + "T Tn";
+  if(Math.abs(n) >= 1e9) return (n/1e9).toFixed(2).replace(/\.00$/,'') + "M T";
+  if(Math.abs(n) >= 1e6) return (n/1e6).toFixed(2).replace(/\.00$/,'') + "Jt T";
+  if(Math.abs(n) >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + "rb T";
+  return n.toLocaleString('id-ID') + " T";
 }
-function upgradeCost(base,mult,level){ return Math.floor(base*Math.pow(mult,level)); }
-function rid(){ return Math.random().toString(36).slice(2,10); }
-
-function toast(msg,type="info",icon="fa-circle-info"){
-  const wrap = document.getElementById("toast-wrap");
-  const el = document.createElement("div");
-  el.className = "toast glass "+type;
-  el.innerHTML = `<i class="fa-solid ${icon}"></i><span>${msg}</span>`;
+function fmtNum(n){ return Math.floor(n||0).toLocaleString('id-ID'); }
+function uid8(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s="CMD-";
+  for(let i=0;i<7;i++) s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function showToast(msg, type='info', icon='fa-circle-info'){
+  const wrap=document.getElementById('toastWrap');
+  const el=document.createElement('div');
+  el.className='toast glass '+type;
+  el.innerHTML=`<i class="fa-solid ${icon}"></i><div>${msg}</div>`;
   wrap.appendChild(el);
-  setTimeout(()=>el.remove(),4100);
+  setTimeout(()=>el.remove(), 4100);
 }
-function openModal(html){
-  document.getElementById("modal-box").innerHTML = html;
-  document.getElementById("modal-overlay").classList.add("show");
-}
-function closeModal(){ document.getElementById("modal-overlay").classList.remove("show"); }
-document.getElementById("modal-overlay").addEventListener("click",e=>{
-  if(e.target.id==="modal-overlay") closeModal();
-});
-
-function animateNumber(el, from, to, suffix=""){
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+function animateNumber(el, to, decimals=0){
   if(!el) return;
-  const key = el.id || el;
-  cancelAnimationFrame(numberAnimFrames[key]);
-  const dur = 600; const start = performance.now();
-  function step(now){
-    const p = Math.min(1,(now-start)/dur);
+  const from = parseFloat(el.dataset.raw || 0);
+  const dur = 700; const start = performance.now();
+  function step(t){
+    const p = Math.min(1,(t-start)/dur);
     const val = from + (to-from)*p;
-    el.textContent = fmt(val)+suffix;
-    if(p<1) numberAnimFrames[key] = requestAnimationFrame(step);
+    el.textContent = decimals ? val.toFixed(decimals) : fmtNum(val);
+    if(p<1) requestAnimationFrame(step); else el.dataset.raw = to;
   }
-  numberAnimFrames[key] = requestAnimationFrame(step);
+  requestAnimationFrame(step);
+}
+function toggleSidebar(open){
+  document.getElementById('sidebar').classList.toggle('open', open);
+  document.getElementById('sideOverlay').classList.toggle('show', open);
 }
 
-/* ---------- NAVIGATION ---------- */
-document.querySelectorAll(".nav-item").forEach(item=>{
-  item.addEventListener("click",()=>{
-    document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
-    item.classList.add("active");
-    const sec = item.dataset.section;
-    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-    document.getElementById("section-"+sec).classList.add("active");
-    document.getElementById("topbar-title").innerHTML = item.innerHTML.replace('<span class="nav-badge" id="war-badge">!</span>','');
-    document.getElementById("sidebar").classList.remove("open");
-    if(sec==="ranking") renderRanking("power");
-    if(sec==="alliance") renderAllianceSection();
-    if(sec==="war") renderWarSection();
-  });
-});
-document.getElementById("hamburger").addEventListener("click",()=>{
-  document.getElementById("sidebar").classList.toggle("open");
-});
+/* ==========================================================================
+   GAME CONFIG DATA
+   ========================================================================== */
+const BUILDINGS = [
+  {key:'hq', name:'Markas Besar', icon:'fa-building-shield', base:2000, growth:1.32, desc:'Meningkatkan kapasitas komando & power dasar.', powerPerLvl:15},
+  {key:'academy', name:'Akademi Militer', icon:'fa-graduation-cap', base:1800, growth:1.30, desc:'Melatih tentara lebih efisien.', powerPerLvl:10},
+  {key:'tankFactory', name:'Pabrik Tank', icon:'fa-truck-monster', base:2600, growth:1.33, desc:'Mempercepat produksi tank & lapis baja.', powerPerLvl:12},
+  {key:'jetFactory', name:'Pabrik Jet', icon:'fa-jet-fighter', base:3200, growth:1.34, desc:'Mempercepat produksi jet tempur.', powerPerLvl:14},
+  {key:'shipyard', name:'Galangan Kapal', icon:'fa-ship', base:3400, growth:1.34, desc:'Mempercepat produksi kapal & kapal selam.', powerPerLvl:14},
+  {key:'lab', name:'Laboratorium', icon:'fa-flask', base:3000, growth:1.31, desc:'Mempercepat riset teknologi militer.', powerPerLvl:13},
+  {key:'intel', name:'Intelijen', icon:'fa-user-secret', base:2200, growth:1.29, desc:'Meningkatkan deteksi & info musuh.', powerPerLvl:9},
+  {key:'cyber', name:'Siber', icon:'fa-network-wired', base:2400, growth:1.30, desc:'Pertahanan digital & serangan siber.', powerPerLvl:10},
+  {key:'radar', name:'Radar', icon:'fa-satellite-dish', base:2100, growth:1.29, desc:'Memperluas jangkauan deteksi.', powerPerLvl:9},
+  {key:'armory', name:'Gudang Senjata', icon:'fa-warehouse', base:2000, growth:1.28, desc:'Meningkatkan kapasitas & efisiensi persenjataan.', powerPerLvl:11}
+];
+const UNITS = [
+  {key:'army', name:'Tentara', icon:'fa-user-shield', cost:50, time:20, power:1},
+  {key:'tank', name:'Tank', icon:'fa-truck-monster', cost:400, time:60, power:8},
+  {key:'armored', name:'Kendaraan Lapis Baja', icon:'fa-truck-front', cost:350, time:55, power:6},
+  {key:'artillery', name:'Artileri', icon:'fa-bomb', cost:500, time:70, power:9},
+  {key:'heli', name:'Helikopter', icon:'fa-helicopter', cost:900, time:100, power:14},
+  {key:'jet', name:'Jet Tempur', icon:'fa-jet-fighter', cost:1500, time:150, power:22},
+  {key:'drone', name:'Drone', icon:'fa-drone', cost:300, time:40, power:5},
+  {key:'ship', name:'Kapal Perang', icon:'fa-ship', cost:2200, time:200, power:28},
+  {key:'sub', name:'Kapal Selam', icon:'fa-water', cost:2600, time:220, power:30},
+  {key:'missile', name:'Rudal', icon:'fa-rocket', cost:1800, time:130, power:26}
+];
+const RESEARCH = [
+  {key:'armor', name:'Armor', icon:'fa-shield', base:1500, growth:1.35, powerPerLvl:18, desc:'Meningkatkan ketahanan unit darat.'},
+  {key:'akurasi', name:'Akurasi', icon:'fa-crosshairs', base:1500, growth:1.35, powerPerLvl:18, desc:'Meningkatkan presisi tembakan.'},
+  {key:'kecepatan', name:'Kecepatan', icon:'fa-gauge', base:1400, growth:1.34, powerPerLvl:16, desc:'Meningkatkan mobilitas pasukan.'},
+  {key:'aiTempur', name:'AI Tempur', icon:'fa-microchip', base:2200, growth:1.37, powerPerLvl:22, desc:'Kecerdasan buatan taktik tempur.'},
+  {key:'radarTech', name:'Radar', icon:'fa-satellite-dish', base:1700, growth:1.34, powerPerLvl:17, desc:'Deteksi dini pergerakan musuh.'},
+  {key:'droneAI', name:'Drone AI', icon:'fa-drone', base:1900, growth:1.35, powerPerLvl:19, desc:'Otonomi & presisi drone.'},
+  {key:'mesinTank', name:'Mesin Tank', icon:'fa-gears', base:2000, growth:1.36, powerPerLvl:20, desc:'Efisiensi & tenaga mesin tank.'},
+  {key:'mesinJet', name:'Mesin Jet', icon:'fa-jet-fighter-up', base:2400, growth:1.37, powerPerLvl:23, desc:'Kecepatan & daya dorong jet.'},
+  {key:'satelit', name:'Satelit', icon:'fa-satellite', base:2600, growth:1.38, powerPerLvl:25, desc:'Pengawasan orbit & komunikasi.'},
+  {key:'logistik', name:'Logistik', icon:'fa-boxes-packing', base:1600, growth:1.33, powerPerLvl:15, desc:'Efisiensi suplai & moral pasukan.'}
+];
+const STRATEGIES = [
+  {key:'cepat', name:'Serangan Cepat', icon:'fa-bolt', atk:1.15, def:0.9},
+  {key:'total', name:'Serangan Total', icon:'fa-fire', atk:1.3, def:0.7},
+  {key:'bertahan', name:'Bertahan', icon:'fa-shield-halved', atk:0.75, def:1.35},
+  {key:'invasiDarat', name:'Invasi Darat', icon:'fa-truck-monster', atk:1.1, def:1.0},
+  {key:'seranganUdara', name:'Serangan Udara', icon:'fa-jet-fighter', atk:1.2, def:0.95},
+  {key:'seranganLaut', name:'Serangan Laut', icon:'fa-ship', atk:1.15, def:0.95}
+];
 
-/* ============================================================
-   PAJAK NEGARA (pemasukan pasif otomatis 100 - 500 / jam)
-   ============================================================ */
-const TAX_MIN = 100;
-const TAX_MAX = 500;
-const TAX_OFFLINE_CAP_MS = 8*60*60*1000; // maksimal akumulasi 8 jam saat offline
+function costFor(base, growth, level){ return Math.round(base * Math.pow(growth, level)); }
 
-function computeTaxRate(p){
-  if(!p) return TAX_MIN;
-  const hqLvl = p.buildings?.hq?.level || 1;
-  const academyLvl = p.buildings?.academy?.level || 1;
-  const intelLvl = p.buildings?.intel?.level || 1;
-  const rate = 100 + hqLvl*8 + academyLvl*5 + intelLvl*4 + (p.level||1)*3;
-  return Math.max(TAX_MIN, Math.min(TAX_MAX, Math.floor(rate)));
-}
-
-async function processTax(showToastIfBig){
-  if(!CURRENT_UID) return;
-  const ref = db.ref("players/"+CURRENT_UID);
-  let earnedAmount = 0;
-  const result = await ref.transaction(p=>{
-    if(!p) return p;
-    const rate = computeTaxRate(p);
-    const last = p.lastTaxCollect || Date.now();
-    const elapsed = Math.min(Date.now()-last, TAX_OFFLINE_CAP_MS);
-    const earned = Math.floor((elapsed/3600000)*rate);
-    if(earned>0){
-      p.money = (p.money||0) + earned;
-      earnedAmount = earned;
-    }
-    p.lastTaxCollect = Date.now();
-    return p;
-  });
-  if(showToastIfBig && earnedAmount>=1){
-    toast("Pajak negara terkumpul: +$"+fmt(earnedAmount),"success","fa-sack-dollar");
-  }
-}
-
-/* ============================================================
-   2. AUTH & PLAYER INIT
-   ============================================================ */
-auth.onAuthStateChanged(async (user)=>{
-  if(user){
-    CURRENT_UID = user.uid;
-    document.getElementById("uid-tag").textContent = user.uid;
-    await ensurePlayerExists(user.uid);
-    await processTax(true);
-    listenToPlayer(user.uid);
-    listenToNotifications(user.uid);
-    listenAllPlayers();
-    setInterval(()=>db.ref("players/"+CURRENT_UID+"/lastSeen").set(Date.now()), 15000);
-    setInterval(()=>processTax(false), 60000);
-    db.ref("players/"+CURRENT_UID+"/online").set(true);
-    db.ref("players/"+CURRENT_UID+"/lastSeen").onDisconnect().set(Date.now());
-    db.ref("players/"+CURRENT_UID+"/online").onDisconnect().set(false);
-    setTimeout(()=>{
-      document.getElementById("loading-screen").classList.add("hide");
-      document.getElementById("app").classList.add("ready");
-    }, 900);
-  } else {
-    document.getElementById("loading-text").textContent = "Mengautentikasi komandan...";
-    auth.signInAnonymously().catch(err=>{
-      document.getElementById("loading-text").textContent = "Gagal terhubung: "+err.message;
-    });
-  }
-});
-
-function askCountryName(){
-  return new Promise(resolve=>{
-    document.getElementById("loading-text").style.display = "none";
-    document.querySelector(".loading-bar").style.display = "none";
-    const entry = document.getElementById("name-entry");
-    entry.style.display = "flex";
-    document.getElementById("name-entry-input").focus();
-    function submit(){
-      const val = document.getElementById("name-entry-input").value.trim();
-      if(!val){ toast("Nama negara wajib diisi","error","fa-triangle-exclamation"); return; }
-      entry.style.display = "none";
-      document.getElementById("loading-text").style.display = "block";
-      document.querySelector(".loading-bar").style.display = "block";
-      document.getElementById("loading-text").textContent = "Mendirikan negara "+val+"...";
-      resolve(val);
-    }
-    document.getElementById("name-entry-btn").onclick = submit;
-    document.getElementById("name-entry-input").onkeydown = e=>{ if(e.key==="Enter") submit(); };
-  });
-}
-
-async function ensurePlayerExists(uid){
-  const snap = await db.ref("players/"+uid).get();
-  if(!snap.exists()){
-    const cname = await askCountryName();
-    const defaultData = {
-      countryName: cname,
-      money: 5000,
-      xp: 0,
-      level: 1,
-      power: 100,
-      wins: 0,
-      losses: 0,
-      army: {soldier:50,tank:2,apc:2,artillery:1,heli:0,jet:1,drone:2,ship:0,submarine:0,missile:0},
-      buildings: Object.fromEntries(Object.keys(BUILDINGS).map(k=>[k,{level:1}])),
-      research: Object.fromEntries(Object.keys(RESEARCH).map(k=>[k,{level:0}])),
-      production: {queue:{}},
-      allianceId: null,
-      online: true,
-      lastSeen: Date.now(),
-      createdAt: Date.now(),
-      lastTaxCollect: Date.now()
-    };
-    await db.ref("players/"+uid).set(defaultData);
-    toast("Selamat datang, Komandan! Negara "+cname+" telah didirikan.","success","fa-flag");
-  }
-}
-
-function listenToPlayer(uid){
-  db.ref("players/"+uid).on("value", snap=>{
-    if(!snap.exists()) return;
-    const prevPower = PLAYER ? PLAYER.power : 0;
-    const prevMoney = PLAYER ? PLAYER.money : 0;
-    PLAYER = snap.val();
-    MY_ALLIANCE_ID = PLAYER.allianceId || null;
-    recalcPower(false);
-    renderTopbar(prevMoney, prevPower);
-    renderDashboard();
-    renderUpgradeSection();
-    renderResearchSection();
-    renderProductionSection();
-  });
-}
-
-/* recompute power based on buildings+research+army and push if changed */
-function recalcPower(forcePush){
-  if(!PLAYER) return;
-  let p = 100 + PLAYER.level*20;
-  for(const k in BUILDINGS){
-    const lvl = (PLAYER.buildings && PLAYER.buildings[k]) ? PLAYER.buildings[k].level : 1;
-    p += lvl*BUILDINGS[k].powerPerLvl;
-  }
-  for(const k in RESEARCH){
-    const lvl = (PLAYER.research && PLAYER.research[k]) ? PLAYER.research[k].level : 0;
-    p += lvl*RESEARCH[k].powerPerLvl;
-  }
-  for(const k in UNITS){
-    const qty = (PLAYER.army && PLAYER.army[k]) ? PLAYER.army[k] : 0;
-    p += qty*UNITS[k].power;
-  }
-  p = Math.floor(p);
-  if(p !== PLAYER.power){
-    PLAYER.power = p;
-    db.ref("players/"+CURRENT_UID+"/power").set(p);
-  }
-}
-
-function listenAllPlayers(){
-  db.ref("players").on("value", snap=>{
-    ALL_PLAYERS = snap.val() || {};
-    renderRanking(currentRankTab || "power");
-    renderEnemyList();
-    renderTopbar();
-  });
-}
-
-function renderTopbar(){
-  if(!PLAYER) return;
-  animateNumber(document.getElementById("tb-money"), 0, PLAYER.money);
-  animateNumber(document.getElementById("tb-power"), 0, PLAYER.power);
-  const onlineCount = Object.values(ALL_PLAYERS).filter(p=>p.online).length || 1;
-  document.getElementById("tb-online").textContent = onlineCount;
-}
-
-/* ============================================================
-   3. DASHBOARD
-   ============================================================ */
-function myRankPosition(){
-  const arr = Object.entries(ALL_PLAYERS).sort((a,b)=>b[1].power-a[1].power);
-  const idx = arr.findIndex(([uid])=>uid===CURRENT_UID);
-  return idx>=0 ? idx+1 : "-";
-}
-
-function renderDashboard(){
-  if(!PLAYER) return;
-  const xpNeeded = PLAYER.level*1000;
-  const xpPct = Math.min(100, ((PLAYER.xp||0)/xpNeeded)*100);
-  const html = `
-  <div class="country-banner glass">
-    <div class="flag-big">${COUNTRY_ICON}</div>
-    <div class="info">
-      <h2>${PLAYER.countryName}</h2>
-      <span>Komandan sejak ${new Date(PLAYER.createdAt||Date.now()).toLocaleDateString('id-ID')}</span>
-      <div class="progress-bar" style="width:220px"><span style="width:${xpPct}%"></span></div>
-    </div>
-    <div class="level-badge"><b>${PLAYER.level}</b><small>MILITARY LEVEL</small></div>
-  </div>
-
-  <div class="grid cols-4" style="margin-bottom:16px;">
-    <div class="stat-card glass"><div class="icon"><i class="fa-solid fa-bolt"></i></div>
-      <div class="label">Total Power</div><div class="value">${fmt(PLAYER.power)}</div>
-      <div class="sub"><i class="fa-solid fa-arrow-trend-up"></i> Peringkat #${myRankPosition()}</div></div>
-    <div class="stat-card glass"><div class="icon"><i class="fa-solid fa-sack-dollar"></i></div>
-      <div class="label">Dana Militer</div><div class="value">$${fmt(PLAYER.money)}</div></div>
-    <div class="stat-card glass"><div class="icon"><i class="fa-solid fa-trophy"></i></div>
-      <div class="label">Kemenangan</div><div class="value">${PLAYER.wins||0}</div>
-      <div class="sub">Kekalahan: ${PLAYER.losses||0}</div></div>
-    <div class="stat-card glass"><div class="icon"><i class="fa-solid fa-globe"></i></div>
-      <div class="label">Peringkat Dunia</div><div class="value">#${myRankPosition()}</div></div>
-  </div>
-
-  <div class="card glass" style="margin-bottom:16px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
-    <div class="icon" style="width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--warn),#ff8a4d);font-size:20px;flex-shrink:0;">
-      <i class="fa-solid fa-sack-dollar"></i>
-    </div>
-    <div style="flex:1;min-width:200px;">
-      <b style="font-size:14px;">Pajak Negara</b>
-      <p style="font-size:12px;color:var(--text-2);margin-top:2px;">Pemasukan pasif otomatis, terkumpul setiap saat termasuk ketika offline (maks. 8 jam akumulasi).</p>
-    </div>
-    <div style="text-align:right;">
-      <div style="font-size:20px;font-weight:800;color:var(--warn);">$${fmt(computeTaxRate(PLAYER))} <span style="font-size:11px;color:var(--text-2);font-weight:400;">/ jam</span></div>
-      <div style="font-size:11px;color:var(--text-2);">Tingkatkan Markas Besar, Akademi & Intelijen untuk menaikkan tarif (maks $${TAX_MAX}/jam)</div>
-    </div>
-  </div>
-
-  <div class="card glass" style="margin-bottom:16px;">
-    <h3><i class="fa-solid fa-people-group"></i> Kekuatan Militer</h3>
-    <div class="grid cols-4">
-      ${Object.entries(UNITS).map(([k,u])=>`
-        <div class="unit-chip glass"><i class="fa-solid ${u.icon}"></i><b>${fmt(PLAYER.army?.[k]||0)}</b><span>${u.name}</span></div>
-      `).join("")}
-    </div>
-  </div>
-
-  <div class="grid cols-2">
-    <div class="card glass">
-      <h3><i class="fa-solid fa-building-shield"></i> Status Markas</h3>
-      ${Object.entries(BUILDINGS).slice(0,5).map(([k,b])=>`
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:10px;">
-          <span><i class="fa-solid ${b.icon}" style="color:var(--accent);margin-right:8px;"></i>${b.name}</span>
-          <b>Lv. ${PLAYER.buildings?.[k]?.level||1}</b>
-        </div>`).join("")}
-    </div>
-    <div class="card glass">
-      <h3><i class="fa-solid fa-flask"></i> Status Penelitian</h3>
-      ${Object.entries(RESEARCH).slice(0,5).map(([k,r])=>`
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:10px;">
-          <span><i class="fa-solid ${r.icon}" style="color:var(--accent2);margin-right:8px;"></i>${r.name}</span>
-          <b>Lv. ${PLAYER.research?.[k]?.level||0}</b>
-        </div>`).join("")}
-    </div>
-  </div>`;
-  document.getElementById("section-dashboard").innerHTML = html;
-}
-
-/* ============================================================
-   4. UPGRADE MARKAS
-   ============================================================ */
-function renderUpgradeSection(){
-  if(!PLAYER) return;
-  const rows = Object.entries(BUILDINGS).map(([k,b])=>{
-    const lvl = PLAYER.buildings?.[k]?.level || 1;
-    const cost = upgradeCost(b.base,b.mult,lvl);
-    const affordable = PLAYER.money >= cost;
-    return `
-    <div class="item-row glass">
-      <div class="ic"><i class="fa-solid ${b.icon}"></i></div>
-      <div class="meta"><b>${b.name}</b><span>Level ${lvl} · +${b.powerPerLvl} Power/level</span></div>
-      <span class="cost"><i class="fa-solid fa-sack-dollar"></i> $${fmt(cost)}</span>
-      <button class="btn" ${affordable?"":"disabled"} onclick="doUpgradeBuilding('${k}')">
-        <i class="fa-solid fa-arrow-up"></i> Upgrade
-      </button>
-    </div>`;
-  }).join("");
-  document.getElementById("section-upgrade").innerHTML = `
-    <div class="card glass">
-      <h3><i class="fa-solid fa-building-shield"></i> Upgrade Markas (Tanpa Batas)</h3>
-      ${rows}
-    </div>`;
-}
-
-async function doUpgradeBuilding(key){
-  const b = BUILDINGS[key];
-  const lvl = PLAYER.buildings?.[key]?.level || 1;
-  const cost = upgradeCost(b.base,b.mult,lvl);
-  if(PLAYER.money < cost){ toast("Dana tidak cukup!","error","fa-triangle-exclamation"); return; }
-  const ref = db.ref("players/"+CURRENT_UID);
-  await ref.transaction(p=>{
-    if(!p) return p;
-    if(p.money < cost) return p;
-    p.money -= cost;
-    if(!p.buildings) p.buildings = {};
-    if(!p.buildings[key]) p.buildings[key] = {level:1};
-    p.buildings[key].level += 1;
-    return p;
-  });
-  toast(b.name+" naik ke Level "+(lvl+1)+"!","success","fa-arrow-up");
-}
-
-/* ============================================================
-   5. PENELITIAN (RESEARCH)
-   ============================================================ */
-function renderResearchSection(){
-  if(!PLAYER) return;
-  const rows = Object.entries(RESEARCH).map(([k,r])=>{
-    const lvl = PLAYER.research?.[k]?.level || 0;
-    const cost = upgradeCost(r.base,r.mult,lvl);
-    const affordable = PLAYER.money >= cost;
-    return `
-    <div class="item-row glass">
-      <div class="ic"><i class="fa-solid ${r.icon}"></i></div>
-      <div class="meta"><b>${r.name}</b><span>Level ${lvl} · +${r.powerPerLvl} Power/level</span></div>
-      <span class="cost"><i class="fa-solid fa-sack-dollar"></i> $${fmt(cost)}</span>
-      <button class="btn" ${affordable?"":"disabled"} onclick="doResearch('${k}')">
-        <i class="fa-solid fa-flask"></i> Teliti
-      </button>
-    </div>`;
-  }).join("");
-  document.getElementById("section-research").innerHTML = `
-    <div class="card glass">
-      <h3><i class="fa-solid fa-flask"></i> Pusat Penelitian</h3>
-      ${rows}
-    </div>`;
-}
-
-async function doResearch(key){
-  const r = RESEARCH[key];
-  const lvl = PLAYER.research?.[key]?.level || 0;
-  const cost = upgradeCost(r.base,r.mult,lvl);
-  if(PLAYER.money < cost){ toast("Dana tidak cukup!","error","fa-triangle-exclamation"); return; }
-  const ref = db.ref("players/"+CURRENT_UID);
-  await ref.transaction(p=>{
-    if(!p) return p;
-    if(p.money < cost) return p;
-    p.money -= cost;
-    if(!p.research) p.research = {};
-    if(!p.research[key]) p.research[key] = {level:0};
-    p.research[key].level += 1;
-    return p;
-  });
-  toast(r.name+" naik ke Level "+(lvl+1)+"! Total Power meningkat.","success","fa-flask");
-}
-
-/* ============================================================
-   6. PRODUKSI UNIT (dengan timer realtime)
-   ============================================================ */
+/* ==========================================================================
+   STATE
+   ========================================================================== */
+let CUR_UID = null;
+let player = null;
+let allPlayers = {};
 let productionTickHandle = null;
-function renderProductionSection(){
-  if(!PLAYER) return;
-  const unitOptions = Object.entries(UNITS).map(([k,u])=>`<option value="${k}">${u.name} — $${u.cost} / ${u.time}s</option>`).join("");
-  const queue = PLAYER.production?.queue || {};
-  const queueEntries = Object.entries(queue).sort((a,b)=>a[1].endTime-b[1].endTime);
-  document.getElementById("section-production").innerHTML = `
-    <div class="card glass" style="margin-bottom:16px;">
-      <h3><i class="fa-solid fa-industry"></i> Produksi Unit Baru</h3>
-      <div class="prod-select">
-        <select id="prod-unit-select">${unitOptions}</select>
-        <input type="number" id="prod-unit-qty" value="1" min="1" max="500" style="width:90px;">
-        <button class="btn" onclick="startProduction()"><i class="fa-solid fa-plus"></i> Produksi</button>
-      </div>
-      <div id="prod-cost-preview" style="font-size:12px;color:var(--text-2);"></div>
-    </div>
-    <div class="card glass">
-      <h3><i class="fa-solid fa-list-check"></i> Antrian Produksi (${queueEntries.length})</h3>
-      <div id="queue-list">
-        ${queueEntries.length===0 ? `<div class="empty-state"><i class="fa-solid fa-box-open"></i>Tidak ada produksi berjalan</div>` :
-          queueEntries.map(([qid,item])=>`
-          <div class="queue-item glass" data-qid="${qid}" data-end="${item.endTime}">
-            <div style="font-size:22px;">${UNITS[item.type].emoji}</div>
-            <div class="qmeta"><b>${item.qty}x ${UNITS[item.type].name}</b>
-              <div class="progress-bar"><span class="qbar" style="width:0%"></span></div>
-            </div>
-            <div class="timer-txt qtimer">--:--</div>
-          </div>`).join("")}
-      </div>
-    </div>`;
-  updateProdPreview();
-  document.getElementById("prod-unit-select").addEventListener("change",updateProdPreview);
-  document.getElementById("prod-unit-qty").addEventListener("input",updateProdPreview);
-  tickProductionQueue();
+let currentEnemyForPrep = null;
+let selectedStrategy = null;
+let activeWarListeners = {};
+
+/* ==========================================================================
+   LOADING / LOGIN FLOW
+   ========================================================================== */
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{
+    document.getElementById('loadingScreen').classList.add('hide');
+    const savedUid = localStorage.getItem('warcom_uid');
+    if(savedUid){
+      db.ref('players/'+savedUid).once('value').then(snap=>{
+        if(snap.exists()){
+          enterGame(savedUid);
+        } else {
+          localStorage.removeItem('warcom_uid');
+          document.getElementById('loginScreen').style.display='flex';
+        }
+      });
+    } else {
+      document.getElementById('loginScreen').style.display='flex';
+    }
+  }, 1500);
+});
+
+function switchLoginTab(tab){
+  document.getElementById('tabNewBtn').classList.toggle('active', tab==='new');
+  document.getElementById('tabOldBtn').classList.toggle('active', tab==='old');
+  document.getElementById('tabNew').style.display = tab==='new' ? 'block':'none';
+  document.getElementById('tabOld').style.display = tab==='old' ? 'block':'none';
 }
 
-function updateProdPreview(){
-  const type = document.getElementById("prod-unit-select").value;
-  const qty = parseInt(document.getElementById("prod-unit-qty").value)||1;
-  const u = UNITS[type];
-  document.getElementById("prod-cost-preview").innerHTML =
-    `Total biaya: <b style="color:var(--warn)">$${fmt(u.cost*qty)}</b> · Waktu: <b style="color:var(--accent)">${u.time*Math.max(1,Math.ceil(qty/5))}s (paralel per-5 unit)</b>`;
+function defaultPlayer(countryName){
+  const units={}; UNITS.forEach(u=>units[u.key]=0);
+  const buildings={}; BUILDINGS.forEach(b=>buildings[b.key]={level:1});
+  const research={}; RESEARCH.forEach(r=>research[r.key]={level:0});
+  return {
+    countryName,
+    money: 5000,
+    exp: 0,
+    level: 1,
+    units,
+    buildings,
+    research,
+    online: true,
+    lastSeen: Date.now(),
+    lastIncomeCollected: Date.now(),
+    production: {},
+    allianceId: null,
+    stats: { wins:0, losses:0 },
+    createdAt: Date.now()
+  };
 }
 
-async function startProduction(){
-  const type = document.getElementById("prod-unit-select").value;
-  const qty = parseInt(document.getElementById("prod-unit-qty").value)||1;
-  const u = UNITS[type];
-  const totalCost = u.cost*qty;
-  if(PLAYER.money < totalCost){ toast("Dana tidak cukup untuk produksi ini!","error","fa-triangle-exclamation"); return; }
-  const duration = u.time*Math.max(1,Math.ceil(qty/5));
-  const qid = rid();
-  const ref = db.ref("players/"+CURRENT_UID);
-  const ok = await ref.transaction(p=>{
-    if(!p) return p;
-    if(p.money < totalCost) return p;
-    p.money -= totalCost;
-    if(!p.production) p.production = {queue:{}};
-    if(!p.production.queue) p.production.queue = {};
-    p.production.queue[qid] = {type, qty, startTime:Date.now(), endTime:Date.now()+duration*1000};
-    return p;
+function createNewPlayer(){
+  const country = document.getElementById('inpCountry').value.trim();
+  if(!country){ showToast('Nama negara wajib diisi','err','fa-triangle-exclamation'); return; }
+  const newUid = uid8();
+  const p = defaultPlayer(country);
+  db.ref('players/'+newUid).set(p).then(()=>{
+    const box=document.getElementById('newUidBox');
+    box.style.display='block';
+    box.innerHTML = `<i class="fa-solid fa-key"></i> UID Komandan Anda: <b>${newUid}</b><br>Simpan UID ini untuk login kembali!`;
+    showToast('Negara berhasil didirikan!','ok','fa-shield-halved');
+    setTimeout(()=> enterGame(newUid), 1600);
+  }).catch(err=>{
+    showToast('Gagal membuat negara: '+err.message,'err','fa-triangle-exclamation');
   });
-  toast("Produksi "+qty+"x "+u.name+" dimulai!","success","fa-industry");
 }
 
-function tickProductionQueue(){
-  clearInterval(productionTickHandle);
-  productionTickHandle = setInterval(()=>{
-    const items = document.querySelectorAll(".queue-item");
-    const now = Date.now();
-    items.forEach(el=>{
-      const end = parseInt(el.dataset.end);
-      const qid = el.dataset.qid;
-      const remain = end-now;
-      const bar = el.querySelector(".qbar");
-      const timerTxt = el.querySelector(".qtimer");
-      const item = PLAYER.production?.queue?.[qid];
-      if(!item) return;
-      const total = item.endTime-item.startTime;
-      const elapsed = Math.min(total, now-item.startTime);
-      bar.style.width = Math.min(100,(elapsed/total)*100)+"%";
-      if(remain<=0){
-        timerTxt.textContent = "Selesai!";
-        completeProduction(qid, item);
-      } else {
-        const s = Math.floor(remain/1000);
-        timerTxt.textContent = String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
-      }
-    });
-  }, 1000);
-}
-
-let completingLock = {};
-async function completeProduction(qid, item){
-  if(completingLock[qid]) return;
-  completingLock[qid] = true;
-  const ref = db.ref("players/"+CURRENT_UID);
-  await ref.transaction(p=>{
-    if(!p || !p.production || !p.production.queue || !p.production.queue[qid]) return p;
-    const it = p.production.queue[qid];
-    if(!p.army) p.army = {};
-    p.army[it.type] = (p.army[it.type]||0) + it.qty;
-    delete p.production.queue[qid];
-    return p;
+function loginExisting(){
+  const uidVal = document.getElementById('inpUid').value.trim().toUpperCase();
+  if(!uidVal){ showToast('Masukkan UID Anda','err','fa-triangle-exclamation'); return; }
+  db.ref('players/'+uidVal).once('value').then(snap=>{
+    if(!snap.exists()){ showToast('UID tidak ditemukan','err','fa-triangle-exclamation'); return; }
+    enterGame(uidVal);
   });
-  toast("Produksi selesai: "+item.qty+"x "+UNITS[item.type].name+" siap bertugas!","success","fa-check-double");
 }
 
-/* ============================================================
-   7. RANKING DUNIA (realtime)
-   ============================================================ */
-let currentRankTab = "power";
-const RANK_CATEGORIES = {
-  power:  {label:"Total Power",     getVal:p=>p.power||0,           icon:"fa-bolt"},
-  level:  {label:"Level Militer",   getVal:p=>p.level||0,           icon:"fa-star"},
-  wins:   {label:"Jumlah Kemenangan",getVal:p=>p.wins||0,           icon:"fa-trophy"},
-  ratio:  {label:"Rasio Menang",    getVal:p=>{
-              const t=(p.wins||0)+(p.losses||0); return t===0?0:(p.wins||0)/t;
-           }, icon:"fa-percent"},
-  strong: {label:"Negara Terkuat",  getVal:p=>(p.power||0)+((p.wins||0)*50), icon:"fa-crown"}
+function enterGame(uidVal){
+  CUR_UID = uidVal;
+  localStorage.setItem('warcom_uid', uidVal);
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('uidFooter').innerHTML = `<i class="fa-solid fa-id-badge"></i> ${CUR_UID}`;
+  db.ref('players/'+CUR_UID+'/online').set(true);
+  db.ref('players/'+CUR_UID+'/lastSeen').set(Date.now());
+  window.addEventListener('beforeunload', ()=>{
+    db.ref('players/'+CUR_UID+'/online').set(false);
+  });
+  listenPlayer();
+  listenAllPlayers();
+  listenNotifications();
+  listenWars();
+  buildBuildingsGrid();
+  buildUnitsGrid();
+  buildResearchGrid();
+  if(productionTickHandle) clearInterval(productionTickHandle);
+  productionTickHandle = setInterval(gameTick, 1000);
+}
+
+function logout(){
+  if(CUR_UID) db.ref('players/'+CUR_UID+'/online').set(false);
+  localStorage.removeItem('warcom_uid');
+  location.reload();
+}
+
+/* ==========================================================================
+   PLAYER LISTENER + INCOME
+   ========================================================================== */
+function listenPlayer(){
+  db.ref('players/'+CUR_UID).on('value', snap=>{
+    if(!snap.exists()) return;
+    player = snap.val();
+    if(!player.production) player.production = {};
+    if(!player.units) player.units = {};
+    if(!player.buildings) player.buildings = {};
+    if(!player.research) player.research = {};
+    if(!player.stats) player.stats = {wins:0, losses:0};
+    renderDashboard();
+    buildBuildingsGrid();
+    buildUnitsGrid();
+    buildResearchGrid();
+    renderQueue();
+  });
+}
+
+function computeTotalPower(p){
+  if(!p) return 0;
+  let power = 0;
+  UNITS.forEach(u=> power += (p.units?.[u.key]||0) * u.power );
+  BUILDINGS.forEach(b=> power += ((p.buildings?.[b.key]?.level||1)-1) * b.powerPerLvl );
+  RESEARCH.forEach(r=> power += (p.research?.[r.key]?.level||0) * r.powerPerLvl );
+  power += (p.level||1) * 25;
+  return Math.round(power);
+}
+
+function gameTick(){
+  if(!player) return;
+  // hourly tax income
+  const now = Date.now();
+  const last = player.lastIncomeCollected || now;
+  const hoursPassed = Math.floor((now-last)/3600000);
+  if(hoursPassed >= 1){
+    const capped = Math.min(hoursPassed, 24);
+    let gained = 0;
+    for(let i=0;i<capped;i++) gained += Math.floor(Math.random()*(1000-500+1))+500;
+    const ref = db.ref('players/'+CUR_UID);
+    ref.child('money').transaction(m => (m||0) + gained);
+    ref.child('lastIncomeCollected').set(now);
+    showToast(`Pajak diterima: +${fmtT(gained)}`, 'ok', 'fa-coins');
+  }
+  // production queue completion
+  checkProductionQueue();
+}
+
+/* ==========================================================================
+   DASHBOARD RENDER
+   ========================================================================== */
+function renderDashboard(){
+  document.getElementById('dashCountry').textContent = player.countryName || '-';
+  document.getElementById('dashUidShort').textContent = CUR_UID;
+  document.getElementById('dashLevel').textContent = player.level||1;
+  const power = computeTotalPower(player);
+  document.getElementById('dashPower').textContent = fmtNum(power);
+  document.getElementById('topMoney').textContent = fmtT(player.money||0);
+
+  animateNumber(document.getElementById('statMoney'), player.money||0);
+  document.getElementById('statTax').textContent = "500 - 1.000 T";
+  animateNumber(document.getElementById('statArmy'), player.units?.army||0);
+  animateNumber(document.getElementById('statTank'), player.units?.tank||0);
+  animateNumber(document.getElementById('statJet'), player.units?.jet||0);
+  animateNumber(document.getElementById('statShip'), player.units?.ship||0);
+  animateNumber(document.getElementById('statDrone'), player.units?.drone||0);
+  animateNumber(document.getElementById('statMissile'), player.units?.missile||0);
+
+  const rank = computeRankOf(CUR_UID, 'power');
+  document.getElementById('statRank').textContent = rank ? '#'+rank : '-';
+
+  const needExp = (player.level||1)*1000;
+  const pct = Math.min(100, ((player.exp||0)/needExp)*100);
+  document.getElementById('lvlNow').textContent = player.level||1;
+  document.getElementById('lvlExp').textContent = `${fmtNum(player.exp||0)} / ${fmtNum(needExp)} EXP`;
+  document.getElementById('lvlBar').style.width = pct+'%';
+}
+
+/* ==========================================================================
+   NAVIGATION
+   ========================================================================== */
+const PAGE_TITLES = {
+  dashboard:['Dashboard','Ringkasan kekuatan negara'],
+  buildings:['Upgrade Markas','Tingkatkan infrastruktur militer'],
+  production:['Produksi Unit','Latih dan bangun kekuatan tempur'],
+  research:['Penelitian','Kembangkan teknologi militer'],
+  alliance:['Aliansi','Kerja sama antar negara'],
+  ranking:['Peringkat Dunia','Klasemen kekuatan global realtime'],
+  war:['Deklarasi Perang','Pilih lawan dan tentukan strategi']
 };
-
-function renderRanking(tab){
-  currentRankTab = tab;
-  const cat = RANK_CATEGORIES[tab];
-  const arr = Object.entries(ALL_PLAYERS)
-    .map(([uid,p])=>({uid,p,val:cat.getVal(p)}))
-    .sort((a,b)=>b.val-a.val)
-    .slice(0,50);
-
-  const tabsHtml = Object.entries(RANK_CATEGORIES).map(([k,c])=>
-    `<div class="rank-tab ${k===tab?'active':''}" onclick="renderRanking('${k}')"><i class="fa-solid ${c.icon}"></i> ${c.label}</div>`
-  ).join("");
-
-  const rowsHtml = arr.map((entry,i)=>{
-    const pos = i+1;
-    const cls = pos===1?"top1":pos===2?"top2":pos===3?"top3":"";
-    const isMe = entry.uid===CURRENT_UID;
-    const valDisplay = tab==="ratio" ? (entry.val*100).toFixed(1)+"%" : fmt(entry.val);
-    return `
-    <div class="rank-row glass ${cls}" style="${isMe?'outline:1px solid var(--accent);':''}">
-      <div class="pos">${pos}</div>
-      <div class="rflag">${COUNTRY_ICON}</div>
-      <div class="rname">${entry.p.countryName||"Unknown"} ${isMe?'<span style="color:var(--accent);font-size:11px;">(Anda)</span>':''}</div>
-      <div class="rval"><i class="fa-solid ${cat.icon}"></i> ${valDisplay}</div>
-    </div>`;
-  }).join("");
-
-  document.getElementById("section-ranking").innerHTML = `
-    <div class="card glass">
-      <h3><i class="fa-solid fa-ranking-star"></i> Papan Peringkat Dunia</h3>
-      <div class="rank-tabs">${tabsHtml}</div>
-      ${rowsHtml || `<div class="empty-state"><i class="fa-solid fa-globe"></i>Belum ada data</div>`}
-    </div>`;
+function goPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===name));
+  document.getElementById('pageTitle').innerHTML = PAGE_TITLES[name][0] + `<span>${PAGE_TITLES[name][1]}</span>`;
+  toggleSidebar(false);
+  if(name==='ranking') renderRanking('power');
+  if(name==='war') renderEnemyList();
+  if(name==='alliance') renderAlliancePage();
 }
 
-/* ============================================================
-   8. ALIANSI
-   ============================================================ */
-function renderAllianceSection(){
-  if(!PLAYER) return;
-  if(!MY_ALLIANCE_ID){
-    document.getElementById("section-alliance").innerHTML = `
-      <div class="grid cols-2">
-        <div class="card glass">
-          <h3><i class="fa-solid fa-plus"></i> Buat Aliansi Baru</h3>
-          <div class="form-group"><label>Nama Aliansi</label><input id="new-alliance-name" placeholder="Contoh: Iron Coalition"></div>
-          <button class="btn" onclick="createAlliance()"><i class="fa-solid fa-flag"></i> Dirikan Aliansi</button>
-        </div>
-        <div class="card glass">
-          <h3><i class="fa-solid fa-right-to-bracket"></i> Gabung Aliansi</h3>
-          <div class="form-group"><label>ID Aliansi</label><input id="join-alliance-id" placeholder="Masukkan ID aliansi"></div>
-          <button class="btn outline" onclick="joinAllianceById()"><i class="fa-solid fa-people-group"></i> Gabung</button>
-        </div>
+/* ==========================================================================
+   BUILDINGS
+   ========================================================================== */
+function buildBuildingsGrid(){
+  if(!player) return;
+  const grid = document.getElementById('buildingsGrid');
+  grid.innerHTML = BUILDINGS.map(b=>{
+    const lvl = player.buildings?.[b.key]?.level || 1;
+    const cost = costFor(b.base, b.growth, lvl);
+    return `<div class="item-card glass">
+      <div class="item-top">
+        <div class="item-icon"><i class="fa-solid ${b.icon}"></i></div>
+        <div><div class="item-name">${b.name}</div><div class="item-lvl">Level ${lvl}</div></div>
       </div>
-      <div class="card glass" style="margin-top:16px;">
-        <h3><i class="fa-solid fa-list"></i> Daftar Aliansi Tersedia</h3>
-        <div id="alliance-browse-list"></div>
-      </div>`;
-    db.ref("alliances").limitToLast(20).once("value").then(snap=>{
-      const data = snap.val()||{};
-      const html = Object.entries(data).map(([id,a])=>`
-        <div class="item-row glass">
-          <div class="ic"><i class="fa-solid fa-people-group"></i></div>
-          <div class="meta"><b>${a.name}</b><span>${Object.keys(a.members||{}).length} anggota · ID: ${id}</span></div>
-          <button class="btn small" onclick="joinAlliance('${id}')">Gabung</button>
-        </div>`).join("") || `<div class="empty-state"><i class="fa-solid fa-people-group"></i>Belum ada aliansi</div>`;
-      document.getElementById("alliance-browse-list").innerHTML = html;
-    });
+      <div class="item-desc">${b.desc}</div>
+      <div class="item-foot">
+        <div class="cost"><i class="fa-solid fa-coins"></i> ${fmtT(cost)}</div>
+        <button class="btn small" onclick="upgradeBuilding('${b.key}')">Upgrade</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function upgradeBuilding(key){
+  const b = BUILDINGS.find(x=>x.key===key);
+  const lvl = player.buildings?.[key]?.level || 1;
+  const cost = costFor(b.base, b.growth, lvl);
+  if((player.money||0) < cost){ showToast('Dana tidak cukup','err','fa-triangle-exclamation'); return; }
+  const ref = db.ref('players/'+CUR_UID);
+  ref.child('money').transaction(m=>{
+    if((m||0) < cost) return; // abort
+    return m - cost;
+  }).then(res=>{
+    if(res.committed){
+      ref.child('buildings/'+key+'/level').set(lvl+1);
+      showToast(b.name+' naik ke level '+(lvl+1),'ok','fa-arrow-up');
+    } else {
+      showToast('Dana tidak cukup','err','fa-triangle-exclamation');
+    }
+  });
+}
+
+/* ==========================================================================
+   PRODUCTION
+   ========================================================================== */
+function buildUnitsGrid(){
+  if(!player) return;
+  const grid = document.getElementById('unitsGrid');
+  grid.innerHTML = UNITS.map(u=>{
+    const owned = player.units?.[u.key]||0;
+    return `<div class="item-card glass">
+      <div class="item-top">
+        <div class="item-icon"><i class="fa-solid ${u.icon}"></i></div>
+        <div><div class="item-name">${u.name}</div><div class="item-lvl">Dimiliki: ${fmtNum(owned)}</div></div>
+      </div>
+      <div class="item-desc">Biaya ${fmtT(u.cost)} / unit · Waktu ${u.time}s · Power ${u.power}</div>
+      <div class="qty-row">
+        <input type="number" min="1" value="1" id="qty-${u.key}">
+        <button class="btn small" style="flex:1" onclick="produceUnit('${u.key}')"><i class="fa-solid fa-hammer"></i> Produksi</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function produceUnit(key){
+  const u = UNITS.find(x=>x.key===key);
+  const qtyInput = document.getElementById('qty-'+key);
+  const qty = Math.max(1, parseInt(qtyInput.value)||1);
+  const totalCost = u.cost * qty;
+  if((player.money||0) < totalCost){ showToast('Dana tidak cukup','err','fa-triangle-exclamation'); return; }
+  const ref = db.ref('players/'+CUR_UID);
+  ref.child('money').transaction(m=>{
+    if((m||0) < totalCost) return;
+    return m - totalCost;
+  }).then(res=>{
+    if(!res.committed){ showToast('Dana tidak cukup','err','fa-triangle-exclamation'); return; }
+    const qId = 'q'+Date.now()+Math.floor(Math.random()*999);
+    const endTime = Date.now() + u.time*1000*qty;
+    ref.child('production/'+qId).set({ type:key, qty, endTime, startTime:Date.now() });
+    showToast(`Produksi ${qty} ${u.name} dimulai`,'info','fa-hammer');
+  });
+}
+function checkProductionQueue(){
+  if(!player || !player.production) return;
+  const now = Date.now();
+  Object.entries(player.production).forEach(([qId, item])=>{
+    if(item.endTime <= now){
+      const ref = db.ref('players/'+CUR_UID);
+      ref.child('units/'+item.type).transaction(n=> (n||0) + item.qty);
+      ref.child('production/'+qId).remove();
+      showToast(`Produksi selesai: ${item.qty} unit`,'ok','fa-check-double');
+    }
+  });
+}
+function renderQueue(){
+  const box = document.getElementById('queueBox');
+  const entries = Object.entries(player.production||{});
+  if(entries.length===0){
+    box.innerHTML = '<div class="empty-state"><i class="fa-solid fa-inbox"></i>Belum ada produksi berjalan</div>';
     return;
   }
-  db.ref("alliances/"+MY_ALLIANCE_ID).on("value", snap=>{
-    if(!snap.exists()){
-      document.getElementById("section-alliance").innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Aliansi tidak ditemukan</div>`;
-      return;
-    }
-    const a = snap.val();
-    const members = Object.keys(a.members||{});
-    document.getElementById("section-alliance").innerHTML = `
-      <div class="country-banner glass">
-        <div class="flag-big"><i class="fa-solid fa-people-group"></i></div>
-        <div class="info"><h2>${a.name}</h2><span>ID: ${MY_ALLIANCE_ID} · ${members.length} anggota · Dana: $${fmt(a.money||0)}</span></div>
-        <button class="btn danger" onclick="leaveAlliance()" style="margin-left:auto;"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
+  box.innerHTML = entries.map(([qId,item])=>{
+    const u = UNITS.find(x=>x.key===item.type);
+    const remain = Math.max(0, Math.floor((item.endTime-Date.now())/1000));
+    const mm = Math.floor(remain/60), ss = remain%60;
+    return `<div class="queue-item">
+      <i class="fa-solid ${u?u.icon:'fa-gear'}"></i>
+      <div class="qi-info">${item.qty}x ${u?u.name:item.type}</div>
+      <div class="qi-timer">${mm}m ${ss}s</div>
+    </div>`;
+  }).join('');
+}
+setInterval(()=>{ if(player) renderQueue(); }, 1000);
+
+/* ==========================================================================
+   RESEARCH
+   ========================================================================== */
+function buildResearchGrid(){
+  if(!player) return;
+  const grid = document.getElementById('researchGrid');
+  grid.innerHTML = RESEARCH.map(r=>{
+    const lvl = player.research?.[r.key]?.level || 0;
+    const cost = costFor(r.base, r.growth, lvl);
+    return `<div class="item-card glass">
+      <div class="item-top">
+        <div class="item-icon"><i class="fa-solid ${r.icon}"></i></div>
+        <div><div class="item-name">${r.name}</div><div class="item-lvl">Level ${lvl}</div></div>
       </div>
-      <div class="grid cols-2">
-        <div class="card glass">
-          <h3><i class="fa-solid fa-comments"></i> Chat Aliansi</h3>
-          <div class="chat-box" id="alliance-chat-box"></div>
-          <div class="chat-input-row">
-            <input id="alliance-chat-input" placeholder="Ketik pesan..." onkeydown="if(event.key==='Enter')sendAllianceChat()">
-            <button class="btn small" onclick="sendAllianceChat()"><i class="fa-solid fa-paper-plane"></i></button>
-          </div>
-        </div>
-        <div class="card glass">
-          <h3><i class="fa-solid fa-users"></i> Anggota (${members.length})</h3>
-          <div id="alliance-members-list"></div>
-          <hr style="border-color:var(--glass-border);margin:14px 0;">
-          <h3><i class="fa-solid fa-hand-holding-dollar"></i> Donasi</h3>
-          <div class="form-group"><label>Jumlah Dana</label>
-            <div class="range-row"><input type="number" id="donate-money-amt" value="100" min="1"><button class="btn small" onclick="donateMoney()">Donasi</button></div>
-          </div>
-        </div>
-      </div>`;
-    // chat listener
-    db.ref("alliances/"+MY_ALLIANCE_ID+"/chat").limitToLast(40).on("value", csnap=>{
-      const chats = csnap.val()||{};
-      const box = document.getElementById("alliance-chat-box");
-      if(!box) return;
-      box.innerHTML = Object.values(chats).map(c=>`<div class="chat-msg"><b>${c.name}</b>${c.text}</div>`).join("");
-      box.scrollTop = box.scrollHeight;
-    });
-    // members list
-    const memHtml = members.map(uid=>{
-      const p = ALL_PLAYERS[uid] || {};
-      return `<div class="item-row glass">
-        <div class="ic"><i class="fa-solid fa-flag"></i></div>
-        <div class="meta"><b>${p.countryName||"?"}</b><span>Power: ${fmt(p.power||0)} ${p.online?'· <span style="color:var(--success)">Online</span>':''}</span></div>
-        ${a.leader===uid?'<span class="cost" style="color:var(--warn)"><i class="fa-solid fa-crown"></i> Leader</span>':''}
-      </div>`;
-    }).join("");
-    const memEl = document.getElementById("alliance-members-list");
-    if(memEl) memEl.innerHTML = memHtml;
+      <div class="item-desc">${r.desc}</div>
+      <div class="item-foot">
+        <div class="cost"><i class="fa-solid fa-coins"></i> ${fmtT(cost)}</div>
+        <button class="btn small" onclick="researchUpgrade('${r.key}')">Teliti</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function researchUpgrade(key){
+  const r = RESEARCH.find(x=>x.key===key);
+  const lvl = player.research?.[key]?.level || 0;
+  const cost = costFor(r.base, r.growth, lvl);
+  if((player.money||0) < cost){ showToast('Dana tidak cukup','err','fa-triangle-exclamation'); return; }
+  const ref = db.ref('players/'+CUR_UID);
+  ref.child('money').transaction(m=>{
+    if((m||0) < cost) return;
+    return m - cost;
+  }).then(res=>{
+    if(res.committed){
+      ref.child('research/'+key+'/level').set(lvl+1);
+      showToast(r.name+' naik ke level '+(lvl+1),'ok','fa-flask');
+    } else showToast('Dana tidak cukup','err','fa-triangle-exclamation');
   });
 }
 
-async function createAlliance(){
-  const name = document.getElementById("new-alliance-name").value.trim();
-  if(!name){ toast("Nama aliansi wajib diisi","error","fa-triangle-exclamation"); return; }
-  const newRef = db.ref("alliances").push();
-  await newRef.set({name, leader:CURRENT_UID, members:{[CURRENT_UID]:true}, money:0, createdAt:Date.now()});
-  await db.ref("players/"+CURRENT_UID+"/allianceId").set(newRef.key);
-  toast("Aliansi \""+name+"\" berhasil didirikan!","success","fa-flag");
+/* ==========================================================================
+   ALL PLAYERS / RANKING
+   ========================================================================== */
+function listenAllPlayers(){
+  db.ref('players').on('value', snap=>{
+    allPlayers = snap.val() || {};
+    if(document.getElementById('page-ranking').classList.contains('active')) renderRanking(currentRankCat||'power');
+    if(document.getElementById('page-war').classList.contains('active')) renderEnemyList();
+    renderDashboard();
+  });
 }
-async function joinAllianceById(){
-  const id = document.getElementById("join-alliance-id").value.trim();
-  if(!id) return;
-  joinAlliance(id);
+let currentRankCat = 'power';
+function computeRankOf(targetUid, cat){
+  const arr = Object.entries(allPlayers).map(([id,p])=>({id, val:rankValue(p,cat)}));
+  arr.sort((a,b)=>b.val-a.val);
+  const idx = arr.findIndex(x=>x.id===targetUid);
+  return idx>=0 ? idx+1 : null;
 }
-async function joinAlliance(id){
-  const snap = await db.ref("alliances/"+id).get();
-  if(!snap.exists()){ toast("Aliansi tidak ditemukan","error","fa-triangle-exclamation"); return; }
-  await db.ref("alliances/"+id+"/members/"+CURRENT_UID).set(true);
-  await db.ref("players/"+CURRENT_UID+"/allianceId").set(id);
-  toast("Berhasil bergabung dengan aliansi!","success","fa-people-group");
+function rankValue(p, cat){
+  if(cat==='power') return computeTotalPower(p);
+  if(cat==='level') return p.level||1;
+  if(cat==='wins') return p.stats?.wins||0;
+  if(cat==='ratio'){
+    const w=p.stats?.wins||0, l=p.stats?.losses||0;
+    return (w+l)===0 ? 0 : w/(w+l);
+  }
+  return 0;
 }
-async function leaveAlliance(){
-  if(!MY_ALLIANCE_ID) return;
-  await db.ref("alliances/"+MY_ALLIANCE_ID+"/members/"+CURRENT_UID).remove();
-  await db.ref("players/"+CURRENT_UID+"/allianceId").set(null);
-  toast("Anda keluar dari aliansi","info","fa-right-from-bracket");
+function renderRanking(cat){
+  currentRankCat = cat;
+  document.querySelectorAll('#rankTabs button').forEach(b=>{
+    b.classList.toggle('ghost', b.dataset.cat!==cat);
+  });
+  const arr = Object.entries(allPlayers).map(([id,p])=>({id,p,val:rankValue(p,cat)}));
+  arr.sort((a,b)=>b.val-a.val);
+  const box = document.getElementById('rankList');
+  if(arr.length===0){ box.innerHTML='<div class="empty-state"><i class="fa-solid fa-ranking-star"></i>Belum ada data</div>'; return; }
+  box.innerHTML = arr.slice(0,50).map((item,i)=>{
+    const pos = i+1;
+    const posClass = pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';
+    let displayVal = cat==='power' ? fmtNum(item.val) : cat==='level' ? item.val : cat==='wins' ? item.val : (item.val*100).toFixed(1)+'%';
+    return `<div class="rank-row">
+      <div class="rank-pos ${posClass}">${pos}</div>
+      <div class="rank-info"><div class="n">${item.p.countryName||'Tanpa Nama'}</div><div class="s">${item.id===CUR_UID?'Anda':'Level '+(item.p.level||1)}</div></div>
+      <div class="rank-val">${displayVal}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ==========================================================================
+   ALLIANCE
+   ========================================================================== */
+function renderAlliancePage(){
+  if(!player) return;
+  if(player.allianceId){
+    document.getElementById('allianceNone').style.display='none';
+    document.getElementById('allianceView').style.display='block';
+    listenAlliance(player.allianceId);
+  } else {
+    document.getElementById('allianceNone').style.display='block';
+    document.getElementById('allianceView').style.display='none';
+  }
+}
+function createAlliance(){
+  const name = document.getElementById('inpAllianceName').value.trim();
+  if(!name){ showToast('Nama aliansi wajib diisi','err','fa-triangle-exclamation'); return; }
+  const allianceId = 'ALY-'+Date.now().toString(36).toUpperCase();
+  db.ref('alliances/'+allianceId).set({
+    name, leader: CUR_UID, money:0, createdAt:Date.now(),
+    members: { [CUR_UID]: true }
+  }).then(()=>{
+    db.ref('players/'+CUR_UID+'/allianceId').set(allianceId);
+    showToast('Aliansi berhasil dibuat: '+allianceId,'ok','fa-people-group');
+  });
+}
+function joinAlliance(){
+  const id = document.getElementById('inpJoinAlliance').value.trim();
+  if(!id){ showToast('Masukkan ID aliansi','err','fa-triangle-exclamation'); return; }
+  db.ref('alliances/'+id).once('value').then(snap=>{
+    if(!snap.exists()){ showToast('Aliansi tidak ditemukan','err','fa-triangle-exclamation'); return; }
+    db.ref('alliances/'+id+'/members/'+CUR_UID).set(true);
+    db.ref('players/'+CUR_UID+'/allianceId').set(id);
+    showToast('Berhasil bergabung ke aliansi','ok','fa-people-group');
+  });
+}
+function leaveAlliance(){
+  if(!player.allianceId) return;
+  db.ref('alliances/'+player.allianceId+'/members/'+CUR_UID).remove();
+  db.ref('players/'+CUR_UID+'/allianceId').set(null);
+  showToast('Anda telah keluar dari aliansi','info','fa-right-from-bracket');
+}
+let allianceListenerId = null;
+function listenAlliance(allianceId){
+  if(allianceListenerId===allianceId) return;
+  allianceListenerId = allianceId;
+  db.ref('alliances/'+allianceId).on('value', snap=>{
+    if(!snap.exists()) return;
+    const a = snap.val();
+    document.getElementById('allianceName').textContent = a.name;
+    document.getElementById('allianceId').textContent = allianceId;
+    const members = Object.keys(a.members||{});
+    document.getElementById('allianceCount').textContent = members.length;
+    document.getElementById('allianceMembers').innerHTML = members.map(mid=>{
+      const p = allPlayers[mid];
+      if(!p) return '';
+      return `<div class="member-row">
+        <div class="mi">${p.countryName||mid}<small>Power: ${fmtNum(computeTotalPower(p))} ${mid===a.leader?' · Pemimpin':''}</small></div>
+      </div>`;
+    }).join('');
+    const chat = a.chat || {};
+    const chatBox = document.getElementById('allianceChat');
+    chatBox.innerHTML = Object.values(chat).sort((x,y)=>x.time-y.time).map(m=>{
+      return `<div class="chat-msg ${m.uid===CUR_UID?'me':''}"><div class="who">${m.name}</div>${m.text}</div>`;
+    }).join('');
+    chatBox.scrollTop = chatBox.scrollHeight;
+  });
 }
 function sendAllianceChat(){
-  const input = document.getElementById("alliance-chat-input");
+  const input = document.getElementById('chatInput');
   const text = input.value.trim();
-  if(!text) return;
-  db.ref("alliances/"+MY_ALLIANCE_ID+"/chat").push({uid:CURRENT_UID,name:PLAYER.countryName,text,time:Date.now()});
-  input.value = "";
+  if(!text || !player.allianceId) return;
+  const msgId = 'm'+Date.now();
+  db.ref('alliances/'+player.allianceId+'/chat/'+msgId).set({
+    uid: CUR_UID, name: player.countryName, text, time: Date.now()
+  });
+  input.value='';
 }
-async function donateMoney(){
-  const amt = parseInt(document.getElementById("donate-money-amt").value)||0;
-  if(amt<=0 || amt>PLAYER.money){ toast("Jumlah tidak valid","error","fa-triangle-exclamation"); return; }
-  await db.ref("players/"+CURRENT_UID).transaction(p=>{ if(p) p.money -= amt; return p; });
-  await db.ref("alliances/"+MY_ALLIANCE_ID+"/money").transaction(m=>(m||0)+amt);
-  toast("Berhasil mendonasikan $"+fmt(amt)+" ke aliansi","success","fa-hand-holding-dollar");
+function donateAllianceMoney(){
+  const amt = parseInt(document.getElementById('donateMoney').value)||0;
+  if(amt<=0 || !player.allianceId) return;
+  if((player.money||0) < amt){ showToast('Dana tidak cukup','err','fa-triangle-exclamation'); return; }
+  const ref = db.ref('players/'+CUR_UID);
+  ref.child('money').transaction(m=>{
+    if((m||0)<amt) return;
+    return m-amt;
+  }).then(res=>{
+    if(res.committed){
+      db.ref('alliances/'+player.allianceId+'/money').transaction(m=>(m||0)+amt);
+      showToast('Donasi dana berhasil','ok','fa-hand-holding-dollar');
+    }
+  });
+}
+function donateAllianceUnit(){
+  const type = document.getElementById('donateUnitType').value;
+  const qty = parseInt(document.getElementById('donateUnitQty').value)||0;
+  if(qty<=0 || !player.allianceId) return;
+  if((player.units?.[type]||0) < qty){ showToast('Unit tidak cukup','err','fa-triangle-exclamation'); return; }
+  const ref = db.ref('players/'+CUR_UID);
+  ref.child('units/'+type).transaction(n=>{
+    if((n||0)<qty) return;
+    return n-qty;
+  }).then(res=>{
+    if(res.committed) showToast(`Donasi ${qty} unit berhasil (dikirim ke gudang aliansi)`,'ok','fa-boxes-packing');
+  });
 }
 
-/* ============================================================
-   9. DEKLARASI PERANG
-   ============================================================ */
+/* ==========================================================================
+   NOTIFICATIONS
+   ========================================================================== */
+function listenNotifications(){
+  db.ref('notifications/'+CUR_UID).on('value', snap=>{
+    const data = snap.val() || {};
+    const entries = Object.entries(data).sort((a,b)=>b[1].time-a[1].time);
+    const unread = entries.filter(e=>!e[1].read).length;
+    const badge = document.getElementById('notifBadge');
+    if(unread>0){ badge.style.display='flex'; badge.textContent = unread; } else badge.style.display='none';
+
+    const list = document.getElementById('notifList');
+    if(entries.length===0){ list.innerHTML='<div class="empty-state"><i class="fa-solid fa-inbox"></i>Tidak ada notifikasi</div>'; return; }
+    list.innerHTML = entries.map(([nid,n])=>{
+      let actions = '';
+      if(n.type==='war_declare' && !n.responded){
+        actions = `<div class="notif-actions">
+          <button class="btn small" onclick="respondWar('${n.warId}',true,'${nid}')"><i class="fa-solid fa-check"></i> Terima</button>
+          <button class="btn small alert" onclick="respondWar('${n.warId}',false,'${nid}')"><i class="fa-solid fa-xmark"></i> Tolak</button>
+        </div>`;
+      }
+      return `<div class="notif-item ${n.read?'':'unread'}" onclick="markNotifRead('${nid}')">
+        <div>${n.text}</div>
+        <div class="nt">${new Date(n.time).toLocaleString('id-ID')}</div>
+        ${actions}
+      </div>`;
+    }).join('');
+  });
+}
+function markNotifRead(nid){ db.ref('notifications/'+CUR_UID+'/'+nid+'/read').set(true); }
+
+/* ==========================================================================
+   WAR: DECLARE / RESPOND / PREP / SIMULATE
+   ========================================================================== */
 function renderEnemyList(){
-  const el = document.getElementById("enemy-list-container");
-  if(!el) return;
-  const q = (document.getElementById("enemy-search")?.value||"").toLowerCase();
-  const rows = Object.entries(ALL_PLAYERS)
-    .filter(([uid,p])=>uid!==CURRENT_UID && (p.countryName||"").toLowerCase().includes(q))
-    .sort((a,b)=>(b[1].power||0)-(a[1].power||0))
-    .slice(0,30)
-    .map(([uid,p])=>`
-      <div class="enemy-row glass">
-        <div class="rflag">${COUNTRY_ICON}</div>
-        <div class="info"><b>${p.countryName}</b><span>Power: ${fmt(p.power||0)} · Level ${p.level||1} ${p.online?'· <span style="color:var(--success)">Online</span>':''}</span></div>
-        <button class="btn danger small" onclick="openDeclareWarModal('${uid}')"><i class="fa-solid fa-crosshairs"></i> Deklarasi Perang</button>
-      </div>`).join("");
-  el.innerHTML = rows || `<div class="empty-state"><i class="fa-solid fa-user-slash"></i>Tidak ada negara ditemukan</div>`;
-}
-
-function renderWarSection(){
-  document.getElementById("section-war").innerHTML = `
-    <div class="card glass" style="margin-bottom:16px;">
-      <h3><i class="fa-solid fa-bell"></i> Notifikasi Perang</h3>
-      <div id="war-notif-list"><div class="empty-state"><i class="fa-solid fa-inbox"></i>Tidak ada notifikasi</div></div>
-    </div>
-    <div class="card glass">
-      <h3><i class="fa-solid fa-crosshairs"></i> Pilih Target</h3>
-      <div class="player-search">
-        <input id="enemy-search" placeholder="Cari nama negara..." oninput="renderEnemyList()">
-      </div>
-      <div id="enemy-list-container"></div>
+  const box = document.getElementById('enemyList');
+  const others = Object.entries(allPlayers).filter(([id])=>id!==CUR_UID);
+  if(others.length===0){ box.innerHTML='<div class="empty-state"><i class="fa-solid fa-globe"></i>Belum ada negara lain</div>'; return; }
+  box.innerHTML = others.map(([id,p])=>{
+    return `<div class="enemy-card glass">
+      <div style="font-size:22px;color:var(--txt-2);"><i class="fa-solid fa-flag-checkered"></i></div>
+      <div class="ei"><b>${p.countryName||id}</b><small>Power: ${fmtNum(computeTotalPower(p))} · Level ${p.level||1}</small></div>
+      <button class="btn small alert" onclick="declareWar('${id}')"><i class="fa-solid fa-explosion"></i></button>
     </div>`;
-  renderEnemyList();
-  renderNotifList();
+  }).join('');
 }
-
-function openDeclareWarModal(enemyUid){
-  const enemy = ALL_PLAYERS[enemyUid];
-  openModal(`
-    <h3>Deklarasi Perang <span class="close-x" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></span></h3>
-    <p style="font-size:13px;color:var(--text-2);margin-bottom:14px;">
-      Anda akan mendeklarasikan perang terhadap <b style="color:#fff;">${enemy.countryName}</b> (Power: ${fmt(enemy.power)}).
-      Lawan akan menerima notifikasi realtime dan dapat Menerima atau Menolak.
-    </p>
-    <button class="btn danger" style="width:100%;" onclick="declareWar('${enemyUid}')"><i class="fa-solid fa-crosshairs"></i> Kirim Deklarasi Perang</button>
-  `);
-}
-
-async function declareWar(enemyUid){
-  const warRef = db.ref("wars").push();
-  const warId = warRef.key;
-  await warRef.set({
-    attacker: CURRENT_UID, defender: enemyUid,
-    attackerName: PLAYER.countryName, defenderName: ALL_PLAYERS[enemyUid].countryName,
-    status: "pending", createdAt: Date.now(), prep:{}, simulated:false
-  });
-  await db.ref("notifications/"+enemyUid).push({
-    type:"war_declared", warId, fromUid:CURRENT_UID, fromName:PLAYER.countryName,
-    text: PLAYER.countryName+" mendeklarasikan perang terhadap Anda!", time: Date.now(), read:false
-  });
-  closeModal();
-  toast("Deklarasi perang terkirim ke "+ALL_PLAYERS[enemyUid].countryName,"warn","fa-crosshairs");
-}
-
-/* ---------- Notifications ---------- */
-function listenToNotifications(uid){
-  db.ref("notifications/"+uid).on("value", snap=>{
-    const data = snap.val()||{};
-    const unread = Object.values(data).filter(n=>!n.read).length;
-    const badge = document.getElementById("war-badge");
-    if(unread>0){ badge.classList.add("show"); badge.textContent = unread; }
-    else badge.classList.remove("show");
-    renderNotifList(data);
+function declareWar(targetUid){
+  const warId = 'WAR-'+Date.now().toString(36).toUpperCase();
+  db.ref('wars/'+warId).set({
+    attacker: CUR_UID, defender: targetUid, status:'pending', createdAt: Date.now(),
+    attackerPrep:null, defenderPrep:null, log:[], winner:null
+  }).then(()=>{
+    db.ref('notifications/'+targetUid+'/n'+Date.now()).set({
+      type:'war_declare', warId, from: CUR_UID,
+      text: `${player.countryName} mendeklarasikan perang terhadap negara Anda!`,
+      time: Date.now(), read:false, responded:false
+    });
+    showToast('Deklarasi perang terkirim','war','fa-explosion');
   });
 }
-function renderNotifList(data){
-  const el = document.getElementById("war-notif-list");
-  if(!el) return;
-  const entries = Object.entries(data||{}).sort((a,b)=>b[1].time-a[1].time);
-  if(entries.length===0){ el.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i>Tidak ada notifikasi</div>`; return; }
-  el.innerHTML = entries.map(([nid,n])=>{
-    if(n.type==="war_declared"){
-      return `<div class="item-row glass">
-        <div class="ic"><i class="fa-solid fa-crosshairs"></i></div>
-        <div class="meta"><b>${n.text}</b><span>${new Date(n.time).toLocaleString('id-ID')}</span></div>
-        <button class="btn success small" onclick="respondWar('${n.warId}','${nid}',true)">Terima</button>
-        <button class="btn danger small" onclick="respondWar('${n.warId}','${nid}',false)">Tolak</button>
-      </div>`;
-    }
-    return `<div class="item-row glass">
-        <div class="ic"><i class="fa-solid fa-bell"></i></div>
-        <div class="meta"><b>${n.text}</b><span>${new Date(n.time).toLocaleString('id-ID')}</span></div>
-        ${n.warId?`<button class="btn small" onclick="goToBattle('${n.warId}')">Lihat</button>`:""}
-      </div>`;
-  }).join("");
-}
-
-async function respondWar(warId, notifId, accept){
-  await db.ref("notifications/"+CURRENT_UID+"/"+notifId).update({read:true});
-  const warRef = db.ref("wars/"+warId);
-  const snap = await warRef.get();
-  const war = snap.val();
-  if(!war) return;
+function respondWar(warId, accept, nid){
+  db.ref('notifications/'+CUR_UID+'/'+nid+'/responded').set(true);
+  db.ref('notifications/'+CUR_UID+'/'+nid+'/read').set(true);
   if(!accept){
-    await warRef.update({status:"rejected"});
-    await db.ref("notifications/"+war.attacker).push({
-      type:"war_rejected", warId, text: PLAYER.countryName+" menolak deklarasi perang Anda.", time:Date.now(), read:false
+    db.ref('wars/'+warId+'/status').set('declined');
+    showToast('Deklarasi perang ditolak','info','fa-xmark');
+    return;
+  }
+  db.ref('wars/'+warId+'/status').set('preparing');
+  showToast('Perang diterima, siapkan strategi!','war','fa-fist-raised');
+}
+
+function listenWars(){
+  db.ref('wars').on('value', snap=>{
+    const wars = snap.val() || {};
+    const relevant = Object.entries(wars).filter(([id,w])=> w.attacker===CUR_UID || w.defender===CUR_UID);
+    const box = document.getElementById('activeWars');
+    const active = relevant.filter(([id,w])=>['preparing','ready','simulating'].includes(w.status));
+    if(active.length===0){
+      box.innerHTML = '<div class="empty-state"><i class="fa-solid fa-dove"></i>Tidak ada perang aktif</div>';
+    } else {
+      box.innerHTML = active.map(([id,w])=>{
+        const enemyId = w.attacker===CUR_UID ? w.defender : w.attacker;
+        const enemy = allPlayers[enemyId] || {};
+        const role = w.attacker===CUR_UID ? 'Penyerang' : 'Bertahan';
+        const myPrep = w.attacker===CUR_UID ? w.attackerPrep : w.defenderPrep;
+        return `<div class="queue-item" style="align-items:center;">
+          <i class="fa-solid fa-explosion"></i>
+          <div class="qi-info">${role} vs <b>${enemy.countryName||enemyId}</b> — status: ${w.status}</div>
+          ${!myPrep ? `<button class="btn small" onclick="openWarPrep('${id}','${enemyId}')">Siapkan</button>` : `<span class="small-muted">Menunggu lawan...</span>`}
+        </div>`;
+      }).join('');
+    }
+    // handle simulating -> open modal to whoever has it open, and trigger sim if needed
+    relevant.forEach(([id,w])=>{
+      if(w.status==='ready' && w.attacker===CUR_UID){
+        // attacker triggers the simulation transaction to avoid double-run
+        triggerSimulation(id, w);
+      }
+      if(w.status==='simulating' || w.status==='finished'){
+        if(!activeWarListeners[id]) {
+          activeWarListeners[id] = true;
+        }
+      }
     });
-    toast("Deklarasi perang ditolak","info","fa-ban");
-    return;
-  }
-  await warRef.update({status:"preparing"});
-  await db.ref("notifications/"+war.attacker).push({
-    type:"war_accepted", warId, text: PLAYER.countryName+" menerima deklarasi perang Anda! Siapkan pasukan.", time:Date.now(), read:false
-  });
-  toast("Perang diterima! Siapkan strategi Anda.","warn","fa-shield-halved");
-  goToBattle(warId);
-}
-
-function goToBattle(warId){
-  document.querySelectorAll(".nav-item").forEach(i=>i.classList.remove("active"));
-  document.querySelector('[data-section="battle"]').classList.add("active");
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-  document.getElementById("section-battle").classList.add("active");
-  loadBattleRoom(warId);
-}
-
-/* ============================================================
-   10. PERSIAPAN PERANG & SIMULASI
-   ============================================================ */
-let currentWarListener = null;
-let selectedStrategy = "quick";
-
-function loadBattleRoom(warId){
-  if(currentWarListener) db.ref("wars/"+currentWarListener).off();
-  currentWarListener = warId;
-  db.ref("wars/"+warId).on("value", snap=>{
-    const war = snap.val();
-    if(!war) return;
-    if(war.status==="preparing") renderPrepRoom(warId, war);
-    else if(war.status==="simulating" || war.status==="finished") renderBattleSimUI(warId, war);
   });
 }
 
-function renderPrepRoom(warId, war){
-  const isAttacker = war.attacker===CURRENT_UID;
-  const myPrep = war.prep?.[CURRENT_UID];
-  const oppUid = isAttacker ? war.defender : war.attacker;
-  const oppReady = !!(war.prep?.[oppUid]?.ready);
-
-  if(myPrep?.ready){
-    document.getElementById("section-battle").innerHTML = `
-      <div class="card glass" style="text-align:center;padding:50px 20px;">
-        <i class="fa-solid fa-hourglass-half" style="font-size:36px;color:var(--warn);margin-bottom:14px;"></i>
-        <h3>Menunggu lawan menyelesaikan persiapan...</h3>
-        <p style="color:var(--text-2);margin-top:8px;font-size:13px;">${oppReady?"Lawan sudah siap! Memulai simulasi...":"Status lawan: sedang menyiapkan pasukan"}</p>
-      </div>`;
-    if(oppReady) maybeStartSimulation(warId);
-    return;
-  }
-
-  const unitInputs = ["soldier","tank","jet","ship","drone","missile"].map(k=>{
-    const max = PLAYER.army?.[k]||0;
-    return `
-    <div class="form-group">
-      <label>${UNITS[k].emoji} ${UNITS[k].name} (Maks: ${max})</label>
-      <input type="number" id="send-${k}" min="0" max="${max}" value="0" style="width:100%;">
+function openWarPrep(warId, enemyId){
+  currentEnemyForPrep = {warId, enemyId};
+  selectedStrategy = null;
+  document.getElementById('prepWarInfo').textContent = `Melawan ${allPlayers[enemyId]?.countryName || enemyId}`;
+  const inputsBox = document.getElementById('prepUnitInputs');
+  inputsBox.innerHTML = UNITS.filter(u=>['army','tank','jet','ship','drone','missile'].includes(u.key)).map(u=>{
+    const owned = player.units?.[u.key]||0;
+    return `<div class="item-card glass">
+      <div class="item-top"><div class="item-icon"><i class="fa-solid ${u.icon}"></i></div><div><div class="item-name">${u.name}</div><div class="item-lvl">Tersedia: ${owned}</div></div></div>
+      <input type="number" min="0" max="${owned}" value="0" id="prep-${u.key}">
     </div>`;
-  }).join("");
-
-  const stratOpts = Object.entries(STRATEGIES).map(([k,s])=>`
-    <div class="strategy-opt ${k===selectedStrategy?'active':''}" onclick="selectStrategy('${k}')" data-strat="${k}">
-      <i class="fa-solid ${s.icon}"></i><br>${s.name}
-    </div>`).join("");
-
-  document.getElementById("section-battle").innerHTML = `
-    <div class="country-banner glass">
-      <div class="flag-big">${COUNTRY_ICON}</div>
-      <div class="info"><h2>Persiapan Perang</h2><span>Melawan: ${isAttacker?war.defenderName:war.attackerName}</span></div>
-    </div>
-    <div class="grid cols-2">
-      <div class="card glass">
-        <h3><i class="fa-solid fa-people-group"></i> Pilih Pasukan</h3>
-        <div class="grid cols-2">${unitInputs}</div>
-      </div>
-      <div class="card glass">
-        <h3><i class="fa-solid fa-chess"></i> Pilih Strategi</h3>
-        <div class="strategy-grid">${stratOpts}</div>
-        <button class="btn danger" style="width:100%;margin-top:18px;" onclick="submitPrep('${warId}')">
-          <i class="fa-solid fa-flag-checkered"></i> Siap Berperang
-        </button>
-      </div>
-    </div>`;
+  }).join('');
+  document.getElementById('strategyGrid').innerHTML = STRATEGIES.map(s=>{
+    return `<div class="strat-opt" id="strat-${s.key}" onclick="pickStrategy('${s.key}')"><i class="fa-solid ${s.icon}"></i>${s.name}</div>`;
+  }).join('');
+  openModal('warPrepModal');
 }
-
-function selectStrategy(k){
-  selectedStrategy = k;
-  document.querySelectorAll(".strategy-opt").forEach(el=>el.classList.toggle("active", el.dataset.strat===k));
+function pickStrategy(key){
+  selectedStrategy = key;
+  document.querySelectorAll('.strat-opt').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('strat-'+key).classList.add('sel');
 }
-
-async function submitPrep(warId){
+function submitWarPrep(){
+  if(!selectedStrategy){ showToast('Pilih strategi terlebih dahulu','err','fa-triangle-exclamation'); return; }
   const units = {};
-  let anyUnit = false;
-  ["soldier","tank","jet","ship","drone","missile"].forEach(k=>{
-    const v = parseInt(document.getElementById("send-"+k).value)||0;
-    units[k] = v;
-    if(v>0) anyUnit = true;
+  UNITS.filter(u=>['army','tank','jet','ship','drone','missile'].includes(u.key)).forEach(u=>{
+    units[u.key] = Math.max(0, parseInt(document.getElementById('prep-'+u.key).value)||0);
   });
-  if(!anyUnit){ toast("Kirim minimal satu unit pasukan!","error","fa-triangle-exclamation"); return; }
-  await db.ref("wars/"+warId+"/prep/"+CURRENT_UID).set({
-    units, strategy: selectedStrategy, ready:true, submittedAt:Date.now()
+  const {warId} = currentEnemyForPrep;
+  db.ref('wars/'+warId).once('value').then(snap=>{
+    const w = snap.val();
+    const isAttacker = w.attacker===CUR_UID;
+    const prepData = { units, strategy: selectedStrategy, submittedAt: Date.now() };
+    const updates = {};
+    updates[isAttacker?'attackerPrep':'defenderPrep'] = prepData;
+    const otherPrep = isAttacker ? w.defenderPrep : w.attackerPrep;
+    updates['status'] = otherPrep ? 'ready' : 'preparing';
+    db.ref('wars/'+warId).update(updates);
+    closeModal('warPrepModal');
+    showToast('Strategi tersimpan, menunggu lawan...','ok','fa-check');
   });
-  toast("Pasukan siap dikerahkan!","success","fa-flag-checkered");
-  maybeStartSimulation(warId);
 }
 
-/* Menghitung skor kekuatan tempur suatu pihak (deterministik, tanpa random) */
-function computeCombatScore(playerData, sentUnits, strategyKey, isDefender){
+/* deterministic war outcome calculation */
+function triggerSimulation(warId, w){
+  const ref = db.ref('wars/'+warId+'/status');
+  ref.transaction(status=>{
+    if(status==='ready') return 'simulating';
+    return; // abort if already changed
+  }).then(res=>{
+    if(res.committed){
+      runWarCalculation(warId, w);
+    }
+  });
+}
+
+function scoreFor(p, prep){
+  const totalPower = computeTotalPower(p);
+  const unitsSent = Object.values(prep.units).reduce((a,b)=>a+b,0);
+  const totalUnits = Object.values(p.units||{}).reduce((a,b)=>a+b,0) || 1;
+  const commitRatio = Math.min(1, unitsSent/totalUnits);
+  const logistikLvl = p.research?.logistik?.level || 0;
+  const aiLvl = p.research?.aiTempur?.level || 0;
+  const strat = STRATEGIES.find(s=>s.key===prep.strategy) || STRATEGIES[0];
+
   let unitPower = 0;
-  for(const k in sentUnits){
-    unitPower += (sentUnits[k]||0) * (UNITS[k]?.power||0);
-  }
-  const research = playerData.research||{};
-  const researchBonus = 1 + (
-    (research.armor?.level||0)*0.01 + (research.accuracy?.level||0)*0.01 +
-    (research.aiCombat?.level||0)*0.015 + (research.speed?.level||0)*0.008 +
-    (research.droneAI?.level||0)*0.01 + (research.tankEngine?.level||0)*0.008 +
-    (research.jetEngine?.level||0)*0.008 + (research.satellite?.level||0)*0.008
-  );
-  const levelBonus = 1 + (playerData.level||1)*0.01;
-  const strat = STRATEGIES[strategyKey] || STRATEGIES.quick;
-  const stratMult = isDefender ? strat.defMult : strat.atkMult;
-  // Moral: berdasarkan rasio menang historis (deterministik, bukan acak)
-  const totalBattles = (playerData.wins||0)+(playerData.losses||0);
-  const moral = 1 + (totalBattles>0 ? (playerData.wins/totalBattles)*0.15 : 0.05);
-  // Bonus aliansi: +5% jika tergabung aliansi
-  const allianceBonus = playerData.allianceId ? 1.05 : 1;
-  // Logistik: mempengaruhi efisiensi pengerahan unit
-  const logisticsLvl = research.logistics?.level||0;
-  const logisticsFactor = 1 + logisticsLvl*0.01;
-  const defenderHomeBonus = isDefender ? 1.1 : 1; // keuntungan bertahan di wilayah sendiri
+  Object.entries(prep.units).forEach(([type,qty])=>{
+    const u = UNITS.find(x=>x.key===type);
+    if(u) unitPower += u.power * qty;
+  });
 
-  const score = unitPower * researchBonus * levelBonus * stratMult * moral * allianceBonus * logisticsFactor * defenderHomeBonus;
-  return Math.max(1, Math.floor(score));
+  const moral = 0.85 + commitRatio*0.3; // deterministic, based on commitment
+  const logisticsBonus = 1 + logistikLvl*0.015;
+  const aiBonus = 1 + aiLvl*0.01;
+  const allianceBonus = p.allianceId ? 1.05 : 1.0;
+  const levelBonus = 1 + (p.level||1)*0.01;
+
+  const base = (totalPower*0.25 + unitPower*1.4) * moral * logisticsBonus * aiBonus * allianceBonus * levelBonus;
+  const withStrategy = base * strat.atk;
+  return { score: withStrategy, unitsSent, strat, moral };
 }
 
-async function maybeStartSimulation(warId){
-  const warRef = db.ref("wars/"+warId);
-  const result = await warRef.transaction(war=>{
-    if(!war) return war;
-    if(war.status!=="preparing") return war;
-    const atkReady = war.prep?.[war.attacker]?.ready;
-    const defReady = war.prep?.[war.defender]?.ready;
-    if(atkReady && defReady){
-      war.status = "simulating";
+function runWarCalculation(warId, w){
+  const attackerP = allPlayers[w.attacker];
+  const defenderP = allPlayers[w.defender];
+  const aScore = scoreFor(attackerP, w.attackerPrep);
+  const dScoreRaw = scoreFor(defenderP, w.defenderPrep);
+  // defender gets defensive multiplier from their chosen strategy's def stat
+  const dStrat = dScoreRaw.strat;
+  const dScore = { ...dScoreRaw, score: dScoreRaw.score * (dStrat.def/dStrat.atk) * dStrat.def };
+
+  const winnerIsAttacker = aScore.score >= dScore.score;
+  const winnerUid = winnerIsAttacker ? w.attacker : w.defender;
+  const loserUid = winnerIsAttacker ? w.defender : w.attacker;
+  const winnerName = allPlayers[winnerUid]?.countryName || winnerUid;
+
+  const logEntries = generateWarLog(attackerP, defenderP, w.attackerPrep, w.defenderPrep, winnerIsAttacker);
+
+  const updates = {};
+  updates['wars/'+warId+'/log'] = logEntries;
+  updates['wars/'+warId+'/winner'] = winnerUid;
+  updates['wars/'+warId+'/status'] = 'finished';
+  updates['wars/'+warId+'/scores'] = { attacker: Math.round(aScore.score), defender: Math.round(dScore.score) };
+  db.ref().update(updates).then(()=>{
+    applyWarResults(warId, winnerUid, loserUid, w);
+  });
+}
+
+function generateWarLog(attackerP, defenderP, aPrep, dPrep, winnerIsAttacker){
+  const aName = attackerP.countryName, dName = defenderP.countryName;
+  const days = [];
+  days.push({day:1, text:`Drone ${aName} berhasil mendeteksi posisi markas ${dName}.`});
+  if((aPrep.units.jet||0) > 0) days.push({day:2, text:`Jet tempur ${aName} menyerang pangkalan udara ${dName}.`});
+  else days.push({day:2, text:`Pasukan ${aName} memulai pergerakan menuju garis depan.`});
+  if((aPrep.units.tank||0) > 0) days.push({day:3, text:`Tank ${aName} memasuki wilayah ${dName}.`});
+  else days.push({day:3, text:`Infanteri ${aName} menembus pertahanan luar ${dName}.`});
+  if((dPrep.strategy==='bertahan')) days.push({day:4, text:`${dName} bertahan mati-matian mempertahankan wilayahnya.`});
+  else days.push({day:4, text:`Pertempuran sengit terjadi di wilayah strategis.`});
+  days.push({day:5, text: winnerIsAttacker ? `${aName} berhasil menguasai wilayah strategis ${dName}.` : `${dName} berhasil memukul mundur pasukan ${aName}.`});
+  days.push({day:6, text: `Perang selesai. ${winnerIsAttacker?aName:dName} keluar sebagai pemenang.`});
+  return days;
+}
+
+function applyWarResults(warId, winnerUid, loserUid, w){
+  const winnerPrep = w.attacker===winnerUid ? w.attackerPrep : w.defenderPrep;
+  const loserPrep = w.attacker===loserUid ? w.attackerPrep : w.defenderPrep;
+  const rewardMoney = Math.round(2000 + Math.random()*0); // fixed reward baseline, no randomness in outcome itself
+  const rewardExp = 500;
+
+  const winnerRef = db.ref('players/'+winnerUid);
+  winnerRef.child('money').transaction(m=>(m||0)+rewardMoney);
+  winnerRef.child('exp').transaction(e=>(e||0)+rewardExp);
+  winnerRef.child('stats/wins').transaction(v=>(v||0)+1);
+  winnerRef.child('medals').transaction(v=>(v||0)+1);
+  winnerRef.once('value').then(snap=>{
+    const p = snap.val();
+    const needExp = (p.level||1)*1000;
+    if((p.exp||0) >= needExp){
+      winnerRef.child('level').set((p.level||1)+1);
+      winnerRef.child('exp').set((p.exp||0)-needExp);
     }
-    return war;
-  });
-  if(result.committed && result.snapshot.val().status==="simulating"){
-    runWarSimulation(warId, result.snapshot.val());
-  }
-}
-
-async function runWarSimulation(warId, war){
-  const [atkSnap, defSnap] = await Promise.all([
-    db.ref("players/"+war.attacker).get(), db.ref("players/"+war.defender).get()
-  ]);
-  const atkData = atkSnap.val(), defData = defSnap.val();
-  const atkPrep = war.prep[war.attacker], defPrep = war.prep[war.defender];
-
-  const atkScore = computeCombatScore(atkData, atkPrep.units, atkPrep.strategy, false);
-  const defScore = computeCombatScore(defData, defPrep.units, defPrep.strategy, true);
-  const winnerIsAttacker = atkScore >= defScore;
-  const total = atkScore+defScore;
-  const winMargin = Math.abs(atkScore-defScore)/total; // 0..1
-
-  const logs = buildBattleLog(atkData, defData, atkPrep, defPrep, winnerIsAttacker);
-
-  // Tulis log satu-persatu ke Firebase dengan jeda (hanya dijalankan oleh 1 klien pemenang transaksi)
-  for(let i=0;i<logs.length;i++){
-    await db.ref("battleLogs/"+warId).push({day:i+1, text:logs[i], time:Date.now()});
-    await new Promise(r=>setTimeout(r, 1400));
-  }
-
-  // Hitung reward/losses
-  const winnerUid = winnerIsAttacker ? war.attacker : war.defender;
-  const loserUid = winnerIsAttacker ? war.defender : war.attacker;
-  const loserSent = winnerIsAttacker ? defPrep.units : atkPrep.units;
-  const winnerSent = winnerIsAttacker ? atkPrep.units : defPrep.units;
-
-  const lossRatio = 0.25 + winMargin*0.35; // 25%-60% unit yang dikirim hilang di pihak kalah
-  const winnerLossRatio = 0.05 + (1-winMargin)*0.1; // pemenang tetap kehilangan sedikit unit
-
-  const xpGain = Math.floor(200 + winMargin*300);
-  const moneyGain = Math.floor(500 + winMargin*1500);
-  const medals = Math.floor(1 + winMargin*4);
-
-  await db.ref("players/"+winnerUid).transaction(p=>{
-    if(!p) return p;
-    p.wins = (p.wins||0)+1;
-    p.xp = (p.xp||0)+xpGain;
-    p.money = (p.money||0)+moneyGain;
-    p.medals = (p.medals||0)+medals;
-    if(p.xp >= p.level*1000){ p.xp -= p.level*1000; p.level += 1; }
-    if(!p.army) p.army={};
-    for(const k in winnerSent){
-      const lost = Math.floor((winnerSent[k]||0)*winnerLossRatio);
-      p.army[k] = Math.max(0,(p.army[k]||0)-lost);
-    }
-    return p;
-  });
-  await db.ref("players/"+loserUid).transaction(p=>{
-    if(!p) return p;
-    p.losses = (p.losses||0)+1;
-    if(!p.army) p.army={};
-    for(const k in loserSent){
-      const lost = Math.floor((loserSent[k]||0)*lossRatio);
-      p.army[k] = Math.max(0,(p.army[k]||0)-lost);
-    }
-    return p;
   });
 
-  await db.ref("wars/"+warId).update({
-    status:"finished", winner:winnerUid, loser:loserUid,
-    atkScore, defScore, xpGain, moneyGain, medals, finishedAt: Date.now()
-  });
-  await db.ref("notifications/"+war.attacker).push({type:"war_finished", warId, text:"Perang telah selesai! Lihat hasilnya.", time:Date.now(), read:false});
-  await db.ref("notifications/"+war.defender).push({type:"war_finished", warId, text:"Perang telah selesai! Lihat hasilnya.", time:Date.now(), read:false});
-}
-
-function buildBattleLog(atkData, defData, atkPrep, defPrep, winnerIsAttacker){
-  const logs = [];
-  logs.push(`Drone ${atkData.countryName} berhasil mendeteksi posisi markas pertahanan ${defData.countryName}.`);
-  if((atkPrep.units.jet||0)>0) logs.push(`Jet Tempur ${atkData.countryName} melancarkan serangan udara ke pangkalan militer musuh.`);
-  else logs.push(`Pasukan ${atkData.countryName} mulai bergerak mendekati garis depan.`);
-  if((defPrep.units.missile||0)>0) logs.push(`Rudal pertahanan ${defData.countryName} berhasil menjatuhkan sebagian unit penyerang.`);
-  else logs.push(`Pertahanan ${defData.countryName} bersiaga penuh menghadapi gelombang serangan.`);
-  if((atkPrep.units.tank||0)>0) logs.push(`Tank ${atkData.countryName} memasuki wilayah perbatasan musuh dengan formasi ofensif.`);
-  if((atkPrep.units.ship||0)>0 || (defPrep.units.ship||0)>0) logs.push(`Pertempuran laut sengit terjadi di perairan sengketa antara kedua kapal perang.`);
-  logs.push(`Pasukan ${winnerIsAttacker?atkData.countryName:defData.countryName} berhasil menguasai titik strategis di medan tempur.`);
-  logs.push(`Perang berakhir. ${winnerIsAttacker?atkData.countryName:defData.countryName} keluar sebagai pemenang pertempuran ini.`);
-  return logs;
-}
-
-/* ---------- Battle Simulation UI (animasi + log realtime) ---------- */
-function renderBattleSimUI(warId, war){
-  document.getElementById("section-battle").innerHTML = `
-    <div class="country-banner glass">
-      <div class="flag-big">${COUNTRY_ICON}</div>
-      <div class="info"><h2>${war.attackerName} <span style="color:var(--text-2);font-weight:400;">VS</span> ${war.defenderName}</h2>
-      <span>${war.status==="finished"?"Perang telah selesai":"Simulasi pertempuran sedang berlangsung..."}</span></div>
-      <div class="flag-big">${COUNTRY_ICON}</div>
-    </div>
-    <div class="battle-stage glass" id="battle-stage">
-      <div class="battle-unit" style="left:5%;bottom:20px;">🪖</div>
-      <div class="battle-unit jet" style="left:10%;">✈️</div>
-      <div class="battle-unit" style="right:5%;bottom:20px;left:auto;">🏰</div>
-      <div class="battle-unit jet" style="right:10%;left:auto;">✈️</div>
-    </div>
-    <div class="card glass">
-      <h3><i class="fa-solid fa-scroll"></i> Log Pertempuran</h3>
-      <div class="battle-log" id="battle-log-list"></div>
-      ${war.status==="finished" ? renderWarResult(war) : ""}
-    </div>`;
-  animateBattleStage();
-  db.ref("battleLogs/"+warId).on("child_added", snap=>{
-    const log = snap.val();
-    const list = document.getElementById("battle-log-list");
-    if(!list) return;
-    const div = document.createElement("div");
-    div.className = "log-entry";
-    div.innerHTML = `<b>Hari ${log.day}</b><span>${log.text}</span>`;
-    list.appendChild(div);
-    list.scrollTop = list.scrollHeight;
-    spawnExplosion();
-  });
-}
-
-function renderWarResult(war){
-  const iWon = war.winner===CURRENT_UID;
-  return `
-    <div style="margin-top:18px;padding:18px;border-radius:14px;background:${iWon?'rgba(51,230,168,0.12)':'rgba(255,77,109,0.12)'};text-align:center;">
-      <i class="fa-solid ${iWon?'fa-trophy':'fa-skull-crossbones'}" style="font-size:32px;color:${iWon?'var(--success)':'var(--danger)'};"></i>
-      <h3 style="margin-top:10px;">${iWon?'KEMENANGAN!':'KEKALAHAN'}</h3>
-      ${iWon?`<p style="color:var(--text-2);font-size:13px;margin-top:6px;">
-        +${fmt(war.xpGain)} XP · +$${fmt(war.moneyGain)} · +${war.medals} Medali</p>`:
-        `<p style="color:var(--text-2);font-size:13px;margin-top:6px;">Sebagian unit yang dikirim hilang dalam pertempuran.</p>`}
-    </div>`;
-}
-
-function animateBattleStage(){
-  const units = document.querySelectorAll("#battle-stage .battle-unit");
-  let dir = 1;
-  setInterval(()=>{
-    units.forEach((u,i)=>{
-      const isRight = u.style.right !== "";
-      const pct = 20+Math.random()*50;
-      if(isRight) u.style.right = pct+"%"; else u.style.left = pct+"%";
+  const loserRef = db.ref('players/'+loserUid);
+  loserRef.child('stats/losses').transaction(v=>(v||0)+1);
+  if(loserPrep){
+    Object.entries(loserPrep.units).forEach(([type,qty])=>{
+      if(qty>0){
+        const lost = Math.round(qty*0.3);
+        loserRef.child('units/'+type).transaction(n=>Math.max(0,(n||0)-lost));
+      }
     });
-  }, 2000);
+  }
+  if(winnerPrep){
+    Object.entries(winnerPrep.units).forEach(([type,qty])=>{
+      if(qty>0){
+        const lost = Math.round(qty*0.1);
+        winnerRef.child('units/'+type).transaction(n=>Math.max(0,(n||0)-lost));
+      }
+    });
+  }
+
+  if(winnerUid===CUR_UID || loserUid===CUR_UID){
+    showWarSimulationModal(warId);
+  }
 }
-function spawnExplosion(){
-  const stage = document.getElementById("battle-stage");
-  if(!stage) return;
-  const boom = document.createElement("div");
-  boom.className = "explosion";
-  boom.textContent = "💥";
-  boom.style.left = (20+Math.random()*60)+"%";
-  boom.style.top = (30+Math.random()*50)+"%";
-  stage.appendChild(boom);
-  setTimeout(()=>boom.remove(),900);
+
+function showWarSimulationModal(warId){
+  db.ref('wars/'+warId).once('value').then(snap=>{
+    const w = snap.val();
+    openModal('warSimModal');
+    const bf = document.getElementById('battlefield');
+    bf.querySelectorAll('.unit-icon,.boom').forEach(e=>e.remove());
+    const icons = ['tank','jet','drone','ship'];
+    icons.forEach((ic,i)=>{
+      const el = document.createElement('div');
+      el.className = 'unit-icon '+ic;
+      el.style.left = (10+i*8)+'%';
+      const map = {tank:'🚛',jet:'🛩️',drone:'🛸',ship:'🚢'};
+      el.textContent = map[ic];
+      bf.appendChild(el);
+    });
+    setTimeout(()=>{
+      const boom = document.createElement('div');
+      boom.className='boom show';
+      boom.style.left='45%'; boom.style.top='40%';
+      bf.appendChild(boom);
+      setTimeout(()=>boom.remove(),700);
+    }, 1200);
+
+    const logBox = document.getElementById('warLog');
+    logBox.innerHTML = '';
+    (w.log||[]).forEach((entry, i)=>{
+      setTimeout(()=>{
+        const el = document.createElement('div');
+        el.className = 'log-day';
+        el.innerHTML = `<div class="d">HARI ${entry.day}</div><div class="t">${entry.text}</div>`;
+        logBox.appendChild(el);
+        logBox.scrollTop = logBox.scrollHeight;
+      }, i*900);
+    });
+
+    const resultBox = document.getElementById('warResultBox');
+    setTimeout(()=>{
+      const winnerP = allPlayers[w.winner] || {};
+      const youWon = w.winner === CUR_UID;
+      resultBox.innerHTML = `<div class="card glass" style="text-align:center;">
+        <h2 style="color:${youWon?'var(--ok)':'var(--alert)'}">${youWon ? 'KEMENANGAN' : 'KEKALAHAN'}</h2>
+        <p class="small-muted mt8">Pemenang: ${winnerP.countryName||w.winner}</p>
+      </div>`;
+    }, (w.log||[]).length*900 + 400);
+  });
 }
+
+/* ==========================================================================
+   INIT MISC
+   ========================================================================== */
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
+  }
+});
 </script>
 </body>
 </html>
