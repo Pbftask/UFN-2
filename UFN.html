@@ -1,314 +1,451 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>UFN · Dashboard</title>
+  <!-- Font Awesome 6 (gratis) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    /* ----- reset & dasar ----- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
 
-<title>UFN</title>
+    body {
+      background: #0b1120;
+      background-image: radial-gradient(circle at 10% 20%, rgba(30, 58, 138, 0.15) 0%, transparent 50%);
+      min-height: 100vh;
+      color: #f1f5f9;
+      padding: 0 12px 80px 12px;
+    }
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    /* ----- header modern ----- */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 8px 8px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      position: relative;
+      flex-wrap: wrap;
+      gap: 10px 0;
+    }
 
-<style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial,sans-serif;
-}
+    .header-left {
+      display: flex;
+      flex-direction: column;
+    }
 
-body{
-    background:#0f172a;
-    color:#fff;
-}
+    .header-left h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
 
-header{
-    padding:18px;
-    text-align:center;
-    height: 75px;
-    border-bottom:1px solid rgba(255,255,255,.08);
-}
+    .header-left .subhead {
+      font-size: 13px;
+      color: #94a3b8;
+      letter-spacing: 0.3px;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-header h2{
-    font-size:22px;
-}
+    .header-left .subhead i {
+      font-size: 10px;
+      color: #38bdf8;
+    }
 
-header p{
-    color:#9ca3af;
-    margin-top:4px;
-    font-size:14px;
-}
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
 
-.lemari{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:15px;
-    padding:20px;
-    margin-top:20px
-}
+    /* ----- online counter (chip) ----- */
+    .online-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(2px);
+      padding: 6px 14px 6px 10px;
+      border-radius: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      font-weight: 500;
+      color: #e2e8f0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
 
-.enve{
-    background:#1b2942;
-    border:1px solid #fff;
-    border-radius:8px 16px;
-    padding:18px 10px;
-    text-align:center;
-    transition:.2s;
-  }
+    .online-dot {
+      width: 10px;
+      height: 10px;
+      background: #4ade80;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 8px #4ade80aa;
+      animation: pulse-dot 2s infinite;
+    }
 
-.enve:active{
-    transform:scale(.96);
-}
+    @keyframes pulse-dot {
+      0% { opacity: 0.7; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.1); }
+      100% { opacity: 0.7; transform: scale(0.95); }
+    }
 
-.enve a{
-    color:#fff;
-    text-decoration:none;
-    font-size:28px;
-    display:block;
-    width:100%;
-    height:100%;
-}
+    .online-chip .count {
+      font-weight: 600;
+      min-width: 20px;
+      text-align: center;
+      color: #f8fafc;
+    }
 
-.enve span{
-    display:block;
-    margin-top:px;
-    font-size:10px;
-    color:#d1d5db;
-}
+    /* ----- inbox (tombol amplop) ----- */
+    .inbox-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-footer{
-    position:fixed;
-    bottom:15px;
-    width:100%;
-    text-align:center;
-    color:#6b7280;
-    font-size:12px;
-}
+    .inbox-btn {
+      background: #1e293b;
+      width: 44px;
+      height: 44px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.2s ease;
+      color: #e2e8f0;
+      font-size: 20px;
+      text-decoration: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
 
-.online-counter{
-  display: flex;
-  flex-direction: row;
-  background: #0f172a;
-  margin-top:-9px;
-  width: 80px;
-  border:1px solid #6b7280;
-}
+    .inbox-btn:active {
+      transform: scale(0.92);
+      background: #2d3a52;
+    }
 
-.jumlah{
-  margin-left:5px;
-  margin-right: 5px;
-}
-  
-.opin{
-  background:#00ff1d;
-  color:transparent;
-  border-radius:50%;
-  width: 10px;
-  height:10px;
-  margin-left:1px;
-  margin-top:3px;
-}
+    .inbox-btn i {
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
 
+    .badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: #ef4444;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      border: 2px solid #0b1120;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.5);
+      letter-spacing: 0.3px;
+    }
 
+    .badge.hidden {
+      display: none;
+    }
 
-.badge{
-  position:absolute;
-  background:#ff0000;
-  width:15px;
-  height: 15px;
-  border-radius:50%;
-  text-align: center;
-  justify-content: center;
-  font-size:15px;
-  margin-top:-27px;
-  margin-left: 23px
-}
+    /* ----- grid menu (lemari) ----- */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 28px;
+    }
 
-.inbox{
-  background: #21356b;
-  width: 35px;
-  height: 25px;
-  border:2px solid white;
-  margin-top:-51px;
-  border-radius:5px;
-}
+    .menu-card {
+      background: #1a253b;
+      background: linear-gradient(145deg, #1a253b, #131d31);
+      border-radius: 20px;
+      padding: 18px 8px 12px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
+      transition: all 0.15s ease;
+      backdrop-filter: blur(2px);
+    }
 
-.inbox a{
-    color:#fff;
-    text-decoration:none;
-    font-size:20px;
-    display:block;
-    width:100%;
-    height:100%;
-}
+    .menu-card:active {
+      transform: scale(0.94);
+      background: #1f2d49;
+    }
 
-.inbox:active{
-    transform:scale(.90);
-}
+    .menu-card a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #f1f5f9;
+      width: 100%;
+      height: 100%;
+    }
 
-.beta{
-  position: fixed;
-  background:red;
-  width: 30px;
-  margin-top:-10px;
-  font-size: 12px;
-}
-</style>
+    .menu-card .icon {
+      font-size: 30px;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 18px;
+      transition: 0.2s;
+      color: #b9c8f0;
+    }
 
+    .menu-card:hover .icon {
+      color: #a5b4fc;
+      transform: translateY(-2px);
+    }
+
+    .menu-card .label {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      color: #cbd5e1;
+      margin-top: 2px;
+      text-transform: capitalize;
+    }
+
+    /* ----- footer ----- */
+    .footer {
+      margin-top: 36px;
+      text-align: center;
+      font-size: 13px;
+      color: #475569;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      padding-top: 24px;
+      letter-spacing: 0.5px;
+    }
+
+    .footer span {
+      background: rgba(255,255,255,0.02);
+      padding: 4px 14px;
+      border-radius: 40px;
+    }
+
+    /* ----- responsive kecil ----- */
+    @media (max-width: 420px) {
+      .header-left h1 { font-size: 22px; }
+      .menu-grid { gap: 12px; }
+      .menu-card { padding: 14px 4px 10px; }
+      .menu-card .icon { font-size: 26px; width: 48px; height: 48px; }
+    }
+
+    @media (min-width: 600px) {
+      .menu-grid { gap: 20px; }
+      .menu-card { padding: 24px 12px 16px; }
+    }
+
+    /* animasi masuk halus */
+    .menu-card {
+      opacity: 0;
+      animation: fadeUp 0.4s ease forwards;
+    }
+    .menu-card:nth-child(1) { animation-delay: 0.02s; }
+    .menu-card:nth-child(2) { animation-delay: 0.06s; }
+    .menu-card:nth-child(3) { animation-delay: 0.10s; }
+    .menu-card:nth-child(4) { animation-delay: 0.14s; }
+    .menu-card:nth-child(5) { animation-delay: 0.18s; }
+    .menu-card:nth-child(6) { animation-delay: 0.22s; }
+    .menu-card:nth-child(7) { animation-delay: 0.26s; }
+    .menu-card:nth-child(8) { animation-delay: 0.30s; }
+
+    @keyframes fadeUp {
+      0% { opacity: 0; transform: translateY(12px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
 
-<header>
-    <h2>UFN</h2>
-    <p>Menu Utama</p>
-  
-      <div class="online-counter">
-   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
-</div>
-      <div class="inbox">
-        <a href="Inbox.html">
-            <i class="fa-solid fa-envelope"></i>
-        </a>
-        <div class="badge" id="inboxBadge" style="display:none;">0</div>
-    </div>
-</header>
-
-<div class="lemari">
-
-    <div class="enve">
-        <a href="UNF-donwload.html">
-            <i class="fa-solid fa-clock"></i>
-        </a>
-        <span>Waktu</span>
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-left">
+      <h1>UFN</h1>
+      <div class="subhead">
+        <i class="fa-regular fa-compass"></i> 
+        <span>Menu Utama</span>
+      </div>
     </div>
 
-    <div class="enve">
-        <a href="cuaca.html">
-            <i class="fa-solid fa-sun"></i>
+    <div class="header-right">
+      <!-- online counter -->
+      <div class="online-chip">
+        <span class="online-dot"></span>
+        <span class="count" id="onlineCount">0</span>
+        <span style="color:#94a3b8;font-weight:400;">Online</span>
+      </div>
+
+      <!-- inbox -->
+      <div class="inbox-wrapper">
+        <a href="Inbox.html" class="inbox-btn" aria-label="Inbox">
+          <i class="fa-regular fa-envelope"></i>
         </a>
-        <span>Cuaca</span>
+        <span class="badge hidden" id="inboxBadge">0</span>
+      </div>
     </div>
+  </header>
 
-    <div class="enve">
-        <a href="berita.html">
-            <i class="fa-solid fa-newspaper"></i>
-        </a>
-        <span>Berita</span>
+  <!-- ===== MENU GRID ===== -->
+  <div class="menu-grid">
+    <!-- 1 -->
+    <div class="menu-card">
+      <a href="UNF-donwload.html">
+        <span class="icon"><i class="fa-regular fa-clock"></i></span>
+        <span class="label">Waktu</span>
+      </a>
     </div>
-
-    <div class="enve">
-        <a href="maps.html">
-            <i class="fa-solid fa-location-dot"></i>
-        </a>
-        <span>Maps</span>
+    <!-- 2 -->
+    <div class="menu-card">
+      <a href="cuaca.html">
+        <span class="icon"><i class="fa-regular fa-sun"></i></span>
+        <span class="label">Cuaca</span>
+      </a>
     </div>
-
-    <div class="enve">
-        <a href="List.html">
-            <i class="fa-solid fa-list"></i>
-        </a>
-        <span>daftar negara</span>
+    <!-- 3 -->
+    <div class="menu-card">
+      <a href="berita.html">
+        <span class="icon"><i class="fa-regular fa-newspaper"></i></span>
+        <span class="label">Berita</span>
+      </a>
     </div>
-  
-    <div class="enve">
-        <a href="tambang.html">
-            <i class="fa-solid fa-helmet-safety"></i>
-        </a>
-        <span>tambang</span>
+    <!-- 4 -->
+    <div class="menu-card">
+      <a href="maps.html">
+        <span class="icon"><i class="fa-solid fa-location-dot"></i></span>
+        <span class="label">Maps</span>
+      </a>
     </div>
-  
-    <div class="enve">
-        <a href="matauang.html">
-            <i class="fa-solid fa-money-bill"></i>
-        </a>
-        <span>Mata uang</span>
+    <!-- 5 -->
+    <div class="menu-card">
+      <a href="List.html">
+        <span class="icon"><i class="fa-solid fa-list"></i></span>
+        <span class="label">Daftar Negara</span>
+      </a>
     </div>
-  
-    <div class="enve">
-        <a href="militer.html">
-            <i class="fa-solid fa-shield"></i>
-        </a>
-        <span>militer</span>
+    <!-- 6 -->
+    <div class="menu-card">
+      <a href="tambang.html">
+        <span class="icon"><i class="fa-solid fa-helmet-safety"></i></span>
+        <span class="label">Tambang</span>
+      </a>
     </div>
+    <!-- 7 -->
+    <div class="menu-card">
+      <a href="matauang.html">
+        <span class="icon"><i class="fa-solid fa-money-bill"></i></span>
+        <span class="label">Mata uang</span>
+      </a>
+    </div>
+    <!-- 8 -->
+    <div class="menu-card">
+      <a href="militer.html">
+        <span class="icon"><i class="fa-solid fa-shield"></i></span>
+        <span class="label">Militer</span>
+      </a>
+    </div>
+  </div>
 
-</div>
+  <!-- ===== FOOTER ===== -->
+  <div class="footer">
+    <span>UFN © 2026</span>
+  </div>
 
-<footer>
-    UFN © 2026
-</footer>
+  <!-- ===== FIREBASE + LOGIC ===== -->
+  <!-- Firebase compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
+  <script>
+    // =====================================================
+    //  KONFIGURASI FIREBASE (sesuai milik Anda)
+    // =====================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+      authDomain: "puki-678bf.firebaseapp.com",
+      databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+      projectId: "puki-678bf",
+      storageBucket: "puki-678bf.firebasestorage.app",
+      messagingSenderId: "343647284151",
+      appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+    };
 
-<!-- Firebase Compat -->
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-<script>
-// =====================
-// Firebase Config
-// =====================
-const firebaseConfig = {
-  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
-  authDomain: "puki-678bf.firebaseapp.com",
-  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
-  projectId: "puki-678bf",
-  storageBucket: "puki-678bf.firebasestorage.app",
-  messagingSenderId: "343647284151",
-  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
-};
-
-// Inisialisasi Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// =====================
-// ID pengguna tetap
-// =====================
-let userId = localStorage.getItem("ufn_user_id");
-
-if (!userId) {
-  userId = crypto.randomUUID();
-  localStorage.setItem("ufn_user_id", userId);
-}
-
-// =====================
-// Tandai Online
-// =====================
-const userRef = db.ref("online/" + userId);
-
-userRef.set(true);
-
-// Hapus otomatis saat koneksi benar-benar terputus
-userRef.onDisconnect().remove();
-
-// =====================
-// Hitung pengguna online
-// =====================
-db.ref("online").on("value", function(snapshot) {
-  const jumlah = snapshot.numChildren();
-
-  const el = document.getElementById("onlineCount");
-  if (el) {
-    el.textContent = jumlah;
-  }
-});
-
-// =====================
-// Badge Inbox (pesan belum dibaca)
-// =====================
-const lastRead = parseInt(localStorage.getItem("ufn_last_read") || "0");
-
-db.ref("messages").orderByChild("time").startAfter(lastRead).on("value", function(snapshot) {
-  const jumlahBelumDibaca = snapshot.numChildren();
-  const badge = document.getElementById("inboxBadge");
-  if (badge) {
-    if (jumlahBelumDibaca > 0) {
-      badge.textContent = jumlahBelumDibaca > 99 ? "99+" : jumlahBelumDibaca;
-      badge.style.display = "flex";
-    } else {
-      badge.style.display = "none";
+    // =====================================================
+    //  USER ID (disimpan di localStorage)
+    // =====================================================
+    let userId = localStorage.getItem("ufn_user_id");
+    if (!userId) {
+      userId = crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+      localStorage.setItem("ufn_user_id", userId);
     }
-  }
-});
-</script>
+
+    // =====================================================
+    //  ONLINE / PRESENCE
+    // =====================================================
+    const userRef = db.ref("online/" + userId);
+    userRef.set(true);
+    userRef.onDisconnect().remove();
+
+    // =====================================================
+    //  HITUNG ONLINE (counter)
+    // =====================================================
+    db.ref("online").on("value", function(snapshot) {
+      const jumlah = snapshot.numChildren();
+      const el = document.getElementById("onlineCount");
+      if (el) el.textContent = jumlah;
+    });
+
+    // =====================================================
+    //  BADGE INBOX (pesan belum dibaca)
+    // =====================================================
+    const lastRead = parseInt(localStorage.getItem("ufn_last_read") || "0");
+
+    db.ref("messages").orderByChild("time").startAfter(lastRead).on("value", function(snapshot) {
+      const jumlahBelumDibaca = snapshot.numChildren();
+      const badge = document.getElementById("inboxBadge");
+      if (badge) {
+        if (jumlahBelumDibaca > 0) {
+          badge.textContent = jumlahBelumDibaca > 99 ? "99+" : jumlahBelumDibaca;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+      }
+    });
+
+    // =====================================================
+    //  (opsional) jika ingin badge tetap sinkron saat klik inbox
+    //  tidak perlu, karena badge akan tetap update realtime
+    // =====================================================
+    console.log("UFN dashboard siap ✅");
+  </script>
 </body>
 </html>
