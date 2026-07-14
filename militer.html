@@ -892,7 +892,8 @@ let allPlayers = {};
 let productionTickHandle = null;
 let currentEnemyForPrep = null;
 let selectedStrategy = null;
-let activeWarListeners = {};
+let activeWarListeners = {}; // tracks which finished wars already had their battle modal opened on this device
+let warsListenerBooted = false; // becomes true after the first 'wars' snapshot, so old/pre-existing finished wars from earlier sessions don't reopen the battle modal on page load
 let missionResetTracker = {daily:null, weekly:null};
 let localOnlineSeconds = 0;
 let prevPlayerLevel = null;
@@ -1573,16 +1574,44 @@ function listenWars(){
         </div>`;
       }).join('');
     }
-    // handle simulating -> open modal to whoever has it open, and trigger sim if needed
+    // FIX (missing realtime "startBattle" trigger): previously, only the
+    // attacker's device ever called showWarSimulationModal(), because it was
+    // invoked directly inside applyWarResults() - a plain local function call
+    // that only happened on whichever client ran runWarCalculation(). The
+    // defender's device had no code path that reacted to the status change,
+    // so it stayed stuck showing "Menunggu lawan..." forever even though the
+    // war had actually finished on the server.
+    //
+    // Both clients keep this same onValue listener alive the whole time
+    // (never detached with off()), so both of them observe the status field
+    // change in realtime. We use that shared observation as the single
+    // source of truth for entering battle: whichever side's status becomes
+    // 'finished' opens the battle modal here, guarded so each war's modal is
+    // only opened once per device.
+    // FIX (modal popping up immediately on page load): on('value') fires
+    // right away with whatever is already in the database - including wars
+    // that finished in a PREVIOUS session. The very first time this listener
+    // fires after page load, we just record which wars are already
+    // 'finished' (without opening the modal for them) instead of treating
+    // them as brand-new results. Only status changes that happen AFTER this
+    // point count as "just finished" and open the battle modal.
+    if(!warsListenerBooted){
+      warsListenerBooted = true;
+      relevant.forEach(([id,w])=>{
+        if(w.status==='finished') activeWarListeners[id] = true;
+      });
+    }
+
     relevant.forEach(([id,w])=>{
       if(w.status==='ready' && w.attacker===CUR_UID){
-        // attacker triggers the simulation transaction to avoid double-run
+        // Only the attacker's client runs the calculation, guarded by a
+        // transaction() below so it can only ever run once, even if this
+        // listener callback fires again before the transaction resolves.
         triggerSimulation(id, w);
       }
-      if(w.status==='simulating' || w.status==='finished'){
-        if(!activeWarListeners[id]) {
-          activeWarListeners[id] = true;
-        }
+      if(w.status==='finished' && !activeWarListeners[id]){
+        activeWarListeners[id] = true;
+        startBattle(id);
       }
     });
   });
@@ -1617,15 +1646,32 @@ function submitWarPrep(){
     units[u.key] = Math.max(0, parseInt(document.getElementById('prep-'+u.key).value)||0);
   });
   const {warId} = currentEnemyForPrep;
-  db.ref('wars/'+warId).once('value').then(snap=>{
-    const w = snap.val();
+  const prepData = { units, strategy: selectedStrategy, submittedAt: Date.now() };
+
+  // FIX (race condition): read-then-write via once() let both players read
+  // the war node BEFORE either write landed, so both could see the other's
+  // prep as null and both set status back to 'preparing' - the status would
+  // then never reach 'ready' and the battle would never start for anyone.
+  // A transaction() re-runs against the server's latest value whenever there
+  // is a conflict, so the "did the other player already submit?" check and
+  // the prep/status write happen atomically, in one round-trip.
+  db.ref('wars/'+warId).transaction(w=>{
+    if(!w) return w; // war node missing/removed - abort without changes
     const isAttacker = w.attacker===CUR_UID;
-    const prepData = { units, strategy: selectedStrategy, submittedAt: Date.now() };
-    const updates = {};
-    updates[isAttacker?'attackerPrep':'defenderPrep'] = prepData;
-    const otherPrep = isAttacker ? w.defenderPrep : w.attackerPrep;
-    updates['status'] = otherPrep ? 'ready' : 'preparing';
-    db.ref('wars/'+warId).update(updates);
+    if(isAttacker) w.attackerPrep = prepData;
+    else w.defenderPrep = prepData;
+    w.status = (w.attackerPrep && w.defenderPrep) ? 'ready' : 'preparing';
+    return w;
+  }, (error, committed)=>{
+    if(error){
+      console.error('submitWarPrep transaction failed:', error);
+      showToast('Gagal menyimpan strategi, coba lagi','err','fa-triangle-exclamation');
+      return;
+    }
+    if(!committed){
+      showToast('Gagal menyimpan strategi, coba lagi','err','fa-triangle-exclamation');
+      return;
+    }
     closeModal('warPrepModal');
     showToast('Strategi tersimpan, menunggu lawan...','ok','fa-check');
     incrementMission('daily','warJoin3',1);
@@ -1766,9 +1812,19 @@ function applyWarResults(warId, winnerUid, loserUid, w){
     if(destroyedPower>0) incrementMission('daily','destroyPower100', destroyedPower);
   }
 
-  if(winnerUid===CUR_UID || loserUid===CUR_UID){
-    showWarSimulationModal(warId);
-  }
+  // NOTE: opening the battle modal is intentionally NOT done here anymore.
+  // This function only ever runs on the attacker's device (the one that
+  // executed runWarCalculation locally), so calling showWarSimulationModal
+  // here would only ever show the battle to that one device. Both players
+  // now enter battle together via the 'finished' status listener in
+  // listenWars() -> startBattle(), which fires on every device in realtime.
+}
+
+// Called by BOTH players' realtime listener the moment they detect
+// status === 'finished' in Firebase - this is what actually opens the
+// battle screen on each device, in sync.
+function startBattle(warId){
+  showWarSimulationModal(warId);
 }
 
 function showWarSimulationModal(warId){
