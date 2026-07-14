@@ -279,13 +279,6 @@
       0% { opacity: 0; transform: translateY(12px); }
       100% { opacity: 1; transform: translateY(0); }
     }
-
-  .tutup{
-    background:red;
-    width:100%;
-    border-radius:10px;
-    margin-top:-30px;
-  }
   </style>
 </head>
 <body>
@@ -295,12 +288,12 @@
     <div class="header-left">
       <h1>UFN</h1>
       <div class="subhead">
-        <i class="fa-regular fa-compass"></i> 
+        <i class="fas fa-compass"></i> 
         <span>Menu Utama</span>
       </div>
     </div>
 
-  
+    <div class="header-right">
       <!-- online counter -->
       <div class="online-chip">
         <span class="online-dot"></span>
@@ -309,6 +302,13 @@
       </div>
 
       <!-- inbox -->
+      <div class="inbox-wrapper">
+        <a href="chat.html" class="inbox-btn" aria-label="Inbox">
+          <i class="fas fa-envelope"></i>
+        </a>
+        <span class="badge hidden" id="inboxBadge">0</span>
+      </div>
+    </div>
   </header>
 
   <!-- ===== MENU GRID ===== -->
@@ -316,56 +316,56 @@
     <!-- 1 -->
     <div class="menu-card">
       <a href="UNF-donwload.html">
-        <span class="icon"><i class="fa-regular fa-clock"></i></span>
+        <span class="icon"><i class="fas fa-clock"></i></span>
         <span class="label">Waktu</span>
       </a>
     </div>
     <!-- 2 -->
     <div class="menu-card">
       <a href="cuaca.html">
-        <span class="icon"><i class="fa-regular fa-sun"></i></span>
+        <span class="icon"><i class="fas fa-sun"></i></span>
         <span class="label">Cuaca</span>
       </a>
     </div>
     <!-- 3 -->
     <div class="menu-card">
       <a href="berita.html">
-        <span class="icon"><i class="fa-regular fa-newspaper"></i></span>
+        <span class="icon"><i class="fas fa-newspaper"></i></span>
         <span class="label">Berita</span>
       </a>
     </div>
     <!-- 4 -->
     <div class="menu-card">
       <a href="maps.html">
-        <span class="icon"><i class="fa-solid fa-location-dot"></i></span>
+        <span class="icon"><i class="fas fa-map-marker-alt"></i></span>
         <span class="label">Maps</span>
       </a>
     </div>
     <!-- 5 -->
     <div class="menu-card">
       <a href="List.html">
-        <span class="icon"><i class="fa-solid fa-list"></i></span>
+        <span class="icon"><i class="fas fa-list-ul"></i></span>
         <span class="label">Daftar Negara</span>
       </a>
     </div>
     <!-- 6 -->
     <div class="menu-card">
       <a href="tambang.html">
-        <span class="icon"><i class="fa-solid fa-helmet-safety"></i></span>
+        <span class="icon"><i class="fas fa-hard-hat"></i></span>
         <span class="label">Tambang</span>
       </a>
     </div>
     <!-- 7 -->
     <div class="menu-card">
       <a href="matauang.html">
-        <span class="icon"><i class="fa-solid fa-money-bill"></i></span>
+        <span class="icon"><i class="fas fa-money-bill-wave"></i></span>
         <span class="label">Mata uang</span>
       </a>
     </div>
     <!-- 8 -->
     <div class="menu-card">
       <a href="militer.html">
-        <span class="icon"><i class="fa-solid fa-shield"></i></span>
+        <span class="icon"><i class="fas fa-shield-alt"></i></span>
         <span class="label">Militer</span>
       </a>
     </div>
@@ -441,10 +441,6 @@
       }
     });
 
-    // =====================================================
-    //  (opsional) jika ingin badge tetap sinkron saat klik inbox
-    //  tidak perlu, karena badge akan tetap update realtime
-    // =====================================================
     console.log("UFN dashboard siap ✅");
   </script>
 </body>
