@@ -360,34 +360,28 @@
   #toast.show{ transform:translate(-50%,0); }
 
   /* ===================================================================
-     7b. MODAL KONFIRMASI (pengganti window.confirm bawaan browser,
-         karena confirm() sering tidak muncul saat dibungkus jadi APK/app)
+     7b. TOMBOL HAPUS — KONFIRMASI TEKAN-LAMA (10 detik)
+         Pengganti window.confirm() bawaan browser, karena confirm()
+         sering tidak muncul/tidak responsif saat dibungkus jadi APK/app.
      =================================================================== */
-  #confirmOverlay{
-    position:absolute; inset:0;
-    background:rgba(0,0,0,0.45);
-    display:none;
-    align-items:center; justify-content:center;
-    z-index:70;
-    padding:24px;
+  #btnDelete{
+    position:relative;
+    overflow:hidden;
+    isolation:isolate;
   }
-  #confirmOverlay.open{ display:flex; }
-  #confirmBox{
-    width:min(320px, 100%);
-    background:var(--panel-solid);
-    border:1px solid var(--border);
-    border-radius:var(--radius-lg);
-    box-shadow:var(--shadow);
-    padding:20px;
-    text-align:center;
+  #btnDelete .hold-fill{
+    position:absolute;
+    inset:0;
+    width:0%;
+    background:rgba(255,255,255,0.35);
+    z-index:-1;
+    pointer-events:none;
   }
-  #confirmBox p{
-    font-size:14px;
-    color:var(--text);
-    margin-bottom:16px;
-    line-height:1.4;
+  #btnDelete .hold-fill.filling{
+    width:100%;
+    transition:width 10s linear;
   }
-  #confirmBox .actions{ display:flex; gap:8px; }
+  #btnDelete .hold-label{ position:relative; }
 
   /* ===================================================================
      8. RESPONSIF
@@ -657,22 +651,14 @@
     <input type="text" id="infoEditInput" maxlength="60" />
     <div class="actions" id="infoActionsView">
       <button class="btn btn-ghost" id="btnEdit">Ubah nama</button>
-      <button class="btn btn-danger" id="btnDelete">Hapus</button>
+      <button class="btn btn-danger" id="btnDelete">
+        <span class="hold-fill" id="deleteHoldFill"></span>
+        <span class="hold-label" id="deleteHoldLabel">Tahan utk hapus</span>
+      </button>
     </div>
     <div class="actions" id="infoActionsEdit" style="display:none;">
       <button class="btn btn-ghost" id="btnCancelEdit">Batal</button>
       <button class="btn btn-primary" id="btnSaveEdit">Simpan</button>
-    </div>
-  </div>
-
-  <!-- ============================ MODAL KONFIRMASI HAPUS ============================ -->
-  <div id="confirmOverlay">
-    <div id="confirmBox">
-      <p>Hapus tempat ini? Tindakan tidak bisa dibatalkan.</p>
-      <div class="actions">
-        <button class="btn btn-ghost" id="btnConfirmCancel">Batal</button>
-        <button class="btn btn-danger" id="btnConfirmOk">Hapus</button>
-      </div>
     </div>
   </div>
 
@@ -928,9 +914,8 @@ import {
 
     const toastEl = document.getElementById("toast");
 
-    const confirmOverlay  = document.getElementById("confirmOverlay");
-    const btnConfirmOk     = document.getElementById("btnConfirmOk");
-    const btnConfirmCancel = document.getElementById("btnConfirmCancel");
+    const deleteHoldFill  = document.getElementById("deleteHoldFill");
+    const deleteHoldLabel = document.getElementById("deleteHoldLabel");
 
     /* =====================================================================
        4. STATE PETA (posisi & zoom)
@@ -1305,6 +1290,7 @@ import {
        11. KARTU INFORMASI MARKER (lihat / ubah / hapus)
        ===================================================================== */
     function selectPlace(id){
+      cancelHold();
       selectedId = id;
       markerElements.forEach((el, mid) => el.classList.toggle("selected", mid === id));
       const place = placesCache.find(p => p.id === id);
@@ -1327,6 +1313,7 @@ import {
     }
 
     function closeInfoCard(){
+      cancelHold();
       infoCard.classList.remove("open");
       selectedId = null;
       markerElements.forEach(el => el.classList.remove("selected"));
@@ -1362,38 +1349,58 @@ import {
       }
     });
 
-    /* Modal konfirmasi kustom — pengganti window.confirm() bawaan browser,
-       karena confirm() sering tidak muncul/tidak bisa ditekan saat halaman
-       ini dibungkus jadi aplikasi (WebView/APK). */
-    function showConfirm(){
-      return new Promise((resolve) => {
-        confirmOverlay.classList.add("open");
-        function cleanup(result){
-          confirmOverlay.classList.remove("open");
-          btnConfirmOk.removeEventListener("click", onOk);
-          btnConfirmCancel.removeEventListener("click", onCancel);
-          resolve(result);
+    /* Konfirmasi hapus via tekan-lama (10 detik) — pengganti window.confirm()
+       bawaan browser, karena confirm() sering tidak muncul/tidak responsif
+       saat halaman ini dibungkus jadi aplikasi (WebView/APK). Tombol
+       menampilkan progress mengisi selama ditahan; lepas sebelum 10 detik
+       akan membatalkan. */
+    const HOLD_DURATION_MS = 10000;
+    let holdTimer = null;
+
+    function startHold(){
+      if (!selectedId || holdTimer) return;
+      deleteHoldLabel.textContent = "Menahan... jangan lepas";
+      // reset dulu ke 0% tanpa transisi, lalu paksa reflow, baru animasikan ke 100%
+      deleteHoldFill.classList.remove("filling");
+      void deleteHoldFill.offsetWidth;
+      deleteHoldFill.classList.add("filling");
+
+      holdTimer = setTimeout(async () => {
+        holdTimer = null;
+        resetHold();
+        const idToDelete = selectedId;
+        if (!idToDelete) return;
+        try{
+          await deleteDoc(doc(db, "places", idToDelete));
+          showToast("Tempat berhasil dihapus");
+          closeInfoCard();
+        } catch(err){
+          console.error(err);
+          showToast("Gagal menghapus: " + err.message);
         }
-        function onOk(){ cleanup(true); }
-        function onCancel(){ cleanup(false); }
-        btnConfirmOk.addEventListener("click", onOk);
-        btnConfirmCancel.addEventListener("click", onCancel);
-      });
+      }, HOLD_DURATION_MS);
     }
 
-    btnDelete.addEventListener("click", async () => {
-      if (!selectedId) return;
-      const ok = await showConfirm();
-      if (!ok) return;
-      try{
-        await deleteDoc(doc(db, "places", selectedId));
-        showToast("Tempat berhasil dihapus");
-        closeInfoCard();
-      } catch(err){
-        console.error(err);
-        showToast("Gagal menghapus: " + err.message);
+    function cancelHold(){
+      if (holdTimer){
+        clearTimeout(holdTimer);
+        holdTimer = null;
       }
+      resetHold();
+    }
+
+    function resetHold(){
+      deleteHoldFill.classList.remove("filling");
+      deleteHoldLabel.textContent = "Tahan 10detik utk hapus";
+    }
+
+    btnDelete.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      startHold();
     });
+    btnDelete.addEventListener("pointerup", cancelHold);
+    btnDelete.addEventListener("pointerleave", cancelHold);
+    btnDelete.addEventListener("pointercancel", cancelHold);
 
     /* =====================================================================
        12. PENCARIAN NAMA TEMPAT (realtime, instan)
