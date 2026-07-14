@@ -139,6 +139,13 @@
     font-size:.7rem; font-weight:700; display:grid; place-items:center;
   }
   .empty-state{ margin:auto; text-align:center; color:var(--muted); font-size:.82rem; padding:1.5rem; }
+  #adminBtn.on{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .verify-toggle{
+    margin-left:auto; flex-shrink:0; border:1px solid var(--ring); background:var(--card-2);
+    color:var(--muted); font-size:.68rem; font-weight:700; padding:.3rem .55rem; border-radius:9px; cursor:pointer;
+  }
+  .verify-toggle.on{ background:#3b9df8; color:#fff; border-color:#3b9df8; }
+  .verify-toggle:active{ transform:scale(.94); }
 
   /* ---------- CHAT VIEW ---------- */
   #view-chat{ min-height:0; }
@@ -229,6 +236,9 @@
         <b id="myName">—</b>
         <span>Online</span>
       </div>
+      <button class="icon-btn" id="adminBtn" title="Mode admin" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M12 3l7 4v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V7l7-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
       <button class="icon-btn" id="logoutBtn" title="Keluar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 17l5-5-5-5M20 12H9M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
@@ -323,8 +333,8 @@ function verifiedBadge(isVerified){
   if(!isVerified) return '';
   return `<span class="verified-badge" title="Terverifikasi">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2l2.4 2.1 3.1-.4 1 3 2.9 1.4-.6 3.1 1.9 2.5-1.9 2.5.6 3.1-2.9 1.4-1 3-3.1-.4L12 26l-2.4-2.1-3.1.4-1-3-2.9-1.4.6-3.1L1.3 14l1.9-2.5-.6-3.1L5.5 7l1-3 3.1.4L12 2z" fill="#3b9df8" transform="scale(0.92) translate(1,-1)"/>
-      <path d="M8.2 12.2l2.6 2.6 5-5.2" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="12" cy="12" r="10" fill="#3b9df8"/>
+      <path d="M7.5 12.5l3 3 6-6.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </span>`;
 }
@@ -415,6 +425,24 @@ $('#logoutBtn').onclick = async ()=>{
   await signOut(auth);
 };
 
+$('#adminBtn').onclick = ()=>{
+  if(!isAdmin) return;
+  adminMode = !adminMode;
+  $('#adminBtn').classList.toggle('on', adminMode);
+  renderContacts();
+  toast(adminMode ? 'Mode admin aktif — ketuk tombol centang di sebelah kontak' : 'Mode admin nonaktif');
+};
+
+async function toggleVerified(uid, current){
+  if(!isAdmin) return;
+  try{
+    await update(ref(db, `users/${uid}`), { verified: !current });
+  }catch(e){
+    console.error('Gagal ubah status verifikasi:', e);
+    toast('Gagal ubah verifikasi (cek Database Rules).');
+  }
+}
+
 function teardownRealtime(){
   if(unsubMsgs){ unsubMsgs(); unsubMsgs=null; }
   if(unsubUsers){ unsubUsers(); unsubUsers=null; }
@@ -432,12 +460,21 @@ let unsubInbox = null;
 let usersCache = {};   // uid -> user record
 let inboxCache = {};   // peerUid -> { username, lastMessage, lastTs, unread }
 
+const ADMIN_EMAIL = 'opintar114@gmail.com';
+let isAdmin = false;
+let adminMode = false;
+
 onAuthStateChanged(auth, async (user)=>{
   if(user){
     ME = { uid: user.uid, username: user.displayName || (user.email||'').split('@')[0] };
     $('#myName').textContent = ME.username;
     $('#myAvatar').textContent = initials(ME.username);
     $('#brandTag').textContent = ME.username;
+
+    isAdmin = (user.email || '').toLowerCase() === ADMIN_EMAIL;
+    adminMode = false;
+    $('#adminBtn').style.display = isAdmin ? 'grid' : 'none';
+    $('#adminBtn').classList.remove('on');
 
     // Navigate first so a database hiccup never traps the user on the login screen.
     showView('#view-contacts');
@@ -526,6 +563,12 @@ function renderContacts(){
       el.getAttribute('data-verified') === '1'
     );
   });
+  listEl.querySelectorAll('[data-toggle-uid]').forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      toggleVerified(btn.getAttribute('data-toggle-uid'), btn.getAttribute('data-current') === '1');
+    };
+  });
 }
 
 function contactRow(u){
@@ -534,13 +577,16 @@ function contactRow(u){
     ? escapeHtml(u.lastMessage)
     : (u.lastSeen ? `Aktif ${timeAgo(u.lastSeen)}` : 'belum aktif');
   const badge = hasUnread ? `<div class="badge">${u.unread > 9 ? '9+' : u.unread}</div>` : '';
+  const verifyBtn = (isAdmin && adminMode)
+    ? `<button class="verify-toggle ${u.verified ? 'on' : ''}" data-toggle-uid="${u.uid}" data-current="${u.verified ? '1' : ''}">${u.verified ? '✓ Verified' : 'Verifikasi'}</button>`
+    : '';
   return `<div class="contact ${hasUnread ? 'has-unread' : ''}" data-uid="${u.uid}" data-name="${escapeHtml(u.username)}" data-verified="${u.verified ? '1' : ''}">
     <div class="avatar">${initials(u.username)}</div>
     <div class="meta">
       <div class="row1"><b>${escapeHtml(u.username)}</b>${verifiedBadge(u.verified)}</div>
       <div class="small ${hasUnread ? 'unread-preview' : ''}">${preview}</div>
     </div>
-    ${badge}
+    ${verifyBtn}${badge}
   </div>`;
 }
 
