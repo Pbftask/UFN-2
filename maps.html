@@ -360,6 +360,36 @@
   #toast.show{ transform:translate(-50%,0); }
 
   /* ===================================================================
+     7b. MODAL KONFIRMASI (pengganti window.confirm bawaan browser,
+         karena confirm() sering tidak muncul saat dibungkus jadi APK/app)
+     =================================================================== */
+  #confirmOverlay{
+    position:absolute; inset:0;
+    background:rgba(0,0,0,0.45);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:70;
+    padding:24px;
+  }
+  #confirmOverlay.open{ display:flex; }
+  #confirmBox{
+    width:min(320px, 100%);
+    background:var(--panel-solid);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow);
+    padding:20px;
+    text-align:center;
+  }
+  #confirmBox p{
+    font-size:14px;
+    color:var(--text);
+    margin-bottom:16px;
+    line-height:1.4;
+  }
+  #confirmBox .actions{ display:flex; gap:8px; }
+
+  /* ===================================================================
      8. RESPONSIF
      =================================================================== */
   @media (max-width:640px){
@@ -635,6 +665,17 @@
     </div>
   </div>
 
+  <!-- ============================ MODAL KONFIRMASI HAPUS ============================ -->
+  <div id="confirmOverlay">
+    <div id="confirmBox">
+      <p>Hapus tempat ini? Tindakan tidak bisa dibatalkan.</p>
+      <div class="actions">
+        <button class="btn btn-ghost" id="btnConfirmCancel">Batal</button>
+        <button class="btn btn-danger" id="btnConfirmOk">Hapus</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ============================ TOAST ============================ -->
   <div id="toast"></div>
 
@@ -886,6 +927,10 @@ import {
     const closeInfo       = document.getElementById("closeInfo");
 
     const toastEl = document.getElementById("toast");
+
+    const confirmOverlay  = document.getElementById("confirmOverlay");
+    const btnConfirmOk     = document.getElementById("btnConfirmOk");
+    const btnConfirmCancel = document.getElementById("btnConfirmCancel");
 
     /* =====================================================================
        4. STATE PETA (posisi & zoom)
@@ -1317,9 +1362,29 @@ import {
       }
     });
 
+    /* Modal konfirmasi kustom — pengganti window.confirm() bawaan browser,
+       karena confirm() sering tidak muncul/tidak bisa ditekan saat halaman
+       ini dibungkus jadi aplikasi (WebView/APK). */
+    function showConfirm(){
+      return new Promise((resolve) => {
+        confirmOverlay.classList.add("open");
+        function cleanup(result){
+          confirmOverlay.classList.remove("open");
+          btnConfirmOk.removeEventListener("click", onOk);
+          btnConfirmCancel.removeEventListener("click", onCancel);
+          resolve(result);
+        }
+        function onOk(){ cleanup(true); }
+        function onCancel(){ cleanup(false); }
+        btnConfirmOk.addEventListener("click", onOk);
+        btnConfirmCancel.addEventListener("click", onCancel);
+      });
+    }
+
     btnDelete.addEventListener("click", async () => {
       if (!selectedId) return;
-      if (!confirm("Hapus tempat ini? Tindakan tidak bisa dibatalkan.")) return;
+      const ok = await showConfirm();
+      if (!ok) return;
       try{
         await deleteDoc(doc(db, "places", selectedId));
         showToast("Tempat berhasil dihapus");
