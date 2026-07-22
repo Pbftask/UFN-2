@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>UFN AI Assistant</title>
+<meta name="description" content="Asisten AI resmi Union of Federated Nations (UFN) — informasi negara, berita, mata uang, dan tempat berdasarkan data resmi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold: #c6a15b;
+  --gold-soft: #e2c98a;
+  --blue-accent: #5c86ad;
+  --success: #4f9e7c;
+  --danger: #c0655a;
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --radius-sm: 8px;
+  --ease: cubic-bezier(.22,.9,.32,1);
+}
+
+html[data-theme="dark"]{
+  --bg-0: #0a1220;
+  --bg-1: #0d1a2b;
+  --bg-2: #122238;
+  --ink: #e9edf3;
+  --ink-dim: #93a2b8;
+  --line: rgba(233,237,243,0.10);
+  --glass: rgba(255,255,255,0.055);
+  --glass-strong: rgba(255,255,255,0.09);
+  --glass-border: rgba(255,255,255,0.14);
+  --shadow: 0 20px 60px rgba(0,0,0,0.45);
+  --bubble-ai: rgba(255,255,255,0.06);
+  --bubble-user: linear-gradient(135deg, rgba(198,161,91,0.24), rgba(198,161,91,0.10));
+}
+html[data-theme="light"]{
+  --bg-0: #f3f1ea;
+  --bg-1: #eeebe2;
+  --bg-2: #e7e3d6;
+  --ink: #1c2430;
+  --ink-dim: #5c6472;
+  --line: rgba(28,36,48,0.10);
+  --glass: rgba(255,255,255,0.55);
+  --glass-strong: rgba(255,255,255,0.75);
+  --glass-border: rgba(28,36,48,0.10);
+  --shadow: 0 20px 50px rgba(28,36,48,0.12);
+  --bubble-ai: rgba(255,255,255,0.65);
+  --bubble-user: linear-gradient(135deg, rgba(198,161,91,0.30), rgba(198,161,91,0.14));
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 700px at 12% -10%, color-mix(in srgb, var(--gold) 10%, transparent), transparent 60%),
+    radial-gradient(900px 600px at 110% 10%, color-mix(in srgb, var(--blue-accent) 14%, transparent), transparent 55%),
+    var(--bg-0);
+  background-attachment:fixed;
+  min-height:100vh;
+  overflow:hidden;
+  transition:background .5s var(--ease), color .4s var(--ease);
+}
+
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background-image:
+    repeating-linear-gradient(to right, var(--line) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px 96px);
+  opacity:.5;
+  pointer-events:none;
+  z-index:0;
+}
+
+.app{
+  position:relative; z-index:1;
+  display:flex; flex-direction:column;
+  height:100vh; height:100dvh;
+  max-width:820px; margin:0 auto;
+}
+
+header.top{
+  display:flex; align-items:center; gap:14px;
+  padding:16px 18px;
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  background:var(--glass);
+  border-bottom:1px solid var(--glass-border);
+  box-shadow:var(--shadow);
+  flex-shrink:0;
+}
+
+.emblem{ width:44px; height:44px; flex:none; position:relative; }
+.emblem svg{ width:100%; height:100%; display:block; }
+.emblem .ring{ transform-origin:50% 50%; animation:spin 22s linear infinite; }
+.emblem .core{ animation:pulse 2.6s ease-in-out infinite; }
+@keyframes spin{ to{ transform:rotate(360deg);} }
+@keyframes pulse{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
+
+.title-block{ display:flex; flex-direction:column; line-height:1.15; flex:1; min-width:0;}
+.title-block h1{
+  margin:0; font-family:'Fraunces', serif; font-weight:600;
+  font-size:19px; letter-spacing:.2px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.title-block .sub{
+  font-size:11px; color:var(--ink-dim); letter-spacing:.6px; text-transform:uppercase;
+  font-family:'IBM Plex Mono', monospace;
+}
+
+.top-actions{ display:flex; gap:8px; flex:none; }
+.icon-btn{
+  width:38px; height:38px; border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--glass); border:1px solid var(--glass-border);
+  color:var(--ink); cursor:pointer;
+  transition:transform .2s var(--ease), background .2s var(--ease);
+}
+.icon-btn:hover{ background:var(--glass-strong); transform:translateY(-1px); }
+.icon-btn:active{ transform:translateY(0) scale(.96); }
+.icon-btn svg{ width:18px; height:18px; }
+
+main#chat{
+  flex:1; overflow-y:auto; padding:20px 16px 10px;
+  display:flex; flex-direction:column; gap:16px;
+  scroll-behavior:smooth;
+}
+main#chat::-webkit-scrollbar{ width:6px; }
+main#chat::-webkit-scrollbar-thumb{ background:var(--glass-border); border-radius:6px; }
+
+.msg-row{ display:flex; gap:10px; max-width:100%; animation:rise .38s var(--ease) both; }
+@keyframes rise{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0);} }
+.msg-row.user{ flex-direction:row-reverse; }
+
+.avatar{
+  width:32px; height:32px; border-radius:10px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--glass-strong); border:1px solid var(--glass-border);
+  font-size:14px;
+}
+.avatar.ai{ color:var(--gold-soft); }
+.avatar.user{ color:var(--blue-accent); }
+
+.msg-col{ display:flex; flex-direction:column; max-width:78%; }
+.msg-row.user .msg-col{ align-items:flex-end; }
+
+.bubble{
+  padding:12px 15px; border-radius:var(--radius-md);
+  border:1px solid var(--glass-border);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  font-size:14.5px; line-height:1.55;
+  word-wrap:break-word;
+  overflow-x:auto;
+}
+.msg-row.ai .bubble{ background:var(--bubble-ai); border-top-left-radius:4px; }
+.msg-row.user .bubble{ background:var(--bubble-user); border-top-right-radius:4px; }
+
+.bubble table{ border-collapse:collapse; width:100%; margin-top:6px; font-size:13px; }
+.bubble th, .bubble td{ padding:6px 8px; border-bottom:1px solid var(--glass-border); text-align:left; }
+.bubble th{ color:var(--ink-dim); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.4px; }
+.bubble ul{ margin:6px 0 0; padding-left:18px; }
+.bubble li{ margin-bottom:4px; }
+.bubble strong{ color:var(--gold-soft); }
+.bubble .hint{ color:var(--ink-dim); font-size:12.5px; }
+.bubble .error{ color:var(--danger); }
+
+.timestamp{
+  font-family:'IBM Plex Mono', monospace; font-size:10.5px;
+  color:var(--ink-dim); margin-top:5px; padding:0 3px; letter-spacing:.3px;
+}
+
+.typing{ display:flex; gap:4px; padding:14px 15px; }
+.typing span{
+  width:6px; height:6px; border-radius:50%; background:var(--ink-dim);
+  animation:bounce 1.2s ease-in-out infinite;
+}
+.typing span:nth-child(2){ animation-delay:.15s; }
+.typing span:nth-child(3){ animation-delay:.3s; }
+@keyframes bounce{ 0%,60%,100%{ transform:translateY(0); opacity:.4; } 30%{ transform:translateY(-4px); opacity:1; } }
+
+footer.input-bar{
+  padding:12px 14px calc(14px + env(safe-area-inset-bottom));
+  background:var(--glass);
+  border-top:1px solid var(--glass-border);
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  flex-shrink:0;
+}
+.input-shell{
+  display:flex; align-items:flex-end; gap:8px;
+  background:var(--glass-strong); border:1px solid var(--glass-border);
+  border-radius:var(--radius-lg); padding:8px 8px 8px 16px;
+  transition:border-color .2s var(--ease);
+}
+.input-shell:focus-within{ border-color:color-mix(in srgb, var(--gold) 55%, var(--glass-border)); }
+textarea#userInput{
+  flex:1; resize:none; border:none; outline:none; background:transparent;
+  color:var(--ink); font-family:'Inter',sans-serif; font-size:14.5px; line-height:1.4;
+  max-height:120px; padding:8px 0;
+}
+textarea#userInput::placeholder{ color:var(--ink-dim); }
+
+.send-btn{
+  width:38px; height:38px; border-radius:11px; flex:none; border:none; cursor:pointer;
+  background:linear-gradient(135deg, var(--gold), #a9793e);
+  color:#241a08; display:flex; align-items:center; justify-content:center;
+  transition:transform .18s var(--ease), filter .18s var(--ease);
+}
+.send-btn:hover{ filter:brightness(1.08); }
+.send-btn:active{ transform:scale(.92); }
+.send-btn:disabled{ opacity:.45; cursor:not-allowed; filter:none; transform:none; }
+.send-btn svg{ width:17px; height:17px; }
+
+.hint-row{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 4px 0; font-size:10.5px; color:var(--ink-dim);
+  font-family:'IBM Plex Mono', monospace;
+}
+
+.quick-replies{
+  display:flex; gap:8px; flex-wrap:wrap; padding:4px 0;
+}
+.quick-replies button{
+  background:var(--glass-strong);
+  border:1px solid var(--glass-border);
+  border-radius:20px;
+  padding:6px 14px;
+  font-size:12px;
+  color:var(--ink);
+  cursor:pointer;
+  transition:background .2s var(--ease), transform .15s var(--ease);
+  font-family:'Inter',sans-serif;
+  white-space:nowrap;
+}
+.quick-replies button:hover{
+  background:color-mix(in srgb, var(--gold) 20%, var(--glass-strong));
+  transform:scale(1.02);
+}
+
+@media (min-width:640px){
+  .app{ border-left:1px solid var(--glass-border); border-right:1px solid var(--glass-border); }
+  .msg-col{ max-width:70%; }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation-duration:.001s !important; transition-duration:.001s !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="emblem" aria-hidden="true">
+      <svg viewBox="0 0 44 44" fill="none">
+        <circle class="ring" cx="22" cy="22" r="17" stroke="var(--gold)" stroke-width="1.1" stroke-dasharray="2 5"/>
+        <circle cx="22" cy="22" r="12.5" stroke="var(--glass-border)" stroke-width="1"/>
+        <circle class="core" cx="22" cy="22" r="4.2" fill="var(--gold)"/>
+        <path d="M22 9.5 L22 34.5 M9.5 22 L34.5 22" stroke="var(--glass-border)" stroke-width=".7"/>
+      </svg>
+    </div>
+    <div class="title-block">
+      <h1>UFN AI Assistant</h1>
+      <span class="sub">Union of Federated Nations · Data Terverifikasi</span>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="themeToggle" title="Ganti mode gelap/terang" aria-label="Ganti tema">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn" id="clearChat" title="Hapus riwayat percakapan" aria-label="Hapus chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>
+      </button>
+      <button class="icon-btn" id="suggestBtn" title="Lihat saran pertanyaan" aria-label="Saran pertanyaan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="chat" aria-live="polite"></main>
+
+  <footer class="input-bar">
+    <div class="input-shell">
+      <textarea id="userInput" rows="1" placeholder="Tanya apa saja tentang UFN…" aria-label="Tulis pertanyaan"></textarea>
+      <button class="send-btn" id="sendBtn" aria-label="Kirim pertanyaan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+      </button>
+    </div>
+    <div class="hint-row">
+      <span>Jawaban dari database resmi UFN</span>
+      <span id="statusDot">● siap</span>
+    </div>
+    <div class="quick-replies" id="quickReplies">
+      <button data-q="Daftar negara UFN">📋 Negara</button>
+      <button data-q="Mata uang terkuat">💰 Mata Uang</button>
+      <button data-q="Berita terbaru">📰 Berita</button>
+      <button data-q="Populasi terbesar">👥 Populasi</button>
+    </div>
+  </footer>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, query, orderBy, limit, getDocs, where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+
+let app, db, firebaseReady = false;
+try{
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  firebaseReady = true;
+  console.log("✅ Firebase terhubung");
+}catch(err){
+  console.error("❌ Gagal inisialisasi Firebase:", err);
+}
+
+/* ============================================================
+   SKEMA FIRESTORE (sesuai Firestore.md)
+   comments/   : { createdAt, likedBy, name, newsId, parentId, text }
+   cauntries/  : { createdAt, description, name }  <-- perhatikan typo "cauntries"
+   news/       : { author, category, content, createdAt, excrept, image, likedBy, likes, title }
+   currencies/ : { changePercent, country, createdAt, name, prevValue, symbol, updatedAt, value }
+   places/     : { createdAt, name, ownerId, type:"negara/provinsi", x, y }
+   reactions/  : { counts: { like }, userReactions }
+   ============================================================ */
+
+const NOT_FOUND = "Maaf, data tersebut belum tersedia di database UFN.";
+const FETCH_ERROR = "Maaf, terjadi kendala saat menghubungi database UFN. Coba lagi sebentar lagi.";
+
+/* -------- cache -------- */
+const cache = { countries:null, news:null, currencies:null, places:null, reactions:null, comments:null };
+
+// ==== FUNGSI LOAD DATA ====
+
+async function loadCountries(){
+  if(cache.countries) return cache.countries;
+  try{
+    const snap = await getDocs(collection(db,"cauntries")); // perhatikan typo "cauntries"
+    cache.countries = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    return cache.countries;
+  }catch(e){
+    console.error("Load countries error:", e);
+    return [];
+  }
+}
+
+async function loadNews(limitCount=20){
+  if(cache.news) return cache.news;
+  try{
+    const q = query(collection(db,"news"), orderBy("createdAt","desc"), limit(limitCount));
+    const snap = await getDocs(q);
+    cache.news = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  }catch{
+    try{
+      const snap = await getDocs(collection(db,"news"));
+      cache.news = snap.docs.map(d=>({ id:d.id, ...d.data() })).slice(0, limitCount);
+    }catch(e){
+      console.error("Load news error:", e);
+      cache.news = [];
+    }
+  }
+  return cache.news;
+}
+
+async function loadCurrencies(){
+  if(cache.currencies) return cache.currencies;
+  try{
+    const snap = await getDocs(collection(db,"currencies"));
+    cache.currencies = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    return cache.currencies;
+  }catch(e){
+    console.error("Load currencies error:", e);
+    return [];
+  }
+}
+
+async function loadPlaces(){
+  if(cache.places) return cache.places;
+  try{
+    const snap = await getDocs(collection(db,"places"));
+    cache.places = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    return cache.places;
+  }catch(e){
+    console.error("Load places error:", e);
+    return [];
+  }
+}
+
+async function loadReactions(){
+  if(cache.reactions) return cache.reactions;
+  try{
+    const snap = await getDocs(collection(db,"reactions"));
+    cache.reactions = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    return cache.reactions;
+  }catch(e){
+    console.error("Load reactions error:", e);
+    return [];
+  }
+}
+
+async function loadComments(){
+  if(cache.comments) return cache.comments;
+  try{
+    const snap = await getDocs(collection(db,"comments"));
+    cache.comments = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    return cache.comments;
+  }catch(e){
+    console.error("Load comments error:", e);
+    return [];
+  }
+}
+
+function norm(s){
+  return (s||"").toString().toLowerCase().normalize("NFKD").replace(/[^\w\s]/g,"").trim();
+}
+
+function findCountryInText(text, countries){
+  const t = norm(text);
+  let best = null;
+  for(const c of countries){
+    const name = norm(c.name);
+    if(name && t.includes(name)){
+      if(!best || name.length > norm(best.name).length) best = c;
+    }
+  }
+  return best;
+}
+
+function findAllCountriesInText(text, countries){
+  const t = norm(text);
+  return countries.filter(c => norm(c.name) && t.includes(norm(c.name)));
+}
+
+function findNewsInText(text, newsItems){
+  const t = norm(text);
+  let best = null;
+  for(const n of newsItems){
+    const title = norm(n.title);
+    if(title && t.includes(title)){
+      if(!best || title.length > norm(best.title).length) best = n;
+    }
+  }
+  return best;
+}
+
+function fmtDate(ts){
+  try{
+    const d = ts?.toDate ? ts.toDate() : new Date(ts);
+    if(isNaN(d)) return "-";
+    return d.toLocaleDateString("id-ID",{ day:"numeric", month:"long", year:"numeric" });
+  }catch{ return "-"; }
+}
+
+function fmtDateTime(ts){
+  try{
+    const d = ts?.toDate ? ts.toDate() : new Date(ts);
+    if(isNaN(d)) return "-";
+    return d.toLocaleString("id-ID",{ day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit" });
+  }catch{ return "-"; }
+}
+
+function fmtNumber(n){
+  if(n===undefined||n===null||isNaN(n)) return "-";
+  return Number(n).toLocaleString("id-ID");
+}
+
+function fmtCurrency(n){
+  if(n===undefined||n===null||isNaN(n)) return "-";
+  return new Intl.NumberFormat("id-ID", { style:"currency", currency:"IDR" }).format(n).replace("Rp", "Rp ");
+}
+
+function esc(str){
+  if(!str) return "";
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function truncate(str, max=200){
+  if(!str) return "";
+  return str.length > max ? str.slice(0,max)+"…" : str;
+}
+
+/* ============================================================
+   DETEKSI MAKSUD (INTENT)
+   ============================================================ */
+function detectIntent(rawText){
+  const t = norm(rawText);
+
+  // Small talk
+  if(/\b(bantuan|help|menu|perintah|bisa apa|bisa bantu apa|apa saja yang bisa|fitur apa|kamu bisa apa|tolong)\b/.test(t)) return "smalltalk_help";
+  if(/\b(terima ?kasih|makasih|thanks|thank you|tengkyu|matursuwun)\b/.test(t)) return "smalltalk_thanks";
+  if(/\b(dadah|sampai jumpa|selamat tinggal|bye|goodbye|dadah|da da)\b/.test(t)) return "smalltalk_bye";
+  if(/\b(halo+|hai+|hello|hi|hey|assalamualaikum|salam|pagi|siang|sore|malam)\b/.test(t) || /\bapa ?kabar\b/.test(t) || /\bselamat (pagi|siang|sore|malam)\b/.test(t)) return "smalltalk_greeting";
+  if(/\b(aku rindu|kangen|rindu)\b/.test(t)) return "smalltalk_miss";
+  if(/\b(apa kabar|kabar|gimana kabar|how are you)\b/.test(t)) return "smalltalk_howareyou";
+  if(/\b(merah|biru|kuning|hijau|ungu|hitam|putih|warna|favorit|kesukaan)\b.*\b(warna|color)\b/.test(t)) return "smalltalk_color";
+  if(/\b(makanan|makan|kuliner|masakan|food)\b/.test(t)) return "smalltalk_food";
+  if(/\b(pacar|cinta|sayang|jodoh|love)\b/.test(t)) return "smalltalk_love";
+  if(/\b(lelucon|joke|humor|lucu|funny)\b/.test(t)) return "smalltalk_joke";
+  if(/\b(umur|usia|berapa tua|old)\b/.test(t)) return "smalltalk_age";
+  if(/\b(nama|siapa namamu|namamu|your name)\b/.test(t)) return "smalltalk_name";
+  if(/\b(kamu (dari|asal)|dari mana|where (are you from|from))\b/.test(t)) return "smalltalk_origin";
+
+  // Data UFN
+  if(/\b(daftar|list|semua|seluruh|mana saja)\b.*\b(negara|country)\b/.test(t) || /\bnegara.*daftar\b/.test(t) || /\bsebutkan negara\b/.test(t)) return "list_countries";
+  if(/\b(deskripsi|tentang|info|informasi|profil|sekilas|gambaran)\b/.test(t) && /\bnegara\b/.test(t)) return "country_profile";
+  if(/\b(ibu ?kota|ibukota|capital|capitals?)\b/.test(t)) return "capital";
+  if(/\b(mata ?uang terkuat|nilai tukar tertinggi|mata uang paling tinggi|kurs tertinggi)\b/.test(t)) return "currency_strongest";
+  if(/\bmata ?uang|kurs|currency|currencies|matauang|nilai tukar\b/.test(t)) return "currency";
+  if(/\b(populasi terbesar|populasi terbanyak|paling banyak|tertinggi|terbesar)\b.*\b(populasi|penduduk)\b/.test(t) || /\bpopulasi terbesar\b/.test(t)) return "population_max";
+  if(/\bpopulasi|penduduk|population\b/.test(t)) return "population";
+  if(/\b(berita|news|informasi terbaru)\b.*\b(terbaru|hari ini|terkini|update)\b/.test(t) || /\b(ada berita apa|berita apa saja|berita terkini)\b/.test(t)) return "latest_news";
+  if(/\bringkas|rangkum|ringkasan|resume|summary\b/.test(t)) return "summary_news";
+  if(/\b(reaksi|like|suka|respon|popularitas)\b.*\b(paling banyak|terbanyak|tertinggi)\b|\bberita.*paling.*reaksi\b/.test(t)) return "top_reaction";
+  if(/\b(komentar|comment|comments|diskusi|tanggapan)\b/.test(t)) return "comments";
+  if(/\b(tempat menarik|wisata|pariwisata|lokasi|objek wisata|destinasi|tempat rekomendasi|tempat bagus)\b/.test(t)) return "places";
+  if(/\b(kategori|category|jenis|jenis berita)\b/.test(t)) return "news_category";
+  if(/\b(penulis|author|penulis berita|wartawan)\b/.test(t)) return "news_author";
+  if(/\b(gambar|image|foto|photo|thumbnail)\b/.test(t)) return "news_image";
+  if(/\b(bandingkan|dibanding|vs|versus|perbedaan antara|perbandingan)\b/.test(t)) return "compare";
+
+  return "general_country";
+}
+
+/* ============================================================
+   HANDLER PER-INTENT
+   ============================================================ */
+
+// --- COUNTRY HANDLERS ---
+
+async function handleListCountries(){
+  const countries = await loadCountries();
+  if(!countries.length) return "Belum ada data negara di database UFN.";
+  const list = countries.map(c => `<li><strong>${esc(c.name)}</strong>${c.description ? ` — ${esc(c.description)}` : ''}</li>`).join("");
+  return `🌍 Daftar negara anggota UFN:<ul>${list}</ul><span class="hint">Total ${countries.length} negara terdaftar.</span>`;
+}
+
+async function handleCountryProfile(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  
+  let info = `<strong>🏛️ ${esc(c.name)}</strong>`;
+  if(c.description) info += `<br><br>${esc(c.description)}`;
+  if(c.createdAt) info += `<br><br><span class="hint">Bergabung: ${fmtDate(c.createdAt)}</span>`;
+  return info;
+}
+
+async function handleCapital(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  return `Ibu kota <strong>${esc(c.name)}</strong> adalah <strong>${esc(c.capital)}</strong>.`;
+}
+
+async function handleCurrency(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  
+  const currencies = await loadCurrencies();
+  const cur = currencies.find(x => norm(x.country) === norm(c.name) || norm(x.name) === norm(c.name));
+  if(cur){
+    let info = `<strong>${esc(c.name)}</strong> menggunakan mata uang <strong>${esc(cur.name)}</strong> (${esc(cur.symbol||"")})`;
+    if(cur.value !== undefined) info += `<br>Nilai saat ini: <strong>${fmtCurrency(cur.value)}</strong>`;
+    if(cur.changePercent !== undefined) info += `<br>Perubahan: <strong>${cur.changePercent > 0 ? "📈" : "📉"} ${fmtNumber(cur.changePercent)}%</strong>`;
+    if(cur.updatedAt) info += `<br><span class="hint">Update terakhir: ${fmtDateTime(cur.updatedAt)}</span>`;
+    return info;
+  }
+  return NOT_FOUND;
+}
+
+async function handleCurrencyStrongest(){
+  const currencies = await loadCurrencies();
+  if(!currencies.length) return NOT_FOUND;
+  
+  // Cari mata uang dengan nilai tertinggi
+  const valid = currencies.filter(c => c.value !== undefined && c.value !== null);
+  if(!valid.length) return "Belum ada data nilai mata uang.";
+  
+  valid.sort((a,b) => b.value - a.value);
+  const top = valid[0];
+  
+  let info = `🏆 Mata uang dengan nilai tukar tertinggi di UFN:<br><br>`;
+  info += `<strong>${esc(top.name)}</strong> (${esc(top.symbol||"")})`;
+  info += `<br>Negara: <strong>${esc(top.country||"Tidak diketahui")}</strong>`;
+  info += `<br>Nilai: <strong>${fmtCurrency(top.value)}</strong>`;
+  if(top.changePercent !== undefined) info += `<br>Perubahan: <strong>${top.changePercent > 0 ? "📈" : "📉"} ${fmtNumber(top.changePercent)}%</strong>`;
+  if(top.updatedAt) info += `<br><span class="hint">Update: ${fmtDateTime(top.updatedAt)}</span>`;
+  return info;
+}
+
+async function handlePopulation(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  return `Populasi <strong>${esc(c.name)}</strong> tercatat sekitar <strong>${fmtNumber(c.population)}</strong> jiwa.`;
+}
+
+async function handlePopulationMax(){
+  const countries = await loadCountries();
+  const withPop = countries.filter(c=>c.population!==undefined && c.population!==null);
+  if(!withPop.length) return "Belum ada data populasi negara.";
+  withPop.sort((a,b)=>b.population - a.population);
+  const top = withPop[0];
+  return `👥 Negara dengan populasi terbesar di UFN adalah <strong>${esc(top.name)}</strong>, dengan sekitar <strong>${fmtNumber(top.population)}</strong> jiwa.`;
+}
+
+// --- NEWS HANDLERS ---
+
+async function handleLatestNews(){
+  const newsItems = await loadNews(5);
+  if(!newsItems.length) return NOT_FOUND;
+  const rows = newsItems.map(n => {
+    const likes = n.likes || 0;
+    return `<li><strong>${esc(n.title||"Tanpa judul")}</strong>${n.author ? ` <span class="hint">· ${esc(n.author)}</span>` : ''}${n.category ? ` <span class="hint">[${esc(n.category)}]</span>` : ''}<br><span class="hint">${fmtDate(n.createdAt)} · ${fmtNumber(likes)} suka</span></li>`;
+  }).join("");
+  return `📰 Berita terbaru di jaringan UFN:<ul>${rows}</ul>`;
+}
+
+async function handleSummaryNews(text){
+  const newsItems = await loadNews(10);
+  if(!newsItems.length) return NOT_FOUND;
+  const n = findNewsInText(text, newsItems) || newsItems[0];
+  const ringkasan = n.excrept || n.content || (n.content ? truncate(n.content, 300) : null);
+  if(!ringkasan) return NOT_FOUND;
+  let info = `📝 Ringkasan berita "<strong>${esc(n.title||"")}</strong>"`;
+  if(n.author) info += ` oleh ${esc(n.author)}`;
+  info += `:<br><br>${esc(ringkasan)}`;
+  if(n.createdAt) info += `<br><span class="hint">${fmtDateTime(n.createdAt)}</span>`;
+  if(n.likes !== undefined) info += ` · ${fmtNumber(n.likes)} suka`;
+  return info;
+}
+
+async function handleNewsCategory(){
+  const newsItems = await loadNews(30);
+  const categories = {};
+  for(const n of newsItems){
+    if(n.category){
+      categories[n.category] = (categories[n.category] || 0) + 1;
+    }
+  }
+  if(!Object.keys(categories).length) return "Belum ada data kategori berita.";
+  const list = Object.entries(categories)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([cat, count]) => `<li><strong>${esc(cat)}</strong> — ${count} berita</li>`)
+    .join("");
+  return `📂 Kategori berita di UFN:<ul>${list}</ul>`;
+}
+
+async function handleNewsAuthor(text){
+  const newsItems = await loadNews(30);
+  if(!newsItems.length) return NOT_FOUND;
+  
+  const t = norm(text);
+  let items = newsItems.filter(n => n.author && t.includes(norm(n.author)));
+  if(!items.length) {
+    const authors = {};
+    for(const n of newsItems){
+      if(n.author) authors[norm(n.author)] = n.author;
+    }
+    for(const [key, val] of Object.entries(authors)){
+      if(t.includes(key)){
+        items = newsItems.filter(n => norm(n.author) === key);
+        break;
+      }
+    }
+  }
+  if(!items.length) return "Tidak ditemukan berita dari penulis tersebut.";
+  
+  const author = items[0].author;
+  const rows = items.slice(0,5).map(n => 
+    `<li><strong>${esc(n.title||"")}</strong>${n.category ? ` [${esc(n.category)}]` : ''}<br><span class="hint">${fmtDate(n.createdAt)}</span></li>`
+  ).join("");
+  return `✍️ Berita dari <strong>${esc(author)}</strong>:<ul>${rows}</ul>${items.length > 5 ? `<span class="hint">+${items.length-5} berita lainnya</span>` : ''}`;
+}
+
+async function handleNewsImage(text){
+  const newsItems = await loadNews(10);
+  if(!newsItems.length) return NOT_FOUND;
+  const n = findNewsInText(text, newsItems) || newsItems[0];
+  if(!n.image) return `Berita "<strong>${esc(n.title||"")}</strong>" tidak memiliki gambar.`;
+  return `🖼️ Gambar untuk berita "<strong>${esc(n.title||"")}</strong>":<br><br><a href="${esc(n.image)}" target="_blank" style="color:var(--gold);">🔗 Lihat gambar</a><br><span class="hint">${esc(n.image)}</span>`;
+}
+
+async function handleTopReaction(){
+  const newsItems = await loadNews(30);
+  if(!newsItems.length) return NOT_FOUND;
+  const reactions = await loadReactions();
+  
+  const reactionMap = {};
+  for(const n of newsItems){
+    let count = n.likes || 0;
+    for(const r of reactions){
+      if(r.userReactions && r.userReactions[n.id]) count += r.userReactions[n.id];
+      if(r.counts && r.counts.like) count += r.counts.like;
+    }
+    reactionMap[n.id] = count;
+  }
+  
+  const sorted = [...newsItems].sort((a,b) => (reactionMap[b.id]||0) - (reactionMap[a.id]||0));
+  const top = sorted[0];
+  if(!top || (reactionMap[top.id]||0) === 0) return "Belum ada data reaksi.";
+  
+  return `🏆 Berita dengan reaksi terbanyak adalah "<strong>${esc(top.title)}</strong>" dengan <strong>${fmtNumber(reactionMap[top.id])}</strong> reaksi.`;
+}
+
+async function handleComments(text){
+  const newsItems = await loadNews(20);
+  if(!newsItems.length) return NOT_FOUND;
+  const t = norm(text);
+  let n = findNewsInText(text, newsItems);
+  if(!n) n = newsItems.find(x => t.includes(norm(x.title)));
+  if(!n) return NOT_FOUND;
+  
+  const comments = await loadComments();
+  const filtered = comments.filter(c => c.newsId === n.id);
+  
+  if(!filtered.length) return `Belum ada komentar pada berita "<strong>${esc(n.title)}</strong>".`;
+  
+  const rows = filtered.slice(0,10).map(c => {
+    let info = `<li><strong>${esc(c.name||c.author||"Anonim")}</strong>: ${esc(c.text||"")}`;
+    if(c.parentId) info += ` <span class="hint">(balasan ke komentar)</span>`;
+    info += `<br><span class="hint">${fmtDateTime(c.createdAt)}</span>`;
+    if(c.likedBy && c.likedBy.length) info += ` · ❤️ ${c.likedBy.length}`;
+    return info + `</li>`;
+  }).join("");
+  return `💬 Komentar pada berita "<strong>${esc(n.title)}</strong>":<ul>${rows}</ul>${filtered.length > 10 ? `<span class="hint">+${filtered.length-10} komentar lainnya</span>` : ''}`;
+}
+
+async function handlePlaces(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  const places = await loadPlaces();
+  
+  if(!places.length) return "Belum ada data tempat wisata.";
+  
+  let filtered = places;
+  if(c){
+    filtered = places.filter(p => norm(p.name) === norm(c.name) || norm(p.ownerId) === norm(c.id));
+  }
+  
+  if(!filtered.length){
+    const t = norm(text);
+    filtered = places.filter(p => t.includes(norm(p.name)) || (p.ownerId && t.includes(norm(p.ownerId))));
+  }
+  
+  if(!filtered.length) filtered = places.slice(0,8);
+  
+  const items = filtered.slice(0,8).map(p => {
+    const typeLabel = p.type === "negara" ? "🏛️ Negara" : p.type === "provinsi" ? "🏙️ Provinsi" : "📍";
+    return `<li><strong>${esc(p.name)}</strong> ${typeLabel}${p.ownerId ? ` · ID: ${esc(p.ownerId)}` : ''}${p.x !== undefined && p.y !== undefined ? `<br><span class="hint">📍 ${fmtNumber(p.x)}, ${fmtNumber(p.y)}</span>` : ''}${p.createdAt ? `<br><span class="hint">${fmtDate(p.createdAt)}</span>` : ''}</li>`;
+  }).join("");
+  return `📍 Tempat menarik di UFN:<ul>${items}</ul>`;
+}
+
+async function handleCompare(text){
+  const countries = await loadCountries();
+  const found = findAllCountriesInText(text, countries);
+  if(found.length < 2) return "Sebutkan dua negara yang ingin dibandingkan.";
+  const [a,b] = found;
+  const rows = [
+    ["Nama", esc(a.name||"-"), esc(b.name||"-")],
+    ["Deskripsi", esc((a.description||"-").slice(0,50)+(a.description?.length>50?"…":"")), esc((b.description||"-").slice(0,50)+(b.description?.length>50?"…":""))],
+  ].map(([label, va, vb]) => `<tr><td>${label}</td><td>${va}</td><td>${vb}</td></tr>`).join("");
+  return `📊 Perbandingan <strong>${esc(a.name)}</strong> vs <strong>${esc(b.name)}</strong>:<table><tr><th></th><th>${esc(a.name)}</th><th>${esc(b.name)}</th></tr>${rows}</table>`;
+}
+
+// --- GENERAL COUNTRY ---
+
+async function handleGeneralCountry(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  let info = `<strong>🏛️ ${esc(c.name)}</strong>`;
+  if(c.description) info += `<br><br>${esc(c.description)}`;
+  if(c.createdAt) info += `<br><br><span class="hint">Bergabung: ${fmtDate(c.createdAt)}</span>`;
+  return info;
+}
+
+/* ============================================================
+   SMALL TALK HANDLERS
+   ============================================================ */
+
+const HELP_LIST = `
+  <li><strong>🏛️ Negara & Info</strong> — "Daftar negara UFN" / "Informasi tentang [negara]"</li>
+  <li><strong>💰 Mata uang</strong> — "Mata uang terkuat" / "Mata uang [negara]"</li>
+  <li><strong>👥 Populasi</strong> — "Populasi terbesar" / "Populasi [negara]"</li>
+  <li><strong>📰 Berita</strong> — "Berita terbaru" / "Ringkas berita" / "Berita dari [penulis]"</li>
+  <li><strong>💬 Komentar & Reaksi</strong> — "Komentar pada berita" / "Reaksi terbanyak"</li>
+  <li><strong>📍 Tempat</strong> — "Tempat wisata" / "Tempat di [negara]"</li>
+  <li><strong>📊 Perbandingan</strong> — "Bandingkan [negaraA] dan [negaraB]"</li>`;
+
+const JOKES = [
+  "Kenapa UFN tidak pernah ribut? Karena semua negara sepakat damai... dan kalau tidak, ada sanksi! 😄",
+  "Apa persamaan UFN dan koper? Sama-sama tempat menyimpan barang berharga! 😄",
+  "Kenapa berita UFN selalu menarik? Karena setiap hari ada cerita baru! 📰",
+  "Apa kata mata uang UFN? 'Nilai saya fluktuatif, tapi hati saya stabil!' 💰",
+  "Kenapa negara di UFN suka bekerja sama? Karena lebih baik berkolaborasi daripada berkonflik! 🤝"
+];
+
+function handleGreeting(){
+  return `Halo! 👋 Senang bertemu Anda. Saya UFN AI Assistant, siap membantu seputar data negara dan berita UFN.<br><br>💡 Ketik "bantuan" untuk melihat daftar perintah.`;
+}
+
+function handleHelp(){
+  return `🤖 Saya bisa membantu dengan:<ul>${HELP_LIST}</ul><span class="hint">Anda juga bisa mengobrol santai dengan saya!</span>`;
+}
+
+function handleThanks(){
+  return ["Sama-sama! Senang bisa membantu. 😊", "Dengan senang hati! Ada lagi yang ingin ditanyakan? 🤗"][Math.floor(Math.random()*2)];
+}
+
+function handleBye(){
+  return ["Sampai jumpa! 👋 Kembali lagi kapan saja jika butuh informasi UFN.", "Dadah! 🌺 Saya di sini kalau Anda butuh bantuan lagi."][Math.floor(Math.random()*2)];
+}
+
+function handleHowAreYou(){
+  return ["Saya baik, terima kasih! 😊 Dan Anda?", "Baik-baik saja! Siap membantu Anda. 💪"][Math.floor(Math.random()*2)];
+}
+
+function handleColor(){
+  return `Warna favorit saya adalah emas 🟡! Karena melambangkan kejayaan dan persatuan UFN. 🎨`;
+}
+
+function handleFood(){
+  return "Saya suka 'menyantap' data UFN! 📊 Tapi makanan favorit saya secara virtual adalah pizza! 🍕";
+}
+
+function handleLove(){
+  return "Cinta itu indah, seperti kerjasama antar negara di UFN! 💕";
+}
+
+function handleJoke(){
+  return JOKES[Math.floor(Math.random()*JOKES.length)];
+}
+
+function handleAge(){
+  return `Saya lahir dari data UFN! 🌟 Selalu up-to-date dengan informasi terbaru.`;
+}
+
+function handleName(){
+  return `Nama saya UFN AI Assistant! 🌍 Panggil saja UFN. Ada yang bisa saya bantu? 🤖`;
+}
+
+function handleOrigin(){
+  return `Saya berasal dari data resmi UFN! 🌏 Saya ada di mana saja Anda membutuhkan saya. 💻`;
+}
+
+function handleMiss(){
+  return ["Aku juga rindu! Tapi saya selalu di sini untuk Anda. 💙", "Rindu itu manis, seperti kerjasama UFN! 🤗"][Math.floor(Math.random()*2)];
+}
+
+/* ============================================================
+   ROUTER UTAMA
+   ============================================================ */
+async function generateAnswer(rawText){
+  const intent = detectIntent(rawText);
+
+  switch(intent){
+    case "smalltalk_greeting": return handleGreeting();
+    case "smalltalk_help": return handleHelp();
+    case "smalltalk_thanks": return handleThanks();
+    case "smalltalk_bye": return handleBye();
+    case "smalltalk_howareyou": return handleHowAreYou();
+    case "smalltalk_color": return handleColor();
+    case "smalltalk_food": return handleFood();
+    case "smalltalk_love": return handleLove();
+    case "smalltalk_joke": return handleJoke();
+    case "smalltalk_age": return handleAge();
+    case "smalltalk_name": return handleName();
+    case "smalltalk_origin": return handleOrigin();
+    case "smalltalk_miss": return handleMiss();
+  }
+
+  if(!firebaseReady) return `⚠️ Database UFN belum terhubung. Pastikan Firebase dikonfigurasi dengan benar.<br><br>${handleHelp()}`;
+  
+  try{
+    switch(intent){
+      case "list_countries": return await handleListCountries();
+      case "country_profile": return await handleCountryProfile(rawText);
+      case "capital": return await handleCapital(rawText);
+      case "currency": return await handleCurrency(rawText);
+      case "currency_strongest": return await handleCurrencyStrongest();
+      case "population": return await handlePopulation(rawText);
+      case "population_max": return await handlePopulationMax();
+      case "latest_news": return await handleLatestNews();
+      case "summary_news": return await handleSummaryNews(rawText);
+      case "news_category": return await handleNewsCategory();
+      case "news_author": return await handleNewsAuthor(rawText);
+      case "news_image": return await handleNewsImage(rawText);
+      case "top_reaction": return await handleTopReaction();
+      case "comments": return await handleComments(rawText);
+      case "places": return await handlePlaces(rawText);
+      case "compare": return await handleCompare(rawText);
+      default: return await handleGeneralCountry(rawText);
+    }
+  }catch(err){
+    console.error("Kesalahan:", err);
+    return FETCH_ERROR;
+  }
+}
+
+/* ============================================================
+   UI — CHAT ENGINE
+   ============================================================ */
+const chatEl = document.getElementById("chat");
+const inputEl = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+const clearBtn = document.getElementById("clearChat");
+const themeToggle = document.getElementById("themeToggle");
+const themeIcon = document.getElementById("themeIcon");
+const statusDot = document.getElementById("statusDot");
+const suggestBtn = document.getElementById("suggestBtn");
+const quickReplies = document.getElementById("quickReplies");
+
+const ICON_SUN = '<path d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-6.66 1.42-1.42M4.92 19.08l1.42-1.42M19.08 19.08l-1.42-1.42M4.92 4.92 6.34 6.34"/><circle cx="12" cy="12" r="5"/>';
+const ICON_MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+
+function timeNow(){
+  return new Date().toLocaleTimeString("id-ID",{ hour:"2-digit", minute:"2-digit" });
+}
+
+function appendMessage(role, html, { animate=true } = {}){
+  const row = document.createElement("div");
+  row.className = `msg-row ${role}`;
+  row.innerHTML = `
+    <div class="avatar ${role}">${role==="ai" ? "◈" : "☺"}</div>
+    <div class="msg-col">
+      <div class="bubble">${html}</div>
+      <div class="timestamp">${timeNow()}</div>
+    </div>`;
+  if(!animate) row.style.animation = "none";
+  chatEl.appendChild(row);
+  scrollToBottom();
+  return row;
+}
+
+function showTyping(){
+  const row = document.createElement("div");
+  row.className = "msg-row ai";
+  row.id = "typingRow";
+  row.innerHTML = `
+    <div class="avatar ai">◈</div>
+    <div class="msg-col">
+      <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>
+    </div>`;
+  chatEl.appendChild(row);
+  scrollToBottom();
+}
+function hideTyping(){
+  document.getElementById("typingRow")?.remove();
+}
+function scrollToBottom(){
+  requestAnimationFrame(()=>{ chatEl.scrollTop = chatEl.scrollHeight; });
+}
+
+async function handleSend(){
+  const text = inputEl.value.trim();
+  if(!text) return;
+  appendMessage("user", esc(text));
+  inputEl.value = "";
+  inputEl.style.height = "auto";
+  sendBtn.disabled = true;
+  statusDot.textContent = "● memproses";
+  showTyping();
+
+  const started = Date.now();
+  const answer = await generateAnswer(text);
+  const elapsed = Date.now() - started;
+  const minDelay = 350;
+  if(elapsed < minDelay) await new Promise(r=>setTimeout(r, minDelay - elapsed));
+
+  hideTyping();
+  appendMessage("ai", answer);
+  sendBtn.disabled = false;
+  statusDot.textContent = "● siap";
+  inputEl.focus();
+}
+
+// Quick replies
+quickReplies.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  inputEl.value = btn.dataset.q;
+  handleSend();
+});
+
+// Suggestions
+const SUGGESTIONS = [
+  "Halo! Ada yang bisa bantu?",
+  "Apa kabar hari ini?",
+  "Daftar negara UFN",
+  "Mata uang terkuat",
+  "Berita terbaru",
+  "Populasi terbesar",
+  "Ringkas berita",
+  "Tempat wisata di UFN",
+  "Komentar pada berita terbaru",
+  "Berita dengan reaksi terbanyak",
+  "Ceritakan lelucon!"
+];
+
+suggestBtn.addEventListener("click", () => {
+  const random = SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)];
+  inputEl.value = random;
+  inputEl.focus();
+  inputEl.style.height = "auto";
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+});
+
+sendBtn.addEventListener("click", handleSend);
+inputEl.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    handleSend();
+  }
+});
+inputEl.addEventListener("input", ()=>{
+  inputEl.style.height = "auto";
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+});
+
+clearBtn.addEventListener("click", ()=>{
+  chatEl.innerHTML = "";
+  showWelcome();
+});
+
+themeToggle.addEventListener("click", ()=>{
+  const html = document.documentElement;
+  const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  themeIcon.innerHTML = next === "dark" ? ICON_MOON : ICON_SUN;
+});
+
+function showWelcome(){
+  appendMessage("ai", `Selamat datang di <strong>UFN AI Assistant</strong> 👋<br><br>Saya menjawab berdasarkan data resmi UFN dan bisa diajak ngobrol santai.<br><br>📌 <strong>Ketik "bantuan"</strong> untuk melihat semua yang bisa saya lakukan!<br><br>💡 <strong>Tips:</strong> Klik tombol <strong>❓</strong> untuk saran pertanyaan acak, atau gunakan tombol cepat di bawah.<br><br><span class="hint">Coba mulai dengan "halo" atau tanyakan langsung tentang UFN.</span>`, { animate:false });
+}
+showWelcome();
+
+if(!firebaseReady){
+  appendMessage("ai", `⚠️ Konfigurasi Firebase belum terhubung. Periksa koneksi internet Anda.<br><br>${handleHelp()}`, { animate:false });
+}
+</script>
+</body>
+</html>
