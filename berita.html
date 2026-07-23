@@ -445,6 +445,51 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
   margin-left:125px;
   margin-top:2px;
 }
+.popup{
+    position:fixed;
+    inset:0;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    background:rgba(0,0,0,.8);
+    backdrop-filter:blur(5px);
+    z-index:9999;
+}
+
+.popup.show{
+    display:flex;
+}
+
+.video-box{
+    position:relative;
+    width:min(90vw,800px);
+    aspect-ratio:16/9;
+    background:#000;
+    border-radius:15px;
+    overflow:hidden;
+}
+
+.video-box video{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+}
+
+.close{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:35px;
+    height:35px;
+    border:none;
+    border-radius:50%;
+    background:rgba(255,255,255,.2);
+    color:#fff;
+    font-size:20px;
+    cursor:pointer;
+    z-index:1;
+}
 </style>
 </head>
 <body>
@@ -472,11 +517,14 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
 
       <button class="icon-btn hamburger" id="hamburgerBtn" title="Menu"><i class="fa-solid fa-bars"></i></button>
       
+<button id="openBtn" class="btn-primary">Tutorial</button>
+
     </div>
     
   </div>
   <div class="breaking-bar">
     <div class="breaking-tag"><i class="fa-solid fa-tower-broadcast"></i> Breaking</div>
+    
     <div class="breaking-track"><ul id="breakingList"></ul></div>
   </div>
   <div class="online-counter">
@@ -572,10 +620,16 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
         <div class="preview-img" id="imgPreview">Pratinjau gambar akan muncul di sini</div>
       </div>
       
-     <div onclick="window.location.href='https://imgbb.com/'" class="btn-primary">
-       Convert URL
-     </div>
-      
+
+<div class="popup" id="popup">
+    <button class="close" id="closeVideo">✕</button>
+
+    <div class="video-box">
+        <video id="video" controls>
+            <source src="video.mp4" type="video/mp4">
+        </video>
+    </div>
+</div>
 
       <div class="field">
         <label>Nama Penulis</label>
@@ -609,6 +663,39 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
 
   
 <script type="module">
+
+
+window.addEventListener("load", () => {
+    const openBtn = document.getElementById("openVideo");
+    const closeBtn = document.getElementById("closeVideo");
+    const popup = document.getElementById("popup");
+    const video = document.getElementById("video");
+
+    if (!openBtn || !closeBtn || !popup || !video) {
+        console.error("Ada ID yang tidak ditemukan.");
+        return;
+    }
+
+    openBtn.addEventListener("click", () => {
+        popup.style.display = "flex";
+        video.currentTime = 0;
+        video.play().catch(() => {});
+    });
+
+    function tutup() {
+        video.pause();
+        video.currentTime = 0;
+        popup.style.display = "none";
+    }
+
+    closeBtn.addEventListener("click", tutup);
+
+    popup.addEventListener("click", (e) => {
+        if (e.target === popup) {
+            tutup();
+        }
+    });
+});
 /* ================================================================
    KONFIGURASI FIREBASE
    Ganti seluruh nilai di bawah ini dengan konfigurasi proyek
