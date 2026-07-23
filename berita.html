@@ -612,7 +612,7 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-box">
     <h3><span id="modalTitle">Tambah Berita</span><button class="close-x" id="modalClose"><i class="fa-solid fa-xmark"></i></button></h3>
-    <form id="newsForm">
+    <form id="newsForm" novalidate>
       <div class="field">
         <label>Judul Berita</label>
         <input type="text" id="fTitle" required placeholder="Judul berita yang menarik">
@@ -1418,7 +1418,19 @@ function updateImgPreview() {
 
 document.getElementById('newsForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+  
+  // Validasi tambahan: pastikan semua field terisi (seharusnya sudah oleh required attribute)
+  const form = document.getElementById('newsForm');
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+  
+  if (!firebaseReady) {
+    showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+    return;
+  }
+  
   const payload = {
     title: document.getElementById('fTitle').value.trim(),
     image: document.getElementById('fImage').value.trim(),
@@ -1427,18 +1439,25 @@ document.getElementById('newsForm').addEventListener('submit', async (e) => {
     excerpt: document.getElementById('fExcerpt').value.trim(),
     content: document.getElementById('fContent').value.trim(),
   };
+  
   try {
     if (editingNewsId) {
       await db.collection('news').doc(editingNewsId).update(payload);
       showToast('Berita berhasil diperbarui', 'fa-check');
     } else {
       await db.collection('news').add({
-        ...payload, likes: 0, likedBy: [], createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        ...payload, 
+        likes: 0, 
+        likedBy: [], 
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       showToast('Berita berhasil dipublikasikan', 'fa-check');
     }
     closeModal();
-  } catch (err) { console.error(err); showToast('Gagal menyimpan berita', 'fa-triangle-exclamation'); }
+  } catch (err) { 
+    console.error(err); 
+    showToast('Gagal menyimpan berita', 'fa-triangle-exclamation'); 
+  }
 });
 
 /* ================================================================
