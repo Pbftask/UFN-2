@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>My Country · UFN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* ============================================================
+   UFN · My Country — Design tokens
+   ============================================================ */
+:root{
+  --bg-0:#05070d;
+  --bg-1:#080c18;
+  --bg-2:#0d1526;
+  --grid-line: rgba(120,170,255,0.05);
+
+  --glass: rgba(255,255,255,0.045);
+  --glass-hi: rgba(255,255,255,0.08);
+  --glass-border: rgba(140,180,255,0.14);
+  --glass-border-hi: rgba(140,190,255,0.28);
+
+  --cyan:#00e6ff;
+  --cyan-dim: rgba(0,230,255,0.35);
+  --violet:#8b6bff;
+  --violet-dim: rgba(139,107,255,0.35);
+  --green:#1dffb0;
+  --amber:#ffb648;
+  --red:#ff5170;
+
+  --text-0:#eef3ff;
+  --text-1:#aab4cc;
+  --text-2:#6b7590;
+
+  --font-display:'Orbitron', sans-serif;
+  --font-body:'Rajdhani', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --radius-sm: 9px;
+
+  --ease: cubic-bezier(.22,1,.36,1);
+}
+
+*{ box-sizing: border-box; margin:0; padding:0; }
+html,body{ height:100%; }
+body{
+  font-family: var(--font-body);
+  background: var(--bg-0);
+  color: var(--text-0);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ambient backdrop: layered radial glow + drifting hex grid */
+.backdrop{
+  position:fixed; inset:0; z-index:-2;
+  background:
+    radial-gradient(1100px 700px at 12% -10%, rgba(0,230,255,0.10), transparent 60%),
+    radial-gradient(900px 650px at 110% 10%, rgba(139,107,255,0.12), transparent 55%),
+    radial-gradient(1200px 800px at 50% 120%, rgba(29,255,176,0.06), transparent 60%),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1) 40%, var(--bg-2));
+}
+.backdrop::before{
+  content:'';
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(1200px 800px at 50% 20%, black, transparent 75%);
+  animation: gridDrift 60s linear infinite;
+}
+@keyframes gridDrift{
+  from{ background-position: 0 0, 0 0; }
+  to{ background-position: 420px 0, 0 420px; }
+}
+
+::selection{ background: var(--cyan-dim); color:#00131a; }
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-thumb{ background: var(--glass-border-hi); border-radius:8px; }
+
+/* focus visibility */
+button:focus-visible, input:focus-visible, textarea:focus-visible{
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: .01ms !important; animation-iteration-count:1 !important; transition-duration: .01ms !important; }
+}
+
+/* ============================================================
+   Layout shells
+   ============================================================ */
+#app-root{ min-height:100vh; display:flex; flex-direction:column; }
+.shell{
+  width:100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px 16px 100px;
+}
+.hidden{ display:none !important; }
+
+/* ============================================================
+   Glass primitives
+   ============================================================ */
+.glass{
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+  position:relative;
+}
+.card{
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: transform .35s var(--ease), border-color .35s var(--ease), box-shadow .35s var(--ease);
+  animation: fadeUp .5s var(--ease) both;
+}
+.card:hover{
+  border-color: var(--glass-border-hi);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(140,190,255,0.06), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+@keyframes fadeUp{
+  from{ opacity:0; transform: translateY(14px); }
+  to{ opacity:1; transform: translateY(0); }
+}
+
+.card-title{
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-1);
+  display:flex; align-items:center; gap:9px;
+  margin-bottom: 16px;
+}
+.card-title i{ color: var(--cyan); font-size: 13px; }
+.card-title .rule{ flex:1; height:1px; background: linear-gradient(90deg, var(--glass-border-hi), transparent); }
+
+/* ============================================================
+   Login screen
+   ============================================================ */
+#login-screen{
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  padding: 24px;
+}
+.login-card{
+  width:100%; max-width: 380px;
+  padding: 34px 28px;
+  text-align:center;
+  animation: fadeUp .6s var(--ease) both;
+}
+.login-seal{
+  width:74px; height:74px; margin: 0 auto 18px;
+  position:relative; display:flex; align-items:center; justify-content:center;
+}
+.login-seal::before{
+  content:'';
+  position:absolute; inset:0;
+  background: conic-gradient(from 0deg, var(--cyan), var(--violet), var(--green), var(--cyan));
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  animation: spin 6s linear infinite;
+  opacity:.85;
+}
+.login-seal::after{
+  content:'';
+  position:absolute; inset:3px;
+  background: var(--bg-1);
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+}
+.login-seal i{ position:relative; z-index:1; color: var(--cyan); font-size: 24px; text-shadow: 0 0 16px var(--cyan-dim); }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+.login-card h1{
+  font-family: var(--font-display);
+  font-size: 21px;
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+}
+.login-card .tag{
+  color: var(--text-2);
+  font-size: 13px;
+  letter-spacing: 1px;
+  margin-bottom: 26px;
+}
+.field{ text-align:left; margin-bottom: 14px; }
+.field label{
+  display:block; font-size: 12px; letter-spacing: 1.5px; text-transform:uppercase;
+  color: var(--text-2); margin-bottom: 6px; font-weight:600;
+}
+input, textarea{
+  width:100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  color: var(--text-0);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight:500;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  transition: border-color .25s var(--ease), background .25s var(--ease), box-shadow .25s var(--ease);
+}
+input::placeholder, textarea::placeholder{ color: var(--text-2); }
+input:focus, textarea:focus{
+  border-color: var(--cyan-dim);
+  background: rgba(0,230,255,0.04);
+  box-shadow: 0 0 0 3px rgba(0,230,255,0.08);
+}
+input[readonly]{ color: var(--text-1); background: rgba(255,255,255,0.015); }
+textarea{ resize: vertical; min-height: 92px; line-height:1.5; }
+.field-error{ color: var(--red); font-size: 12px; margin-top: 5px; min-height:14px; letter-spacing:.3px; }
+
+.btn{
+  position:relative; overflow:hidden;
+  font-family: var(--font-body); font-weight:700; letter-spacing: 1px;
+  font-size: 14px; text-transform: uppercase;
+  border:none; cursor:pointer;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  transition: transform .2s var(--ease), box-shadow .2s var(--ease), filter .2s var(--ease);
+}
+.btn:active{ transform: scale(.97); }
+.btn-primary{
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  color: #04101a;
+  box-shadow: 0 6px 24px rgba(0,230,255,0.18);
+}
+.btn-primary:hover{ filter: brightness(1.08); box-shadow: 0 8px 30px rgba(0,230,255,0.28); }
+.btn-ghost{
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-0);
+}
+.btn-ghost:hover{ border-color: var(--glass-border-hi); background: rgba(255,255,255,0.06); }
+.btn-block{ width:100%; }
+.btn-sm{ padding: 8px 14px; font-size: 12px; }
+.btn:disabled{ opacity:.5; cursor:not-allowed; filter:none; }
+
+.ripple{
+  position:absolute; border-radius:50%;
+  background: rgba(255,255,255,0.55);
+  transform: scale(0); animation: rippleAnim .6s var(--ease);
+  pointer-events:none;
+}
+@keyframes rippleAnim{ to{ transform: scale(2.6); opacity:0; } }
+
+.auth-toggle{
+  margin-top: 18px; font-size: 13px; color: var(--text-1);
+}
+.auth-toggle a{ color: var(--cyan); cursor:pointer; font-weight:600; text-decoration:none; }
+.auth-toggle a:hover{ text-decoration:underline; }
+.auth-error{
+  color: var(--red); font-size: 13px; margin-top: 10px; min-height: 16px;
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 4px 2px 20px;
+}
+.brand{
+  font-family: var(--font-display);
+  font-size: 13px; letter-spacing: 3px; color: var(--text-2);
+  display:flex; align-items:center; gap:8px;
+}
+.brand i{ color: var(--cyan); }
+.icon-btn{
+  width: 38px; height:38px; border-radius: 50%;
+  background: var(--glass); border:1px solid var(--glass-border); color: var(--text-1);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  transition: all .25s var(--ease);
+}
+.icon-btn:hover{ color: var(--red); border-color: rgba(255,81,112,0.4); background: rgba(255,81,112,0.08); }
+
+.hero{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  padding: 6px 0 24px;
+  animation: fadeUp .5s var(--ease) both;
+}
+.flag-frame{
+  width: 118px; height: 118px; position:relative;
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom: 16px;
+}
+.flag-frame::before{
+  content:'';
+  position:absolute; inset:0;
+  background: conic-gradient(from 0deg, var(--cyan), var(--violet), var(--green), var(--cyan));
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  animation: spin 10s linear infinite;
+}
+.flag-frame .flag-inner{
+  position:absolute; inset:4px;
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  background: var(--bg-2);
+  overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.flag-inner img{ width:100%; height:100%; object-fit:cover; }
+.flag-inner i{ color: var(--text-2); font-size: 30px; }
+
+.hero h1{
+  font-family: var(--font-display);
+  font-size: 26px; font-weight:800; letter-spacing: 1px;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, #fff, var(--text-1));
+  -webkit-background-clip: text; background-clip:text; color:transparent;
+}
+.hero .subtitle{ color: var(--text-2); font-size: 14px; letter-spacing: 1px; }
+
+/* ============================================================
+   Flag card
+   ============================================================ */
+.flag-row{ display:flex; align-items:center; gap:18px; }
+.flag-preview{
+  width: 88px; height: 88px; flex-shrink:0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.02);
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; position:relative;
+}
+.flag-preview img{ width:100%; height:100%; object-fit:cover; }
+.flag-preview i{ color: var(--text-2); font-size: 26px; }
+.flag-actions{ flex:1; }
+.upload-progress{
+  margin-top: 10px; height: 5px; border-radius: 4px; background: rgba(255,255,255,0.06); overflow:hidden;
+  display:none;
+}
+.upload-progress .bar{
+  height:100%; width:0%; background: linear-gradient(90deg, var(--cyan), var(--violet));
+  transition: width .2s var(--ease);
+}
+.upload-status{ font-size: 12px; color: var(--text-2); margin-top: 8px; min-height: 14px; }
+.upload-status.err{ color: var(--red); }
+.upload-status.ok{ color: var(--green); }
+
+/* ============================================================
+   Info grid / population / description
+   ============================================================ */
+.info-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 4px; }
+.info-grid .field.full{ grid-column: 1 / -1; }
+
+.pop-value{
+  font-family: var(--font-mono);
+  font-size: 30px; font-weight:600; letter-spacing: .5px;
+  color: var(--text-0);
+  display:flex; align-items:baseline; gap:8px;
+}
+.pop-value small{ font-family: var(--font-body); font-size: 12px; color: var(--text-2); font-weight:600; letter-spacing:1px; }
+.pop-sub{ font-size:12px; color: var(--text-2); margin-top:6px; display:flex; align-items:center; gap:6px; }
+.pop-sub i{ color: var(--green); font-size:10px; }
+
+.sync-panel{
+  margin-top: 14px; padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(139,107,255,0.06);
+  border: 1px dashed var(--violet-dim);
+  font-size: 13px; line-height:1.5; color: var(--text-1);
+}
+.sync-panel .lbl{
+  font-size: 10px; letter-spacing: 1.5px; text-transform:uppercase; color: var(--violet);
+  font-weight:700; margin-bottom: 5px; display:flex; align-items:center; gap:6px;
+}
+
+.actions-row{ display:flex; justify-content:flex-end; gap:10px; margin-top: 14px; }
+
+/* ============================================================
+   Weather grid
+   ============================================================ */
+.weather-grid{
+  display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+}
+.w-cell{
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 10px;
+  text-align:center;
+  transition: border-color .3s var(--ease), transform .3s var(--ease);
+}
+.w-cell:hover{ border-color: var(--cyan-dim); transform: translateY(-2px); }
+.w-cell i{ color: var(--cyan); font-size: 17px; margin-bottom: 7px; display:block; }
+.w-cell .val{ font-family: var(--font-mono); font-size: 15px; font-weight:600; color: var(--text-0); }
+.w-cell .lbl{ font-size: 10px; letter-spacing: .8px; text-transform:uppercase; color: var(--text-2); margin-top:3px; }
+.weather-hero{
+  display:flex; align-items:center; justify-content:center; gap: 16px;
+  padding: 8px 0 18px;
+}
+.weather-hero i{ font-size: 44px; color: var(--cyan); text-shadow: 0 0 24px var(--cyan-dim); }
+.weather-hero .temp{ font-family: var(--font-mono); font-size: 42px; font-weight:600; }
+.weather-hero .cond{ font-size: 13px; color: var(--text-2); letter-spacing: 1px; text-transform:capitalize; }
+.weather-updated{ text-align:center; font-size: 11px; color: var(--text-2); margin-top:4px; letter-spacing:.5px; }
+.empty-state{ text-align:center; padding: 22px 10px; color: var(--text-2); font-size: 13px; }
+.empty-state i{ font-size: 26px; display:block; margin-bottom: 10px; color: var(--text-2); opacity:.6; }
+
+/* ============================================================
+   Skeleton loading
+   ============================================================ */
+.skeleton{
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.07) 37%, rgba(255,255,255,0.03) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.6s ease infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer{
+  0%{ background-position: 100% 0; } 100%{ background-position: -100% 0; }
+}
+.sk-line{ height: 14px; margin-bottom: 10px; width: 100%; }
+.sk-line.w60{ width:60%; } .sk-line.w40{ width:40%; }
+.sk-circle{ width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 16px; }
+
+/* ============================================================
+   Snackbar / toast
+   ============================================================ */
+#snackbar{
+  position: fixed; left:50%; bottom: 26px; transform: translate(-50%, 20px);
+  background: rgba(15,22,38,0.92);
+  border: 1px solid var(--glass-border-hi);
+  backdrop-filter: blur(14px);
+  color: var(--text-0);
+  padding: 12px 20px;
+  border-radius: 999px;
+  font-size: 13px; font-weight:600; letter-spacing: .3px;
+  display:flex; align-items:center; gap:10px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  opacity:0; pointer-events:none;
+  transition: all .4s var(--ease);
+  z-index: 999; max-width: 90vw;
+}
+#snackbar.show{ opacity:1; transform: translate(-50%, 0); }
+#snackbar i{ color: var(--green); }
+#snackbar.err i{ color: var(--red); }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 480px){
+  .info-grid{ grid-template-columns: 1fr; }
+  .weather-grid{ grid-template-columns: repeat(2, 1fr); }
+  .hero h1{ font-size: 22px; }
+  .weather-hero .temp{ font-size: 34px; }
+}
+</style>
+</head>
+<body>
+
+<div class="backdrop"></div>
+
+<div id="app-root">
+
+  <!-- ============================= LOGIN SCREEN ============================= -->
+  <div id="login-screen">
+    <div class="login-card glass">
+      <div class="login-seal"><i class="fa-solid fa-globe"></i></div>
+      <h1>UFN ACCESS</h1>
+      <div class="tag">United Fictive Nations · Sign in to manage your nation</div>
+
+      <form id="auth-form" novalidate>
+        <div class="field">
+          <label for="auth-email">Email</label>
+          <input type="email" id="auth-email" placeholder="you@nation.gov" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" required minlength="6">
+        </div>
+        <div class="auth-error" id="auth-error"></div>
+        <button type="submit" class="btn btn-primary btn-block" id="auth-submit-btn">
+          <i class="fa-solid fa-right-to-bracket"></i> <span id="auth-submit-label">Sign In</span>
+        </button>
+      </form>
+
+      <div class="auth-toggle">
+        <span id="auth-toggle-text">Don't have a nation yet?</span>
+        <a id="auth-toggle-link">Register</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================= DASHBOARD ============================= -->
+  <div id="dashboard" class="shell hidden">
+    <div class="topbar">
+      <div class="brand"><i class="fa-solid fa-satellite-dish"></i> UFN CONTROL</div>
+      <button class="icon-btn" id="logout-btn" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero" id="hero-block">
+      <div class="flag-frame">
+        <div class="flag-inner" id="hero-flag-inner"><i class="fa-solid fa-flag"></i></div>
+      </div>
+      <h1 id="hero-name">Unnamed Nation</h1>
+      <div class="subtitle">Manage your nation.</div>
+    </div>
+
+    <!-- FLAG CARD -->
+    <div class="card glass">
+      <div class="card-title"><i class="fa-solid fa-flag"></i> National Flag <span class="rule"></span></div>
+      <div class="flag-row">
+        <div class="flag-preview" id="flag-preview"><i class="fa-solid fa-image"></i></div>
+        <div class="flag-actions">
+          <button class="btn btn-ghost btn-sm" id="upload-flag-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Flag</button>
+          <input type="file" id="flag-file-input" accept="image/*" class="hidden">
+          <div class="upload-progress" id="upload-progress"><div class="bar" id="upload-bar"></div></div>
+          <div class="upload-status" id="upload-status"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COUNTRY INFO CARD -->
+    <div class="card glass">
+      <div class="card-title"><i class="fa-solid fa-landmark"></i> National Information <span class="rule"></span></div>
+      <div class="info-grid">
+        <div class="field full">
+          <label for="input-name">Country Name</label>
+          <input type="text" id="input-name" maxlength="40" placeholder="e.g. Aurelia">
+          <div class="field-error" id="err-name"></div>
+        </div>
+        <div class="field">
+          <label for="input-language">Language</label>
+          <input type="text" id="input-language" maxlength="40" placeholder="e.g. Aurelian">
+          <div class="field-error" id="err-language"></div>
+        </div>
+        <div class="field">
+          <label for="input-capital">Capital City</label>
+          <input type="text" id="input-capital" maxlength="40" placeholder="e.g. Novaris">
+          <div class="field-error" id="err-capital"></div>
+        </div>
+      </div>
+
+      <div class="sync-panel hidden" id="sync-panel">
+        <div class="lbl"><i class="fa-solid fa-satellite"></i> Community Description Sync</div>
+        <div id="sync-content">No description available.</div>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn btn-primary btn-sm" id="save-info-btn"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+      </div>
+    </div>
+
+    <!-- DESCRIPTION CARD -->
+    <div class="card glass">
+      <div class="card-title"><i class="fa-solid fa-feather-pointer"></i> Description <span class="rule"></span></div>
+      <div class="field full" style="margin-bottom:0;">
+        <textarea id="input-description" maxlength="1000" placeholder="Describe your nation's history, culture, and ambitions..."></textarea>
+      </div>
+      <div class="actions-row">
+        <button class="btn btn-primary btn-sm" id="save-description-btn"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+      </div>
+    </div>
+
+    <!-- POPULATION CARD -->
+    <div class="card glass">
+      <div class="card-title"><i class="fa-solid fa-users"></i> Population <span class="rule"></span></div>
+      <div class="pop-value"><span id="pop-number">0</span><small>CITIZENS</small></div>
+      <div class="pop-sub"><i class="fa-solid fa-circle"></i> <span id="pop-updated">Awaiting first sync</span></div>
+    </div>
+
+    <!-- WEATHER CARD -->
+    <div class="card glass">
+      <div class="card-title"><i class="fa-solid fa-cloud-bolt"></i> Weather <span class="rule"></span></div>
+      <div id="weather-content"></div>
+    </div>
+
+  </div>
+
+  <!-- ============================= SKELETON (loading) ============================= -->
+  <div id="loading-screen" class="shell hidden">
+    <div class="topbar">
+      <div class="brand"><i class="fa-solid fa-satellite-dish"></i> UFN CONTROL</div>
+    </div>
+    <div style="text-align:center; padding: 10px 0 24px;">
+      <div class="skeleton sk-circle"></div>
+      <div class="skeleton sk-line w60" style="margin:0 auto 8px;"></div>
+      <div class="skeleton sk-line w40" style="margin:0 auto;"></div>
+    </div>
+    <div class="card glass"><div class="skeleton sk-line"></div><div class="skeleton sk-line w60"></div></div>
+    <div class="card glass"><div class="skeleton sk-line"></div><div class="skeleton sk-line"></div><div class="skeleton sk-line w40"></div></div>
+    <div class="card glass"><div class="skeleton sk-line"></div><div class="skeleton sk-line w60"></div></div>
+  </div>
+
+</div>
+
+<div id="snackbar"><i class="fa-solid fa-circle-check"></i><span id="snackbar-msg">Saved successfully.</span></div>
+
+<!-- ============================= FIREBASE ============================= -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+
+// Replace with your own imgBB API key: https://api.imgbb.com/
+const IMGBB_API_KEY = "4b5b5ba36295e875f1c44a632408c8c7";
+
+const ONE_HOUR_MS = 60 * 60 * 1000;
+const POP_MIN = 10000;
+const POP_MAX = 1000000000;
+
+const CONDITION_ICONS = {
+  clear_day: "fa-sun",
+  clear_night: "fa-moon",
+  partly_cloudy: "fa-cloud-sun",
+  cloudy: "fa-cloud",
+  rain: "fa-cloud-rain",
+  storm: "fa-bolt",
+  snow: "fa-snowflake",
+  fog: "fa-smog",
+  wind: "fa-wind"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* ============================================================
+   DOM refs
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+
+const loginScreen = $("login-screen");
+const dashboard = $("dashboard");
+const loadingScreen = $("loading-screen");
+
+const authForm = $("auth-form");
+const authEmail = $("auth-email");
+const authPassword = $("auth-password");
+const authError = $("auth-error");
+const authSubmitBtn = $("auth-submit-btn");
+const authSubmitLabel = $("auth-submit-label");
+const authToggleLink = $("auth-toggle-link");
+const authToggleText = $("auth-toggle-text");
+
+let isRegisterMode = false;
+
+/* ============================================================
+   Utility: snackbar / toast
+   ============================================================ */
+let snackbarTimer = null;
+function showSnackbar(message, isError){
+  const bar = $("snackbar");
+  const msg = $("snackbar-msg");
+  const icon = bar.querySelector("i");
+  msg.textContent = message;
+  bar.classList.toggle("err", !!isError);
+  icon.className = isError ? "fa-solid fa-triangle-exclamation" : "fa-solid fa-circle-check";
+  bar.classList.add("show");
+  clearTimeout(snackbarTimer);
+  snackbarTimer = setTimeout(()=> bar.classList.remove("show"), 3200);
+}
+
+/* ============================================================
+   Utility: ripple effect on buttons
+   ============================================================ */
+document.addEventListener("click", function(e){
+  const btn = e.target.closest(".btn, .icon-btn");
+  if(!btn) return;
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const ripple = document.createElement("span");
+  ripple.className = "ripple";
+  ripple.style.width = ripple.style.height = size + "px";
+  ripple.style.left = (e.clientX - rect.left - size/2) + "px";
+  ripple.style.top = (e.clientY - rect.top - size/2) + "px";
+  btn.style.position = btn.style.position || "relative";
+  btn.style.overflow = "hidden";
+  btn.appendChild(ripple);
+  setTimeout(()=> ripple.remove(), 620);
+});
+
+/* ============================================================
+   Utility: formatting
+   ============================================================ */
+function formatPopulation(n){
+  n = Math.round(Number(n) || 0);
+  return n.toLocaleString("id-ID");
+}
+function toDateSafe(value){
+  if(!value) return null;
+  if(typeof value.toDate === "function") return value.toDate();
+  if(value instanceof Date) return value;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+function formatTimeAgo(date){
+  if(!date) return "Never";
+  const diffMs = Date.now() - date.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if(mins < 1) return "Just now";
+  if(mins < 60) return mins + "m ago";
+  const hrs = Math.floor(mins / 60);
+  if(hrs < 24) return hrs + "h ago";
+  const days = Math.floor(hrs / 24);
+  return days + "d ago";
+}
+function formatClock(date){
+  if(!date) return "--:--";
+  return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+}
+
+/* ============================================================
+   AUTH FLOW
+   ============================================================ */
+authToggleLink.addEventListener("click", () => {
+  isRegisterMode = !isRegisterMode;
+  authSubmitLabel.textContent = isRegisterMode ? "Create Nation" : "Sign In";
+  authToggleText.textContent = isRegisterMode ? "Already have a nation?" : "Don't have a nation yet?";
+  authToggleLink.textContent = isRegisterMode ? "Sign In" : "Register";
+  authError.textContent = "";
+});
+
+authForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  authError.textContent = "";
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+  if(!email || !password){ authError.textContent = "Email and password are required."; return; }
+
+  authSubmitBtn.disabled = true;
+  try{
+    if(isRegisterMode){
+      await auth.createUserWithEmailAndPassword(email, password);
+    } else {
+      await auth.signInWithEmailAndPassword(email, password);
+    }
+  } catch(err){
+    authError.textContent = mapAuthError(err);
+  } finally {
+    authSubmitBtn.disabled = false;
+  }
+});
+
+function mapAuthError(err){
+  const code = err && err.code ? err.code : "";
+  switch(code){
+    case "auth/invalid-email": return "That email address looks invalid.";
+    case "auth/user-not-found": return "No nation found for that email.";
+    case "auth/wrong-password": return "Incorrect password.";
+    case "auth/email-already-in-use": return "That email is already registered.";
+    case "auth/weak-password": return "Password should be at least 6 characters.";
+    case "auth/invalid-credential": return "Invalid email or password.";
+    default: return err && err.message ? err.message : "Authentication failed.";
+  }
+}
+
+$("logout-btn").addEventListener("click", () => {
+  auth.signOut();
+});
+
+/* ============================================================
+   APP STATE
+   ============================================================ */
+let currentUid = null;
+let unsubscribeDoc = null;
+let popIntervalHandle = null;
+let currentData = null;
+let nameSyncDebounce = null;
+
+auth.onAuthStateChanged((user) => {
+  if(unsubscribeDoc){ unsubscribeDoc(); unsubscribeDoc = null; }
+  if(popIntervalHandle){ clearInterval(popIntervalHandle); popIntervalHandle = null; }
+
+  if(user){
+    currentUid = user.uid;
+    loginScreen.classList.add("hidden");
+    dashboard.classList.add("hidden");
+    loadingScreen.classList.remove("hidden");
+    initCountryDoc(user.uid);
+  } else {
+    currentUid = null;
+    dashboard.classList.add("hidden");
+    loadingScreen.classList.add("hidden");
+    loginScreen.classList.remove("hidden");
+    authForm.reset();
+  }
+});
+
+/* ============================================================
+   FIRESTORE: init / ensure country document exists
+   ============================================================ */
+async function initCountryDoc(uid){
+  const ref = db.collection("countries").doc(uid);
+  try{
+    const snap = await ref.get();
+    if(!snap.exists){
+      const randomPopulation = Math.floor(Math.random() * (20000000 - 100000 + 1)) + 100000;
+      await ref.set({
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        name: "Unnamed Nation",
+        description: "",
+        flag: "",
+        population: randomPopulation,
+        populationUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        language: "",
+        capitalCity: "",
+        weather: null
+      });
+    }
+  } catch(err){
+    showSnackbar("Failed to initialize country data.", true);
+    console.error(err);
+  }
+
+  // realtime listener
+  unsubscribeDoc = ref.onSnapshot((snap) => {
+    if(!snap.exists) return;
+    const data = snap.data();
+    currentData = data;
+    renderCountry(data);
+    checkPopulationTick(ref, data);
+    loadingScreen.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+  }, (err) => {
+    showSnackbar("Connection to Firestore failed.", true);
+    console.error(err);
+  });
+
+  // periodic check in case the tab stays open past the hour mark
+  popIntervalHandle = setInterval(() => {
+    if(currentData) checkPopulationTick(ref, currentData);
+  }, 60 * 1000);
+}
+
+/* ============================================================
+   RENDER: country data -> DOM
+   ============================================================ */
+function renderCountry(data){
+  // hero
+  $("hero-name").textContent = data.name || "Unnamed Nation";
+  renderFlag(data.flag);
+
+  // info fields (don't clobber while user is actively typing)
+  if(document.activeElement !== $("input-name")) $("input-name").value = data.name || "";
+  if(document.activeElement !== $("input-language")) $("input-language").value = data.language || "";
+  if(document.activeElement !== $("input-capital")) $("input-capital").value = data.capitalCity || "";
+  if(document.activeElement !== $("input-description")) $("input-description").value = data.description || "";
+
+  // population
+  $("pop-number").textContent = formatPopulation(data.population);
+  const updatedDate = toDateSafe(data.populationUpdatedAt) || toDateSafe(data.createdAt);
+  $("pop-updated").textContent = updatedDate ? ("Last sync " + formatTimeAgo(updatedDate)) : "Awaiting first sync";
+
+  // weather
+  renderWeather(data.weather);
+}
+
+function renderFlag(flagUrl){
+  const heroInner = $("hero-flag-inner");
+  const preview = $("flag-preview");
+  if(flagUrl){
+    heroInner.innerHTML = '<img src="' + flagUrl + '" alt="National flag">';
+    preview.innerHTML = '<img src="' + flagUrl + '" alt="National flag">';
+  } else {
+    heroInner.innerHTML = '<i class="fa-solid fa-flag"></i>';
+    preview.innerHTML = '<i class="fa-solid fa-image"></i>';
+  }
+}
+
+function renderWeather(weather){
+  const el = $("weather-content");
+  if(!weather || typeof weather !== "object"){
+    el.innerHTML = '<div class="empty-state"><i class="fa-solid fa-satellite-dish"></i>No weather data available.</div>';
+    return;
+  }
+  const iconClass = CONDITION_ICONS[weather.conditionKey] || "fa-cloud";
+  const condLabel = (weather.conditionKey || "unknown").replace(/_/g, " ");
+  const sunrise = toDateSafe(weather.sunrise);
+  const sunset = toDateSafe(weather.sunset);
+  const updated = toDateSafe(weather.updatedAt);
+
+  el.innerHTML = `
+    <div class="weather-hero">
+      <i class="fa-solid ${iconClass}"></i>
+      <div>
+        <div class="temp">${weather.temp !== undefined ? Math.round(weather.temp) + "°" : "--"}</div>
+        <div class="cond">${condLabel}</div>
+      </div>
+    </div>
+    <div class="weather-grid">
+      ${weatherCell("fa-droplet", "Humidity", weather.humidity !== undefined ? weather.humidity + "%" : "--")}
+      ${weatherCell("fa-wind", "Wind", weather.windSpeed !== undefined ? weather.windSpeed + " km/h" : "--")}
+      ${weatherCell("fa-gauge", "Pressure", weather.pressure !== undefined ? weather.pressure + " hPa" : "--")}
+      ${weatherCell("fa-temperature-half", "Feels Like", weather.feelsLike !== undefined ? Math.round(weather.feelsLike) + "°" : "--")}
+      ${weatherCell("fa-sun-plant-wilt", "UV Index", weather.UV !== undefined ? weather.UV : "--")}
+      ${weatherCell("fa-eye", "Visibility", weather.visibility !== undefined ? weather.visibility + " km" : "--")}
+      ${weatherCell("fa-lungs", "AQI", weather.aqi !== undefined ? weather.aqi : "--")}
+      ${weatherCell("fa-cloud-rain", "Rain Chance", weather.rainChance !== undefined ? weather.rainChance + "%" : "--")}
+      ${weatherCell("fa-icicles", "Dew Point", weather.dewPoint !== undefined ? weather.dewPoint + "°" : "--")}
+      ${weatherCell("fa-arrow-up-from-ground-water", "Sunrise", formatClock(sunrise))}
+      ${weatherCell("fa-arrow-down-to-line", "Sunset", formatClock(sunset))}
+    </div>
+    <div class="weather-updated">Last update: ${updated ? formatTimeAgo(updated) : "unknown"}</div>
+  `;
+}
+function weatherCell(icon, label, value){
+  return `<div class="w-cell"><i class="fa-solid ${icon}"></i><div class="val">${value}</div><div class="lbl">${label}</div></div>`;
+}
+
+/* ============================================================
+   POPULATION AUTO-UPDATE (client-driven, hourly)
+   ============================================================ */
+let populationUpdateInFlight = false;
+async function checkPopulationTick(ref, data){
+  if(populationUpdateInFlight) return;
+  const last = toDateSafe(data.populationUpdatedAt) || toDateSafe(data.createdAt);
+  if(!last) return;
+  const elapsed = Date.now() - last.getTime();
+  if(elapsed < ONE_HOUR_MS) return;
+
+  populationUpdateInFlight = true;
+  try{
+    const current = Number(data.population) || 0;
+    const pctChange = (Math.random() * (2 - 0.2) + 0.2) / 100; // 0.2% - 2%
+    const direction = Math.random() < 0.5 ? -1 : 1;
+    let next = current + (current * pctChange * direction);
+    next = Math.round(Math.min(POP_MAX, Math.max(POP_MIN, next)));
+
+    await ref.update({
+      population: next,
+      populationUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(err){
+    console.error("Population sync failed", err);
+  } finally {
+    populationUpdateInFlight = false;
+  }
+}
+
+/* ============================================================
+   VALIDATION
+   ============================================================ */
+function validateInfo(){
+  let valid = true;
+  const name = $("input-name").value.trim();
+  const language = $("input-language").value.trim();
+  const capital = $("input-capital").value.trim();
+
+  $("err-name").textContent = "";
+  $("err-language").textContent = "";
+  $("err-capital").textContent = "";
+
+  if(name.length < 3 || name.length > 40){
+    $("err-name").textContent = "Must be between 3 and 40 characters.";
+    valid = false;
+  }
+  if(language.length < 2){
+    $("err-language").textContent = "Must be at least 2 characters.";
+    valid = false;
+  }
+  if(capital.length < 2){
+    $("err-capital").textContent = "Must be at least 2 characters.";
+    valid = false;
+  }
+  return valid ? { name, language, capitalCity: capital } : null;
+}
+
+/* ============================================================
+   SAVE: country info (name / language / capital)
+   ============================================================ */
+$("save-info-btn").addEventListener("click", async () => {
+  if(!currentUid) return;
+  const payload = validateInfo();
+  if(!payload) return;
+
+  const btn = $("save-info-btn");
+  btn.disabled = true;
+  try{
+    await db.collection("countries").doc(currentUid).update(payload);
+    showSnackbar("Saved successfully.");
+    syncDescriptionByName(payload.name);
+  } catch(err){
+    showSnackbar("Failed to save. Please try again.", true);
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ============================================================
+   SAVE: description
+   ============================================================ */
+$("save-description-btn").addEventListener("click", async () => {
+  if(!currentUid) return;
+  const btn = $("save-description-btn");
+  btn.disabled = true;
+  try{
+    await db.collection("countries").doc(currentUid).update({
+      description: $("input-description").value
+    });
+    showSnackbar("Saved successfully.");
+  } catch(err){
+    showSnackbar("Failed to save description.", true);
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ============================================================
+   DESCRIPTION SYNC: look up matching country name in collection
+   ============================================================ */
+$("input-name").addEventListener("input", () => {
+  clearTimeout(nameSyncDebounce);
+  const value = $("input-name").value.trim();
+  nameSyncDebounce = setTimeout(() => syncDescriptionByName(value), 450);
+});
+
+async function syncDescriptionByName(name){
+  const panel = $("sync-panel");
+  const content = $("sync-content");
+  if(!name || name.length < 3){
+    panel.classList.add("hidden");
+    return;
+  }
+  panel.classList.remove("hidden");
+  content.textContent = "Searching...";
+  try{
+    const results = await db.collection("countries").where("name", "==", name).limit(5).get();
+    let match = null;
+    results.forEach((doc) => {
+      if(doc.id !== currentUid && !match) match = doc.data();
+    });
+    if(match && match.description){
+      content.textContent = match.description;
+    } else {
+      content.textContent = "No description available.";
+    }
+  } catch(err){
+    content.textContent = "No description available.";
+    console.error(err);
+  }
+}
+
+/* ============================================================
+   FLAG UPLOAD via imgBB
+   ============================================================ */
+$("upload-flag-btn").addEventListener("click", () => $("flag-file-input").click());
+
+$("flag-file-input").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  e.target.value = "";
+
+  if(!file.type.startsWith("image/")){
+    setUploadStatus("Please select an image file.", true);
+    return;
+  }
+  if(file.size > 8 * 1024 * 1024){
+    setUploadStatus("Image must be smaller than 8MB.", true);
+    return;
+  }
+  if(IMGBB_API_KEY === "YOUR_IMGBB_API_KEY"){
+    setUploadStatus("Set your imgBB API key in the script to enable uploads.", true);
+    return;
+  }
+
+  uploadFlagToImgbb(file);
+});
+
+function setUploadStatus(msg, isErr){
+  const el = $("upload-status");
+  el.textContent = msg || "";
+  el.classList.toggle("err", !!isErr);
+  el.classList.toggle("ok", !isErr && !!msg);
+}
+function setUploadProgress(pct, visible){
+  $("upload-progress").style.display = visible ? "block" : "none";
+  $("upload-bar").style.width = Math.max(0, Math.min(100, pct)) + "%";
+}
+
+function uploadFlagToImgbb(file){
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", "https://api.imgbb.com/1/upload?key=" + IMGBB_API_KEY);
+
+  setUploadProgress(0, true);
+  setUploadStatus("Uploading...", false);
+
+  xhr.upload.onprogress = (evt) => {
+    if(evt.lengthComputable){
+      setUploadProgress((evt.loaded / evt.total) * 100, true);
+    }
+  };
+
+  xhr.onload = async () => {
+    setUploadProgress(0, false);
+    try{
+      const res = JSON.parse(xhr.responseText);
+      if(xhr.status >= 200 && xhr.status < 300 && res.success){
+        const url = res.data.url;
+        await db.collection("countries").doc(currentUid).update({ flag: url });
+        setUploadStatus("Flag uploaded successfully.", false);
+      } else {
+        throw new Error((res.error && res.error.message) || "Upload failed.");
+      }
+    } catch(err){
+      setUploadStatus("Upload failed. Please try again.", true);
+      console.error(err);
+    }
+  };
+
+  xhr.onerror = () => {
+    setUploadProgress(0, false);
+    setUploadStatus("Network error during upload.", true);
+  };
+
+  xhr.send(formData);
+}
+
+})();
+</script>
+</body>
+</html>

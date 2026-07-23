@@ -167,6 +167,7 @@ main#chat::-webkit-scrollbar-thumb{ background:var(--glass-border); border-radiu
 .bubble strong{ color:var(--gold-soft); }
 .bubble .hint{ color:var(--ink-dim); font-size:12.5px; }
 .bubble .error{ color:var(--danger); }
+.bubble .flag-img{ display:block; width:100%; max-width:220px; border-radius:var(--radius-sm); margin-bottom:10px; border:1px solid var(--glass-border); box-shadow:var(--shadow); }
 
 .timestamp{
   font-family:'IBM Plex Mono', monospace; font-size:10.5px;
@@ -526,7 +527,8 @@ function detectIntent(rawText){
   // Data UFN
   if(/\b(daftar|list|semua|seluruh|mana saja)\b.*\b(negara|country)\b/.test(t) || /\bnegara.*daftar\b/.test(t) || /\bsebutkan negara\b/.test(t)) return "list_countries";
   if(/\b(deskripsi|tentang|info|informasi|profil|sekilas|gambaran)\b/.test(t) && /\bnegara\b/.test(t)) return "country_profile";
-  if(/\b(ibu ?kota|ibukota|capital|capitals?)\b/.test(t)) return "capital";
+  if(/\b(ibu ?kota|ibukota|capitalCity|capitalCitys?)\b/.test(t)) return "capitalCity";
+  if(/\bbahasa (apa|resmi)\b|\bbahasa yang di ?pakai\b|\bbahasa yang di ?gunakan\b|\b(pakai|gunakan) bahasa\b|\blanguage\b/.test(t)) return "language";
   if(/\b(mata ?uang terkuat|nilai tukar tertinggi|mata uang paling tinggi|kurs tertinggi)\b/.test(t)) return "currency_strongest";
   if(/\bmata ?uang|kurs|currency|currencies|matauang|nilai tukar\b/.test(t)) return "currency";
   if(/\b(populasi terbesar|populasi terbanyak|paling banyak|tertinggi|terbesar)\b.*\b(populasi|penduduk)\b/.test(t) || /\bpopulasi terbesar\b/.test(t)) return "population_max";
@@ -563,20 +565,32 @@ async function handleCountryProfile(text){
   const c = findCountryInText(text, countries);
   if(!c) return NOT_FOUND;
   
-  let info = `<strong>🏛️ ${esc(c.name)}</strong>`;
+  let info = "";
+  if(c.flag) info += `<img src="${esc(c.flag)}" alt="Bendera ${esc(c.name)}" class="flag-img">`;
+  info += `<strong>🏛️ ${esc(c.name)}</strong>`;
   if(c.description) info += `<br><br>${esc(c.description)}`;
   if(c.createdAt) info += `<br><br><span class="hint">Bergabung: ${fmtDate(c.createdAt)}</span>`;
-  if(c.capital) info += `<br><span class="hint">Ibu kota: ${esc(c.capital)}</span>`;
+  if(c.capitalCity) info += `<br><span class="hint">Ibu kota: ${esc(c.capitalCity)}</span>`;
   if(c.population) info += `<br><span class="hint">Populasi: ${fmtNumber(c.population)} jiwa</span>`;
+  if(c.language) info += `<br><span class="hint">Bahasa: ${esc(c.language)}</span>`;
+  if(c.weather && c.weather.temp !== undefined) info += `<br><span class="hint">Cuaca saat ini: ${fmtNumber(c.weather.temp)}°C</span>`;
   return info;
 }
 
-async function handleCapital(text){
+async function handlecapitalCity(text){
   const countries = await loadCountries();
   const c = findCountryInText(text, countries);
   if(!c) return NOT_FOUND;
-  if(!c.capital) return `Data ibu kota untuk ${esc(c.name)} belum tersedia.`;
-  return `🏙️ Ibu kota <strong>${esc(c.name)}</strong> adalah <strong>${esc(c.capital)}</strong>.`;
+  if(!c.capitalCity) return `Data ibu kota untuk ${esc(c.name)} belum tersedia.`;
+  return `🏙️ Ibu kota <strong>${esc(c.name)}</strong> adalah <strong>${esc(c.capitalCity)}</strong>.`;
+}
+
+async function handleLanguage(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  if(!c.language) return `Data bahasa untuk ${esc(c.name)} belum tersedia.`;
+  return `🗣️ Bahasa yang digunakan di <strong>${esc(c.name)}</strong> adalah <strong>${esc(c.language)}</strong>.`;
 }
 
 async function handleCurrency(text){
@@ -840,7 +854,7 @@ async function handleCompare(text){
   const rows = [
     ["Nama", esc(a.name||"-"), esc(b.name||"-")],
     ["Deskripsi", esc((a.description||"-").slice(0,50)+(a.description?.length>50?"…":"")), esc((b.description||"-").slice(0,50)+(b.description?.length>50?"…":""))],
-    ["Ibu Kota", esc(a.capital||"-"), esc(b.capital||"-")],
+    ["Ibu Kota", esc(a.capitalCity||"-"), esc(b.capitalCity||"-")],
     ["Populasi", fmtNumber(a.population), fmtNumber(b.population)],
   ].map(([label, va, vb]) => `<tr><td>${label}</td><td>${va}</td><td>${vb}</td></tr>`).join("");
   return `📊 Perbandingan <strong>${esc(a.name)}</strong> vs <strong>${esc(b.name)}</strong>:<table><tr><th></th><th>${esc(a.name)}</th><th>${esc(b.name)}</th></tr>${rows}</table>`;
@@ -854,7 +868,7 @@ async function handleGeneralCountry(text){
   if(!c) return NOT_FOUND;
   let info = `<strong>🏛️ ${esc(c.name)}</strong>`;
   if(c.description) info += `<br><br>${esc(c.description)}`;
-  if(c.capital) info += `<br><br>🏙️ Ibu kota: <strong>${esc(c.capital)}</strong>`;
+  if(c.capitalCity) info += `<br><br>🏙️ Ibu kota: <strong>${esc(c.capitalCity)}</strong>`;
   if(c.population) info += `<br>👥 Populasi: <strong>${fmtNumber(c.population)}</strong> jiwa`;
   if(c.createdAt) info += `<br><span class="hint">Bergabung: ${fmtDate(c.createdAt)}</span>`;
   return info;
@@ -865,13 +879,21 @@ async function handleGeneralCountry(text){
    ============================================================ */
 
 const HELP_LIST = `
-  <li><strong>🏛️ Negara & Info</strong> — "Daftar negara UFN" / "Informasi tentang [negara]"</li>
+  <li><strong>🏛️ Daftar Negara</strong> — "Daftar negara UFN" / "Sebutkan negara yang ada di UFN"</li>
+  <li><strong>ℹ️ Profil Negara</strong> — "Informasi tentang [negara]" / "Info [negara]" / "Deskripsi [negara]"</li>
+  <li><strong>🏙️ Ibu Kota</strong> — "Ibu kota [negara]"</li>
+  <li><strong>🗣️ Bahasa</strong> — "Bahasa apa yang dipakai [negara]"</li>
   <li><strong>🌤️ Cuaca</strong> — "Cuaca di [negara]" / "Cuaca [negara]"</li>
-  <li><strong>💰 Mata uang</strong> — "Mata uang terkuat" / "Mata uang [negara]"</li>
-  <li><strong>👥 Populasi</strong> — "Populasi terbesar" / "Populasi [negara]"</li>
-  <li><strong>📰 Berita</strong> — "Berita terbaru" / "Ringkas berita" / "Berita dari [penulis]"</li>
-  <li><strong>💬 Komentar & Reaksi</strong> — "Komentar pada berita" / "Reaksi terbanyak"</li>
-  <li><strong>📍 Tempat</strong> — "Tempat menarik" / "Tempat di [negara]"</li>
+  <li><strong>💰 Mata Uang</strong> — "Mata uang [negara]" / "Mata uang terkuat"</li>
+  <li><strong>👥 Populasi</strong> — "Populasi [negara]" / "Populasi terbesar"</li>
+  <li><strong>📰 Berita Terbaru</strong> — "Berita terbaru" / "Ada berita apa hari ini"</li>
+  <li><strong>📝 Ringkasan Berita</strong> — "Ringkas berita [judul]" / "Rangkum berita"</li>
+  <li><strong>🗂️ Kategori Berita</strong> — "Kategori berita apa saja"</li>
+  <li><strong>✍️ Penulis Berita</strong> — "Berita dari [penulis]"</li>
+  <li><strong>🖼️ Gambar Berita</strong> — "Gambar berita [judul]" / "Foto berita [judul]"</li>
+  <li><strong>💬 Komentar</strong> — "Komentar pada berita [judul]"</li>
+  <li><strong>❤️ Reaksi Terbanyak</strong> — "Berita dengan reaksi paling banyak"</li>
+  <li><strong>📍 Tempat Menarik</strong> — "Tempat menarik" / "Tempat di [negara]"</li>
   <li><strong>📊 Perbandingan</strong> — "Bandingkan [negaraA] dan [negaraB]"</li>`;
 
 const JOKES = [
@@ -963,7 +985,8 @@ async function generateAnswer(rawText){
     switch(intent){
       case "list_countries": return await handleListCountries();
       case "country_profile": return await handleCountryProfile(rawText);
-      case "capital": return await handleCapital(rawText);
+      case "capitalCity": return await handlecapitalCity(rawText);
+      case "language": return await handleLanguage(rawText);
       case "currency": return await handleCurrency(rawText);
       case "currency_strongest": return await handleCurrencyStrongest();
       case "population": return await handlePopulation(rawText);
