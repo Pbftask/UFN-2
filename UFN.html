@@ -362,12 +362,26 @@
     .menu-card:nth-child(6) { animation-delay: 0.22s; }
     .menu-card:nth-child(7) { animation-delay: 0.26s; }
     .menu-card:nth-child(8) { animation-delay: 0.30s; }
+    .menu-card:nth-child(9) { animation-delay: 0.35s; }
 
     @keyframes fadeUp {
       0% { opacity: 0; transform: translateY(12px); }
       100% { opacity: 1; transform: translateY(0); }
     }
 
+a {
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
+    text-decoration: none;
+    color: inherit;
+    outline: none;
+}
+
+      * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+      }
+    
     .tag{
       background: red;
       position: absolute;
@@ -468,8 +482,7 @@
       
       <div class="menu-card">
       <a href="UFNAI.html">
-        <span class="icon"><i class="fa-solid fa-robot""></i></span>
-        <div class="tag">preview</div>
+        <span class="icon"><i class="fas fa-solid fa-robot""></i></span>
         <span class="label">asistent AI</span>
       </a>
     </div>
