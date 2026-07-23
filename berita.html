@@ -6,7 +6,7 @@
 <title>Kabar Kini — Portal Berita Terkini</title>
 <meta name="description" content="Portal berita modern: politik, ekonomi, teknologi, olahraga, hiburan, kesehatan, dan dunia.">
 
-<!-- Google Fonts: Poppins (utama) + JetBrains Mono (utilitas untuk waktu/label) -->
+<!-- Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -15,10 +15,9 @@
 
 <style>
 /* ============================================================
-   1. DESIGN TOKENS — palet warna, tipografi, radius, shadow
+   1. DESIGN TOKENS
    ============================================================ */
 :root{
-  /* --- Light theme --- */
   --bg: #F7F8FB;
   --surface: #FFFFFF;
   --surface-2: #F0F2F7;
@@ -26,9 +25,9 @@
   --ink-soft: #565C74;
   --ink-faint: #8A90A6;
   --line: #E7E9F2;
-  --accent: #D6293E;        /* merah editorial — breaking / like */
+  --accent: #D6293E;
   --accent-ink: #ffffff;
-  --accent-2: #E8A33D;      /* amber — sorotan */
+  --accent-2: #E8A33D;
   --accent-soft: #FCE7E9;
   --shadow: 0 8px 24px -12px rgba(18,23,43,.18);
   --shadow-lg: 0 20px 48px -16px rgba(18,23,43,.24);
@@ -36,8 +35,6 @@
   --radius-sm: 8px;
   --font-ui: 'Poppins', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-
-  /* Warna kategori — dipakai sebagai "spine" konsisten di seluruh situs */
   --cat-politik: #6C63FF;
   --cat-ekonomi: #1FA37B;
   --cat-teknologi: #1F6FEB;
@@ -86,13 +83,12 @@ ul{ list-style:none; }
 .container{ max-width:1240px; margin:0 auto; padding:0 20px; }
 @media(prefers-reduced-motion: reduce){ *{ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
 
-/* Scrollbar tipis */
 ::-webkit-scrollbar{ width:9px; height:9px; }
 ::-webkit-scrollbar-track{ background:transparent; }
 ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:20px; }
 
 /* ============================================================
-   3. CONFIG BANNER (muncul jika Firebase belum dikonfigurasi)
+   3. CONFIG BANNER
    ============================================================ */
 .config-banner{
   background:linear-gradient(90deg,#3A1418,#5B1B22);
@@ -181,14 +177,13 @@ main{ padding:28px 0 80px; }
 .section-title i{ color:var(--accent); }
 .section-title::after{ content:''; flex:1; height:1px; background:var(--line); }
 
-/* Category chip helper */
 .cat-chip{
   display:inline-flex; align-items:center; gap:5px; font-size:.68rem; font-weight:700;
   text-transform:uppercase; letter-spacing:.04em; padding:4px 10px; border-radius:20px; color:#fff;
 }
 .cat-chip::before{ content:'●'; font-size:.55rem; opacity:.85; }
 
-/* --- Hero headline --- */
+/* Hero */
 .hero{
   position:relative; border-radius:20px; overflow:hidden; min-height:440px;
   display:flex; align-items:flex-end; background:var(--surface-2); box-shadow:var(--shadow-lg);
@@ -207,7 +202,7 @@ main{ padding:28px 0 80px; }
 .hero-meta{ display:flex; align-items:center; gap:16px; font-size:.82rem; color:rgba(255,255,255,.75); font-family:var(--font-mono); flex-wrap:wrap; }
 .hero-meta span{ display:flex; align-items:center; gap:6px; }
 
-/* --- News grid / cards --- */
+/* News grid */
 .news-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
 .news-card{
   background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
@@ -232,7 +227,7 @@ main{ padding:28px 0 80px; }
 .end-msg{ text-align:center; color:var(--ink-faint); font-size:.85rem; padding:24px 0; display:none; }
 .load-more-spin{ display:flex; justify-content:center; padding:20px 0; color:var(--ink-faint); font-size:1.3rem; }
 
-/* Skeleton loading */
+/* Skeleton */
 .skeleton{ position:relative; overflow:hidden; background:var(--surface-2); }
 .skeleton::after{
   content:''; position:absolute; inset:0;
@@ -246,7 +241,7 @@ main{ padding:28px 0 80px; }
 .sk-line.w60{ width:60%; }
 .sk-line.w40{ width:40%; margin-bottom:16px; }
 
-/* --- Sidebar --- */
+/* Sidebar */
 .sidebar{ display:flex; flex-direction:column; gap:24px; position:sticky; top:158px; }
 .widget{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); }
 .widget h4{ font-size:.95rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
@@ -270,9 +265,7 @@ main{ padding:28px 0 80px; }
 .newsletter-widget input{ width:100%; padding:10px 12px; border-radius:8px; border:none; margin-bottom:8px; font-size:.83rem; }
 .newsletter-widget button.sub-btn{ width:100%; background:#fff; color:var(--accent); font-weight:700; padding:10px; border-radius:8px; font-size:.83rem; }
 
-/* ============================================================
-   6. ARTICLE VIEW
-   ============================================================ */
+/* Article View */
 .article-view{ display:none; }
 .article-view.show{ display:block; animation:fadeIn .4s ease; }
 .home-view.hide{ display:none; }
@@ -346,12 +339,7 @@ body.dark .action-btn.bookmark-btn.active{ background:#33290F; color:#F0B25E; }
 .replies{ margin-left:44px; border-left:2px solid var(--line); padding-left:16px; margin-top:10px; }
 .comment-count-badge{ font-family:var(--font-mono); font-size:.78rem; color:var(--ink-faint); }
 
-/* --- Sidebar in article --- */
-.toc-widget ul{ display:flex; flex-direction:column; gap:8px; }
-
-/* ============================================================
-   7. FLOATING ADD BUTTON + MODAL
-   ============================================================ */
+/* Floating Add Button + Modal */
 .fab{
   position:fixed; bottom:26px; right:26px; width:58px; height:58px; border-radius:50%;
   background:var(--accent); color:var(--accent-ink); font-size:1.4rem; display:flex; align-items:center; justify-content:center;
@@ -399,9 +387,98 @@ body.dark .action-btn.bookmark-btn.active{ background:#33290F; color:#F0B25E; }
 footer{ border-top:1px solid var(--line); padding:36px 0; margin-top:40px; text-align:center; color:var(--ink-faint); font-size:.82rem; }
 footer b{ color:var(--ink); }
 
-/* ============================================================
-   8. RESPONSIVE
-   ============================================================ */
+/* Online Counter */
+.online-counter{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px;
+  font-size: .82rem;
+  color: var(--ink-soft);
+  background: var(--surface-2);
+  border-top: 1px solid var(--line);
+}
+.online-counter .opin{
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #00ff1d;
+  border-radius: 50%;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+@keyframes pulse-dot{
+  0%, 100%{ opacity:1; transform:scale(1); }
+  50%{ opacity:.4; transform:scale(.7); }
+}
+.online-counter .jumlah{
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+/* Tutorial / Video Popup */
+.popup{
+  position:fixed;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,.85);
+  backdrop-filter:blur(5px);
+  z-index:9999;
+}
+.popup.show{
+  display:flex;
+}
+.video-box{
+  position:relative;
+  width:min(90vw,800px);
+  aspect-ratio:16/9;
+  background:#000;
+  border-radius:15px;
+  overflow:hidden;
+}
+.video-box video{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+.video-box .close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:35px;
+  height:35px;
+  border:none;
+  border-radius:50%;
+  background:rgba(255,255,255,.2);
+  color:#fff;
+  font-size:20px;
+  cursor:pointer;
+  z-index:1;
+  transition:background .2s;
+}
+.video-box .close:hover{
+  background:rgba(255,255,255,.4);
+}
+
+/* Tutorial button header */
+.btn-tutorial{
+  padding:6px 14px;
+  border-radius:20px;
+  background:var(--accent);
+  color:var(--accent-ink);
+  font-weight:600;
+  font-size:.82rem;
+  border:1px solid transparent;
+  transition:.2s;
+}
+.btn-tutorial:hover{
+  transform:translateY(-1px);
+  filter:brightness(1.1);
+}
+
+/* Responsive */
 @media(max-width:980px){
   .layout-grid{ grid-template-columns:1fr; }
   .sidebar{ position:static; flex-direction:row; flex-wrap:wrap; }
@@ -420,76 +497,6 @@ footer b{ color:var(--ink); }
 }
 nav.main-nav.mobile-open{ display:flex; position:absolute; top:100%; left:0; right:0; background:var(--surface); flex-direction:column; padding:10px 16px 16px; border-bottom:1px solid var(--line); box-shadow:var(--shadow); }
 nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radius:8px; }
-
-.gok{
-  background:red;
-}
-
-  .online-counter{
-  display: flex;
-  flex-direction: row;
-  margin-top:5px;
-}
-
-.jumlah{
-  margin-left:5px;
-  margin-right: 5px;
-}
-  
-.opin{
-  background:#00ff1d;
-  color:transparent;
-  border-radius:50%;
-  width: 10px;
-  height:10px;
-  margin-left:125px;
-  margin-top:2px;
-}
-.popup{
-    position:fixed;
-    inset:0;
-    display:none;
-    justify-content:center;
-    align-items:center;
-    background:rgba(0,0,0,.8);
-    backdrop-filter:blur(5px);
-    z-index:9999;
-}
-
-.popup.show{
-    display:flex;
-}
-
-.video-box{
-    position:relative;
-    width:min(90vw,800px);
-    aspect-ratio:16/9;
-    background:#000;
-    border-radius:15px;
-    overflow:hidden;
-}
-
-.video-box video{
-    width:100%;
-    height:100%;
-    object-fit:contain;
-    display:block;
-}
-
-.close{
-    position:absolute;
-    top:10px;
-    right:10px;
-    width:35px;
-    height:35px;
-    border:none;
-    border-radius:50%;
-    background:rgba(255,255,255,.2);
-    color:#fff;
-    font-size:20px;
-    cursor:pointer;
-    z-index:1;
-}
 </style>
 </head>
 <body>
@@ -514,22 +521,18 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
         <input type="text" id="searchInput" placeholder="Cari berita...">
       </div>
       <button class="icon-btn" id="themeToggle" title="Ganti tema"><i class="fa-solid fa-moon"></i></button>
-
       <button class="icon-btn hamburger" id="hamburgerBtn" title="Menu"><i class="fa-solid fa-bars"></i></button>
-      
-<button id="openBtn" class="btn-primary">Tutorial</button>
-
+      <button class="btn-tutorial" id="openVideoBtn"><i class="fa-solid fa-play"></i> Tutorial</button>
     </div>
-    
   </div>
   <div class="breaking-bar">
     <div class="breaking-tag"><i class="fa-solid fa-tower-broadcast"></i> Breaking</div>
-    
     <div class="breaking-track"><ul id="breakingList"></ul></div>
   </div>
   <div class="online-counter">
-   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
-</div>
+    <span class="opin"></span>
+    <span id="onlineCount" class="jumlah">0</span> Online
+  </div>
 </header>
 
 <!-- ============================== HOME VIEW ============================== -->
@@ -559,7 +562,7 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
         <div class="widget newsletter-widget">
           <h4><i class="fa-solid fa-envelope-open-text"></i> Newsletter</h4>
           <p>Dapatkan ringkasan berita pilihan setiap pagi langsung ke email Anda.</p>
-          <input type="email" placeholder="Alamat email Anda">
+          <input type="email" placeholder="Alamat email Anda" id="newsletterInput">
           <button class="sub-btn" id="subscribeBtn">Berlangganan</button>
         </div>
       </aside>
@@ -619,18 +622,6 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
         <input type="url" id="fImage" required placeholder="https://contoh.com/gambar.jpg">
         <div class="preview-img" id="imgPreview">Pratinjau gambar akan muncul di sini</div>
       </div>
-      
-
-<div class="popup" id="popup">
-    <button class="close" id="closeVideo">✕</button>
-
-    <div class="video-box">
-        <video id="video" controls>
-            <source src="video.mp4" type="video/mp4">
-        </video>
-    </div>
-</div>
-
       <div class="field">
         <label>Nama Penulis</label>
         <input type="text" id="fAuthor" required placeholder="Nama penulis">
@@ -655,51 +646,27 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
   </div>
 </div>
 
+<!-- ============================== VIDEO POPUP ============================== -->
+<div class="popup" id="videoPopup">
+  <div class="video-box">
+    <button class="close" id="closeVideoBtn"><i class="fa-solid fa-xmark"></i></button>
+    <video id="tutorialVideo" controls>
+      <source src="video.mp4" type="video/mp4">
+      Browser Anda tidak mendukung video.
+    </video>
+  </div>
+</div>
+
 <div id="toast-wrap"></div>
 
-<!-- ============================== FIREBASE SDK (compat) ============================== -->
+<!-- ============================== FIREBASE SDK ============================== -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
-  
-<script type="module">
-
-
-window.addEventListener("load", () => {
-    const openBtn = document.getElementById("openVideo");
-    const closeBtn = document.getElementById("closeVideo");
-    const popup = document.getElementById("popup");
-    const video = document.getElementById("video");
-
-    if (!openBtn || !closeBtn || !popup || !video) {
-        console.error("Ada ID yang tidak ditemukan.");
-        return;
-    }
-
-    openBtn.addEventListener("click", () => {
-        popup.style.display = "flex";
-        video.currentTime = 0;
-        video.play().catch(() => {});
-    });
-
-    function tutup() {
-        video.pause();
-        video.currentTime = 0;
-        popup.style.display = "none";
-    }
-
-    closeBtn.addEventListener("click", tutup);
-
-    popup.addEventListener("click", (e) => {
-        if (e.target === popup) {
-            tutup();
-        }
-    });
-});
+<script>
 /* ================================================================
    KONFIGURASI FIREBASE
-   Ganti seluruh nilai di bawah ini dengan konfigurasi proyek
-   Firebase Anda sendiri (Project Settings → General → Your apps).
    ================================================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
@@ -711,44 +678,26 @@ const firebaseConfig = {
   appId: "1:343647284151:web:c26e7f5f75235c187a1632"
 };
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  doc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-import {
-  getDatabase,
-  ref,
-  set,
-  onValue,
-  onDisconnect
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-const app = initializeApp(firebaseConfig);
-
-const rtdb = getDatabase(app);
-  
-
+/* ================================================================
+   INISIALISASI FIREBASE
+   ================================================================ */
 let db = null;
+let rtdb = null;
 let firebaseReady = false;
-try{
-  if(firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY_HERE"){
+
+try {
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
+    rtdb = firebase.database();
     firebaseReady = true;
+    console.log('✅ Firebase berhasil diinisialisasi');
   } else {
     document.getElementById('configBanner').classList.add('show');
+    console.warn('⚠️ Firebase belum dikonfigurasi');
   }
-}catch(e){
-  console.error("Gagal inisialisasi Firebase:", e);
+} catch (e) {
+  console.error('❌ Gagal inisialisasi Firebase:', e);
   document.getElementById('configBanner').classList.add('show');
 }
 
@@ -764,6 +713,7 @@ const CATEGORIES = [
   { id:'kesehatan',  label:'Kesehatan',  icon:'fa-heart-pulse',     color:'var(--cat-kesehatan)' },
   { id:'dunia',      label:'Dunia',      icon:'fa-earth-asia',      color:'var(--cat-dunia)' },
 ];
+
 const REACTIONS = [
   { id:'like',  emoji:'👍', label:'Suka' },
   { id:'love',  emoji:'❤️', label:'Cinta' },
@@ -772,14 +722,17 @@ const REACTIONS = [
   { id:'sad',   emoji:'😢', label:'Sedih' },
   { id:'angry', emoji:'😡', label:'Marah' },
 ];
-function catInfo(id){ return CATEGORIES.find(c=>c.id===id) || CATEGORIES[0]; }
+
+function catInfo(id) {
+  return CATEGORIES.find(c => c.id === id) || CATEGORIES[0];
+}
 
 /* ================================================================
-   IDENTITAS PENGGUNA (disimpan lokal agar like/reaksi/bookmark unik per user)
+   IDENTITAS PENGGUNA
    ================================================================ */
-function getUserId(){
+function getUserId() {
   let uid = localStorage.getItem('kk_uid');
-  if(!uid){
+  if (!uid) {
     uid = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
     localStorage.setItem('kk_uid', uid);
   }
@@ -790,8 +743,8 @@ const USER_ID = getUserId();
 /* ================================================================
    STATE APLIKASI
    ================================================================ */
-let allNews = null;          // array berita (null = belum dimuat / skeleton)
-let filteredNews = [];       // hasil setelah filter kategori + pencarian
+let allNews = null;
+let filteredNews = [];
 let activeCategory = 'semua';
 let searchQuery = '';
 let pageSize = 6;
@@ -802,68 +755,85 @@ let commentsUnsub = null;
 let reactionUnsub = null;
 let bookmarkUnsub = null;
 let commentsCache = [];
-let replyTarget = null; // {id, name} saat membalas komentar
+let replyTarget = null;
 
 /* ================================================================
    UTILITAS
    ================================================================ */
-function escapeHtml(str){
+function escapeHtml(str) {
   const d = document.createElement('div');
   d.innerText = str ?? '';
   return d.innerHTML;
 }
-function timeAgo(date){
-  if(!date) return '...';
+
+function timeAgo(date) {
+  if (!date) return '...';
   const now = Date.now();
-  const diff = Math.max(0, Math.floor((now - date.getTime())/1000));
-  if(diff < 30) return 'Baru saja';
-  if(diff < 60) return diff + ' detik lalu';
-  const m = Math.floor(diff/60);
-  if(m < 60) return m + ' menit lalu';
-  const h = Math.floor(m/60);
-  if(h < 24) return h + ' jam lalu';
-  const d = Math.floor(h/24);
-  if(d < 7) return d + ' hari lalu';
-  return date.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+  const diff = Math.max(0, Math.floor((now - date.getTime()) / 1000));
+  if (diff < 30) return 'Baru saja';
+  if (diff < 60) return diff + ' detik lalu';
+  const m = Math.floor(diff / 60);
+  if (m < 60) return m + ' menit lalu';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + ' jam lalu';
+  const d = Math.floor(h / 24);
+  if (d < 7) return d + ' hari lalu';
+  return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
-function formatDateFull(date){
-  if(!date) return '...';
-  return date.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+function formatDateFull(date) {
+  if (!date) return '...';
+  return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
-function readTime(text){
-  const words = (text||'').trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words/200));
+
+function readTime(text) {
+  const words = (text || '').trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
 }
-function toDate(ts){
-  if(!ts) return null;
-  if(ts.toDate) return ts.toDate();
-  if(ts instanceof Date) return ts;
+
+function toDate(ts) {
+  if (!ts) return null;
+  if (ts.toDate) return ts.toDate();
+  if (ts instanceof Date) return ts;
   return new Date(ts);
 }
-function showToast(msg, icon='fa-circle-check'){
+
+function showToast(msg, icon = 'fa-circle-check') {
   const wrap = document.getElementById('toast-wrap');
   const t = document.createElement('div');
   t.className = 'toast';
   t.innerHTML = `<i class="fa-solid ${icon}"></i> ${escapeHtml(msg)}`;
   wrap.appendChild(t);
-  setTimeout(()=>{ t.classList.add('out'); setTimeout(()=>t.remove(), 300); }, 2600);
+  setTimeout(() => {
+    t.classList.add('out');
+    setTimeout(() => t.remove(), 300);
+  }, 2600);
 }
-function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+
+function debounce(fn, ms) {
+  let t;
+  return (...a) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...a), ms);
+  };
+}
 
 /* ================================================================
-   TEMA (LIGHT / DARK)
+   TEMA
    ================================================================ */
-function initTheme(){
+function initTheme() {
   const saved = localStorage.getItem('kk_theme');
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if(saved === 'dark' || (!saved && prefersDark)) document.body.classList.add('dark');
+  if (saved === 'dark' || (!saved && prefersDark)) document.body.classList.add('dark');
   updateThemeIcon();
 }
-function updateThemeIcon(){
+
+function updateThemeIcon() {
   const icon = document.querySelector('#themeToggle i');
   icon.className = document.body.classList.contains('dark') ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
 }
-document.getElementById('themeToggle').addEventListener('click', ()=>{
+
+document.getElementById('themeToggle').addEventListener('click', () => {
   document.body.classList.toggle('dark');
   localStorage.setItem('kk_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
   updateThemeIcon();
@@ -871,86 +841,92 @@ document.getElementById('themeToggle').addEventListener('click', ()=>{
 initTheme();
 
 /* ================================================================
-   RENDER: NAVIGASI & FILTER KATEGORI
+   NAVIGASI & FILTER
    ================================================================ */
-function renderNav(){
+function renderNav() {
   const nav = document.getElementById('mainNav');
   const catList = document.getElementById('catFilterList');
-  const options = [{ id:'semua', label:'Semua' }, ...CATEGORIES];
+  const options = [{ id: 'semua', label: 'Semua' }, ...CATEGORIES];
 
-  nav.innerHTML = options.map(c=>`<button data-cat="${c.id}" class="${activeCategory===c.id?'active':''}">${c.label}</button>`).join('');
-  nav.querySelectorAll('button').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ setCategory(btn.dataset.cat); nav.classList.remove('mobile-open'); });
+  nav.innerHTML = options.map(c => `<button data-cat="${c.id}" class="${activeCategory === c.id ? 'active' : ''}">${c.label}</button>`).join('');
+  nav.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setCategory(btn.dataset.cat);
+      nav.classList.remove('mobile-open');
+    });
   });
 
-  catList.innerHTML = options.map(c=>`<button data-cat="${c.id}" class="${activeCategory===c.id?'active':''}">${c.label}</button>`).join('');
-  catList.querySelectorAll('button').forEach(btn=>{
-    btn.addEventListener('click', ()=> setCategory(btn.dataset.cat));
+  catList.innerHTML = options.map(c => `<button data-cat="${c.id}" class="${activeCategory === c.id ? 'active' : ''}">${c.label}</button>`).join('');
+  catList.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => setCategory(btn.dataset.cat));
   });
 
-  // Populate dropdown kategori di modal form
   const sel = document.getElementById('fCategory');
-  sel.innerHTML = CATEGORIES.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  sel.innerHTML = CATEGORIES.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
 }
-function setCategory(cat){
+
+function setCategory(cat) {
   activeCategory = cat;
   currentPage = 1;
   renderNav();
   applyFilters();
 }
-document.getElementById('hamburgerBtn').addEventListener('click', ()=>{
+
+document.getElementById('hamburgerBtn').addEventListener('click', () => {
   document.getElementById('mainNav').classList.toggle('mobile-open');
 });
 
-/* Pencarian real-time (debounced) */
-document.getElementById('searchInput').addEventListener('input', debounce((e)=>{
+document.getElementById('searchInput').addEventListener('input', debounce((e) => {
   searchQuery = e.target.value.trim().toLowerCase();
   currentPage = 1;
   applyFilters();
 }, 220));
 
 /* ================================================================
-   FIRESTORE: LISTENER BERITA (real-time)
+   FIRESTORE: LISTENER BERITA
    ================================================================ */
-function listenNews(){
-  if(!firebaseReady){ allNews = []; renderSkeletonOrEmpty(); return; }
-  db.collection('news').orderBy('createdAt','desc').onSnapshot(snap=>{
-    allNews = snap.docs.map(d=>{
+function listenNews() {
+  if (!firebaseReady) {
+    allNews = [];
+    renderSkeletonOrEmpty();
+    return;
+  }
+  db.collection('news').orderBy('createdAt', 'desc').onSnapshot(snap => {
+    allNews = snap.docs.map(d => {
       const v = d.data();
-      return { id:d.id, ...v, createdAtDate: toDate(v.createdAt), likedBy: v.likedBy || [], likes: v.likes || 0 };
+      return { id: d.id, ...v, createdAtDate: toDate(v.createdAt), likedBy: v.likedBy || [], likes: v.likes || 0 };
     });
     applyFilters();
     renderBreaking();
     renderPopular();
-    // Jika artikel yang sedang dibuka ikut berubah, refresh tampilannya
-    if(currentArticleId){
-      const updated = allNews.find(n=>n.id===currentArticleId);
-      if(updated) renderArticleCore(updated);
+    if (currentArticleId) {
+      const updated = allNews.find(n => n.id === currentArticleId);
+      if (updated) renderArticleCore(updated);
     }
-  }, err=>{
+  }, err => {
     console.error(err);
     showToast('Gagal memuat berita dari Firestore', 'fa-triangle-exclamation');
   });
 }
 
 /* ================================================================
-   FILTER + PAGINASI (INFINITE SCROLL)
+   FILTER + PAGINASI
    ================================================================ */
-function applyFilters(){
-  if(!allNews){ return; }
-  filteredNews = allNews.filter(n=>{
-    const matchCat = activeCategory==='semua' || n.category===activeCategory;
-    const matchSearch = !searchQuery || (n.title||'').toLowerCase().includes(searchQuery) || (n.excerpt||'').toLowerCase().includes(searchQuery) || (n.content||'').toLowerCase().includes(searchQuery);
+function applyFilters() {
+  if (!allNews) return;
+  filteredNews = allNews.filter(n => {
+    const matchCat = activeCategory === 'semua' || n.category === activeCategory;
+    const matchSearch = !searchQuery || (n.title || '').toLowerCase().includes(searchQuery) || (n.excerpt || '').toLowerCase().includes(searchQuery) || (n.content || '').toLowerCase().includes(searchQuery);
     return matchCat && matchSearch;
   });
-  document.getElementById('listTitle').innerHTML = `<i class="fa-solid fa-newspaper"></i> ${searchQuery? 'Hasil pencarian "'+escapeHtml(searchQuery)+'"' : (activeCategory==='semua'?'Berita Terbaru':catInfo(activeCategory).label)}`;
+  document.getElementById('listTitle').innerHTML = `<i class="fa-solid fa-newspaper"></i> ${searchQuery ? 'Hasil pencarian "' + escapeHtml(searchQuery) + '"' : (activeCategory === 'semua' ? 'Berita Terbaru' : catInfo(activeCategory).label)}`;
   renderHero();
   renderGrid(true);
 }
 
-function renderSkeletonOrEmpty(){
+function renderSkeletonOrEmpty() {
   const grid = document.getElementById('newsGrid');
-  grid.innerHTML = Array.from({length:6}).map(()=>`
+  grid.innerHTML = Array.from({ length: 6 }).map(() => `
     <div class="sk-card skeleton-wrap">
       <div class="sk-thumb skeleton"></div>
       <div class="sk-line skeleton w40"></div>
@@ -959,9 +935,9 @@ function renderSkeletonOrEmpty(){
   document.getElementById('heroWrap').innerHTML = `<div class="hero skeleton" style="min-height:440px;"></div>`;
 }
 
-function renderHero(){
+function renderHero() {
   const wrap = document.getElementById('heroWrap');
-  if(!filteredNews.length){ wrap.innerHTML=''; return; }
+  if (!filteredNews.length) { wrap.innerHTML = ''; return; }
   const hero = filteredNews[0];
   const c = catInfo(hero.category);
   wrap.innerHTML = `
@@ -970,37 +946,37 @@ function renderHero(){
       <div class="hero-content">
         <span class="cat-chip" style="background:${c.color}">${c.label}</span>
         <h1>${escapeHtml(hero.title)}</h1>
-        <p>${escapeHtml(hero.excerpt||'')}</p>
+        <p>${escapeHtml(hero.excerpt || '')}</p>
         <div class="hero-meta">
           <span><i class="fa-solid fa-pen-nib"></i> ${escapeHtml(hero.author)}</span>
           <span><i class="fa-regular fa-clock"></i> ${timeAgo(hero.createdAtDate)}</span>
           <span><i class="fa-solid fa-book-open"></i> ${readTime(hero.content)} menit baca</span>
-          <span><i class="fa-solid fa-heart"></i> ${hero.likes||0} suka</span>
+          <span><i class="fa-solid fa-heart"></i> ${hero.likes || 0} suka</span>
         </div>
       </div>
     </div>`;
-  wrap.querySelector('.hero').addEventListener('click', ()=> openArticle(hero.id));
+  wrap.querySelector('.hero').addEventListener('click', () => openArticle(hero.id));
 }
 
-function renderGrid(reset){
+function renderGrid(reset) {
   const grid = document.getElementById('newsGrid');
-  if(reset){ grid.innerHTML=''; currentPage = 1; }
-  const rest = filteredNews.slice(1); // item pertama sudah jadi headline
-  if(!rest.length){
+  if (reset) { grid.innerHTML = ''; currentPage = 1; }
+  const rest = filteredNews.slice(1);
+  if (!rest.length) {
     grid.innerHTML = `<div class="empty-state"><i class="fa-solid fa-newspaper"></i>Belum ada berita yang cocok.<br>Coba kata kunci atau kategori lain.</div>`;
-    document.getElementById('endMsg').style.display='none';
+    document.getElementById('endMsg').style.display = 'none';
     return;
   }
   const end = currentPage * pageSize;
   const slice = rest.slice(0, end);
   grid.innerHTML = slice.map(cardHtml).join('');
-  grid.querySelectorAll('.news-card').forEach(el=>{
-    el.addEventListener('click', ()=> openArticle(el.dataset.id));
+  grid.querySelectorAll('.news-card').forEach(el => {
+    el.addEventListener('click', () => openArticle(el.dataset.id));
   });
   document.getElementById('endMsg').style.display = end >= rest.length ? 'block' : 'none';
 }
 
-function cardHtml(n){
+function cardHtml(n) {
   const c = catInfo(n.category);
   return `
   <div class="news-card" data-id="${n.id}" style="--card-cat:${c.color}">
@@ -1008,105 +984,107 @@ function cardHtml(n){
     <div class="body">
       <span class="cat-chip" style="background:${c.color}">${c.label}</span>
       <h3>${escapeHtml(n.title)}</h3>
-      <p class="excerpt">${escapeHtml(n.excerpt||'')}</p>
+      <p class="excerpt">${escapeHtml(n.excerpt || '')}</p>
       <div class="meta">
         <span class="stat"><i class="fa-regular fa-clock"></i> ${timeAgo(n.createdAtDate)}</span>
-        <span class="stat"><i class="fa-solid fa-heart"></i> ${n.likes||0}</span>
+        <span class="stat"><i class="fa-solid fa-heart"></i> ${n.likes || 0}</span>
       </div>
     </div>
   </div>`;
 }
 
-/* Infinite scroll via IntersectionObserver */
+/* Infinite scroll */
 const sentinel = document.getElementById('loadSentinel');
-const io = new IntersectionObserver((entries)=>{
-  entries.forEach(entry=>{
-    if(entry.isIntersecting && allNews && filteredNews.length > 1){
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && allNews && filteredNews.length > 1) {
       const rest = filteredNews.slice(1);
-      if(currentPage * pageSize < rest.length){
-        document.getElementById('loadSpin').style.display='flex';
-        setTimeout(()=>{ // sedikit delay agar animasi loading terlihat natural
+      if (currentPage * pageSize < rest.length) {
+        document.getElementById('loadSpin').style.display = 'flex';
+        setTimeout(() => {
           currentPage++;
           renderGrid(false);
-          document.getElementById('loadSpin').style.display='none';
+          document.getElementById('loadSpin').style.display = 'none';
         }, 400);
       }
     }
   });
-}, { rootMargin:'200px' });
+}, { rootMargin: '200px' });
 io.observe(sentinel);
 
 /* ================================================================
-   BREAKING NEWS TICKER
+   BREAKING NEWS
    ================================================================ */
-function renderBreaking(){
+function renderBreaking() {
   const list = document.getElementById('breakingList');
-  const latest = (allNews||[]).slice(0,8);
-  if(!latest.length){ list.innerHTML = '<li>Belum ada berita terkini.</li>'; return; }
-  const items = latest.map(n=>`<li data-id="${n.id}"><i class="fa-solid fa-circle" style="font-size:5px;"></i> ${escapeHtml(n.title)}</li>`).join('');
-  list.innerHTML = items + items; // duplikasi agar marquee looping mulus
-  list.querySelectorAll('li').forEach(li=>{
-    li.style.cursor='pointer';
-    li.addEventListener('click', ()=> li.dataset.id && openArticle(li.dataset.id));
+  const latest = (allNews || []).slice(0, 8);
+  if (!latest.length) { list.innerHTML = '<li>Belum ada berita terkini.</li>'; return; }
+  const items = latest.map(n => `<li data-id="${n.id}"><i class="fa-solid fa-circle" style="font-size:5px;"></i> ${escapeHtml(n.title)}</li>`).join('');
+  list.innerHTML = items + items;
+  list.querySelectorAll('li').forEach(li => {
+    li.style.cursor = 'pointer';
+    li.addEventListener('click', () => li.dataset.id && openArticle(li.dataset.id));
   });
 }
 
 /* ================================================================
-   SIDEBAR: BERITA POPULER (diurutkan berdasarkan jumlah like)
+   POPULAR
    ================================================================ */
-function renderPopular(){
-  const top = [...(allNews||[])].sort((a,b)=>(b.likes||0)-(a.likes||0)).slice(0,5);
-  const html = top.length ? top.map((n,i)=>`
+function renderPopular() {
+  const top = [...(allNews || [])].sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 5);
+  const html = top.length ? top.map((n, i) => `
     <div class="popular-item" data-id="${n.id}">
-      <div class="popular-rank">${String(i+1).padStart(2,'0')}</div>
+      <div class="popular-rank">${String(i + 1).padStart(2, '0')}</div>
       <div class="p-body">
         <h5>${escapeHtml(n.title)}</h5>
-        <div class="meta"><span><i class="fa-solid fa-heart"></i> ${n.likes||0}</span><span><i class="fa-regular fa-clock"></i> ${timeAgo(n.createdAtDate)}</span></div>
+        <div class="meta"><span><i class="fa-solid fa-heart"></i> ${n.likes || 0}</span><span><i class="fa-regular fa-clock"></i> ${timeAgo(n.createdAtDate)}</span></div>
       </div>
     </div>`).join('') : `<p style="font-size:.82rem;color:var(--ink-faint);">Belum ada data.</p>`;
-  ['popularList','popularListArticle'].forEach(id=>{
+  ['popularList', 'popularListArticle'].forEach(id => {
     const el = document.getElementById(id);
     el.innerHTML = html;
-    el.querySelectorAll('.popular-item').forEach(item=> item.addEventListener('click', ()=> openArticle(item.dataset.id)));
+    el.querySelectorAll('.popular-item').forEach(item => item.addEventListener('click', () => openArticle(item.dataset.id)));
   });
 }
 
 /* ================================================================
-   HALAMAN ARTIKEL
+   ARTIKEL
    ================================================================ */
-function openArticle(id){
+function openArticle(id) {
   currentArticleId = id;
   location.hash = 'artikel/' + id;
   document.getElementById('homeView').classList.add('hide');
   document.getElementById('articleView').classList.add('show');
-  window.scrollTo({top:0, behavior:'smooth'});
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  const n = (allNews||[]).find(x=>x.id===id);
-  if(n) renderArticleCore(n);
+  const n = (allNews || []).find(x => x.id === id);
+  if (n) renderArticleCore(n);
 
   listenReactions(id);
   listenComments(id);
   listenBookmark(id);
 }
+
 document.getElementById('backBtn').addEventListener('click', closeArticle);
-function closeArticle(){
+
+function closeArticle() {
   currentArticleId = null;
   location.hash = '';
   document.getElementById('homeView').classList.remove('hide');
   document.getElementById('articleView').classList.remove('show');
-  if(reactionUnsub) reactionUnsub();
-  if(commentsUnsub) commentsUnsub();
-  if(bookmarkUnsub) bookmarkUnsub();
-  window.scrollTo({top:0, behavior:'smooth'});
+  if (reactionUnsub) reactionUnsub();
+  if (commentsUnsub) commentsUnsub();
+  if (bookmarkUnsub) bookmarkUnsub();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function renderArticleCore(n){
+function renderArticleCore(n) {
   const c = catInfo(n.category);
   document.getElementById('articleHeader').innerHTML = `
     <span class="cat-chip" style="background:${c.color}">${c.label}</span>
     <h1>${escapeHtml(n.title)}</h1>
     <div class="article-byline">
-      <div class="author-avatar">${escapeHtml((n.author||'?').charAt(0).toUpperCase())}</div>
+      <div class="author-avatar">${escapeHtml((n.author || '?').charAt(0).toUpperCase())}</div>
       <div class="author-info">
         <b>${escapeHtml(n.author)}</b>
         <span>
@@ -1116,183 +1094,184 @@ function renderArticleCore(n){
       </div>
     </div>`;
   document.getElementById('articleImg').innerHTML = `<img src="${escapeHtml(n.image)}" alt="${escapeHtml(n.title)}" loading="lazy">`;
-  document.getElementById('articleBody').innerHTML = (n.content||'').split(/\n+/).filter(Boolean).map(p=>`<p>${escapeHtml(p)}</p>`).join('');
+  document.getElementById('articleBody').innerHTML = (n.content || '').split(/\n+/).filter(Boolean).map(p => `<p>${escapeHtml(p)}</p>`).join('');
   renderActionBar(n);
 }
 
-function renderActionBar(n){
-  const liked = (n.likedBy||[]).includes(USER_ID);
+function renderActionBar(n) {
+  const liked = (n.likedBy || []).includes(USER_ID);
   const bar = document.getElementById('actionBar');
   bar.innerHTML = `
-    <button class="action-btn like-btn ${liked?'active':''}" id="likeBtn"><i class="fa-solid fa-heart"></i> <span id="likeCount">${n.likes||0}</span> Suka</button>
+    <button class="action-btn like-btn ${liked ? 'active' : ''}" id="likeBtn"><i class="fa-solid fa-heart"></i> <span id="likeCount">${n.likes || 0}</span> Suka</button>
     <button class="action-btn bookmark-btn" id="bookmarkBtn"><i class="fa-regular fa-bookmark"></i> Simpan</button>
     <button class="action-btn" id="shareBtn"><i class="fa-solid fa-share-nodes"></i> Bagikan</button>
     <button class="action-btn" id="copyLinkBtn"><i class="fa-solid fa-link"></i> Salin Tautan</button>
   `;
-  document.getElementById('likeBtn').addEventListener('click', ()=> toggleLike(n.id));
-  document.getElementById('shareBtn').addEventListener('click', ()=> shareArticle(n));
-  document.getElementById('copyLinkBtn').addEventListener('click', ()=> copyLink(n.id));
-  document.getElementById('bookmarkBtn').addEventListener('click', ()=> toggleBookmark(n.id));
+  document.getElementById('likeBtn').addEventListener('click', () => toggleLike(n.id));
+  document.getElementById('shareBtn').addEventListener('click', () => shareArticle(n));
+  document.getElementById('copyLinkBtn').addEventListener('click', () => copyLink(n.id));
+  document.getElementById('bookmarkBtn').addEventListener('click', () => toggleBookmark(n.id));
 
-  // render reaksi
   const rBox = document.getElementById('reactionsBox');
-  rBox.innerHTML = REACTIONS.map(r=>`
+  rBox.innerHTML = REACTIONS.map(r => `
     <button class="reaction-btn" data-r="${r.id}"><span class="emo">${r.emoji}</span> <span class="r-label">${r.label}</span> <span class="r-count" data-count="${r.id}">0</span></button>
   `).join('');
-  rBox.querySelectorAll('.reaction-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=> setReaction(n.id, btn.dataset.r, btn));
+  rBox.querySelectorAll('.reaction-btn').forEach(btn => {
+    btn.addEventListener('click', () => setReaction(n.id, btn.dataset.r, btn));
   });
 }
 
-/* --- LIKE ARTIKEL (Firestore, satu kali per user, real-time) --- */
-async function toggleLike(newsId){
-  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+/* LIKE */
+async function toggleLike(newsId) {
+  if (!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
   const ref = db.collection('news').doc(newsId);
   const btn = document.getElementById('likeBtn');
-  try{
-    await db.runTransaction(async(tx)=>{
+  try {
+    await db.runTransaction(async (tx) => {
       const doc = await tx.get(ref);
       const data = doc.data() || {};
       const likedBy = data.likedBy || [];
       const already = likedBy.includes(USER_ID);
-      const newLikedBy = already ? likedBy.filter(u=>u!==USER_ID) : [...likedBy, USER_ID];
-      tx.update(ref, { likedBy:newLikedBy, likes: newLikedBy.length });
+      const newLikedBy = already ? likedBy.filter(u => u !== USER_ID) : [...likedBy, USER_ID];
+      tx.update(ref, { likedBy: newLikedBy, likes: newLikedBy.length });
     });
     btn.classList.add('pulse');
-    setTimeout(()=>btn.classList.remove('pulse'), 450);
-  }catch(e){ console.error(e); showToast('Gagal memproses like', 'fa-triangle-exclamation'); }
+    setTimeout(() => btn.classList.remove('pulse'), 450);
+  } catch (e) { console.error(e); showToast('Gagal memproses like', 'fa-triangle-exclamation'); }
 }
 
-/* --- REAKSI ARTIKEL (koleksi "reactions", 1 doc per berita) --- */
-function listenReactions(newsId){
-  if(reactionUnsub) reactionUnsub();
-  if(!firebaseReady) return;
-  reactionUnsub = db.collection('reactions').doc(newsId).onSnapshot(doc=>{
+/* REAKSI */
+function listenReactions(newsId) {
+  if (reactionUnsub) reactionUnsub();
+  if (!firebaseReady) return;
+  reactionUnsub = db.collection('reactions').doc(newsId).onSnapshot(doc => {
     const data = doc.data() || {};
     const counts = data.counts || {};
     const userMap = data.userReactions || {};
     const myReaction = userMap[USER_ID];
-    REACTIONS.forEach(r=>{
+    REACTIONS.forEach(r => {
       const el = document.querySelector(`.r-count[data-count="${r.id}"]`);
-      if(el) el.textContent = counts[r.id] || 0;
+      if (el) el.textContent = counts[r.id] || 0;
       const btn = document.querySelector(`.reaction-btn[data-r="${r.id}"]`);
-      if(btn) btn.classList.toggle('active', myReaction===r.id);
+      if (btn) btn.classList.toggle('active', myReaction === r.id);
     });
   });
 }
-async function setReaction(newsId, type, btnEl){
-  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+
+async function setReaction(newsId, type, btnEl) {
+  if (!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
   const ref = db.collection('reactions').doc(newsId);
-  try{
-    await db.runTransaction(async(tx)=>{
+  try {
+    await db.runTransaction(async (tx) => {
       const doc = await tx.get(ref);
-      const data = doc.exists ? doc.data() : { counts:{}, userReactions:{} };
+      const data = doc.exists ? doc.data() : { counts: {}, userReactions: {} };
       const counts = data.counts || {};
       const userReactions = data.userReactions || {};
       const prev = userReactions[USER_ID];
-      if(prev === type){
-        // batalkan reaksi yang sama
-        counts[type] = Math.max(0,(counts[type]||0)-1);
+      if (prev === type) {
+        counts[type] = Math.max(0, (counts[type] || 0) - 1);
         delete userReactions[USER_ID];
       } else {
-        if(prev) counts[prev] = Math.max(0,(counts[prev]||0)-1);
-        counts[type] = (counts[type]||0)+1;
+        if (prev) counts[prev] = Math.max(0, (counts[prev] || 0) - 1);
+        counts[type] = (counts[type] || 0) + 1;
         userReactions[USER_ID] = type;
       }
-      tx.set(ref, { counts, userReactions }, { merge:true });
+      tx.set(ref, { counts, userReactions }, { merge: true });
     });
     btnEl.classList.add('bump');
-    setTimeout(()=>btnEl.classList.remove('bump'), 400);
-  }catch(e){ console.error(e); showToast('Gagal mengirim reaksi', 'fa-triangle-exclamation'); }
+    setTimeout(() => btnEl.classList.remove('bump'), 400);
+  } catch (e) { console.error(e); showToast('Gagal mengirim reaksi', 'fa-triangle-exclamation'); }
 }
 
-/* --- BOOKMARK (koleksi "bookmarks") --- */
-function listenBookmark(newsId){
-  if(bookmarkUnsub) bookmarkUnsub();
-  if(!firebaseReady) return;
+/* BOOKMARK */
+function listenBookmark(newsId) {
+  if (bookmarkUnsub) bookmarkUnsub();
+  if (!firebaseReady) return;
   const docId = USER_ID + '_' + newsId;
-  bookmarkUnsub = db.collection('bookmarks').doc(docId).onSnapshot(doc=>{
+  bookmarkUnsub = db.collection('bookmarks').doc(docId).onSnapshot(doc => {
     const btn = document.getElementById('bookmarkBtn');
-    if(!btn) return;
+    if (!btn) return;
     const exists = doc.exists;
     btn.classList.toggle('active', exists);
     btn.innerHTML = exists ? '<i class="fa-solid fa-bookmark"></i> Tersimpan' : '<i class="fa-regular fa-bookmark"></i> Simpan';
   });
 }
-async function toggleBookmark(newsId){
-  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+
+async function toggleBookmark(newsId) {
+  if (!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
   const docId = USER_ID + '_' + newsId;
   const ref = db.collection('bookmarks').doc(docId);
   const doc = await ref.get();
-  if(doc.exists){
+  if (doc.exists) {
     await ref.delete();
     showToast('Dihapus dari simpanan', 'fa-bookmark');
   } else {
-    await ref.set({ userId:USER_ID, newsId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await ref.set({ userId: USER_ID, newsId, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     showToast('Berita disimpan ke bookmark', 'fa-bookmark');
   }
 }
 
-/* --- SHARE & COPY LINK --- */
-function shareArticle(n){
+/* SHARE & COPY */
+function shareArticle(n) {
   const url = location.origin + location.pathname + '#artikel/' + n.id;
-  if(navigator.share){
-    navigator.share({ title:n.title, text:n.excerpt||'', url }).catch(()=>{});
+  if (navigator.share) {
+    navigator.share({ title: n.title, text: n.excerpt || '', url }).catch(() => { });
   } else {
     copyLink(n.id);
   }
 }
-function copyLink(id){
+
+function copyLink(id) {
   const url = location.origin + location.pathname + '#artikel/' + id;
-  navigator.clipboard.writeText(url).then(()=> showToast('Tautan disalin ke clipboard', 'fa-link'))
-    .catch(()=> showToast('Gagal menyalin tautan', 'fa-triangle-exclamation'));
+  navigator.clipboard.writeText(url).then(() => showToast('Tautan disalin ke clipboard', 'fa-link'))
+    .catch(() => showToast('Gagal menyalin tautan', 'fa-triangle-exclamation'));
 }
 
 /* ================================================================
-   KOMENTAR (real-time, balasan berjenjang, like komentar, edit/hapus)
+   KOMENTAR
    ================================================================ */
-function listenComments(newsId){
-  if(commentsUnsub) commentsUnsub();
+function listenComments(newsId) {
+  if (commentsUnsub) commentsUnsub();
   renderCommentForm(null);
-  if(!firebaseReady){ document.getElementById('commentsList').innerHTML=''; return; }
-  commentsUnsub = db.collection('comments').where('newsId','==',newsId)
-    .onSnapshot(snap=>{
-      commentsCache = snap.docs.map(d=>{
+  if (!firebaseReady) { document.getElementById('commentsList').innerHTML = ''; return; }
+  commentsUnsub = db.collection('comments').where('newsId', '==', newsId)
+    .onSnapshot(snap => {
+      commentsCache = snap.docs.map(d => {
         const v = d.data();
-        return { id:d.id, ...v, createdAtDate: toDate(v.createdAt), likedBy: v.likedBy || [] };
+        return { id: d.id, ...v, createdAtDate: toDate(v.createdAt), likedBy: v.likedBy || [] };
       });
-      commentsCache.sort((a,b)=> (b.createdAtDate?.getTime()||0) - (a.createdAtDate?.getTime()||0));
+      commentsCache.sort((a, b) => (b.createdAtDate?.getTime() || 0) - (a.createdAtDate?.getTime() || 0));
       document.getElementById('commentCount').textContent = '(' + commentsCache.length + ')';
       renderComments();
-    }, err=>{ console.error(err); });
+    }, err => { console.error(err); });
 }
 
-function renderCommentForm(replyTo){
+function renderCommentForm(replyTo) {
   replyTarget = replyTo;
   const wrap = document.getElementById('mainCommentForm');
   wrap.innerHTML = `
     ${replyTo ? `<div class="reply-hint"><i class="fa-solid fa-reply"></i> Membalas <b>@${escapeHtml(replyTo.name)}</b> <button type="button" id="cancelReply" style="margin-left:8px;color:var(--ink-faint);text-decoration:underline;">batal</button></div>` : ''}
-    <form id="commentForm" style="margin-top:${replyTo?'10px':'0'}">
+    <form id="commentForm" style="margin-top:${replyTo ? '10px' : '0'}">
       <div class="row">
         <input type="text" id="cName" placeholder="Nama Anda" required style="max-width:220px;">
       </div>
-      <textarea id="cText" placeholder="${replyTo? 'Tulis balasan Anda...' : 'Tulis komentar Anda...'}" required>${replyTo? '@'+replyTo.name+' ' : ''}</textarea>
+      <textarea id="cText" placeholder="${replyTo ? 'Tulis balasan Anda...' : 'Tulis komentar Anda...'}" required>${replyTo ? '@' + replyTo.name + ' ' : ''}</textarea>
       <div class="actions">
         <span style="font-size:.75rem;color:var(--ink-faint);"><i class="fa-solid fa-circle-info"></i> Nama & komentar tersimpan publik</span>
         <button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> Kirim</button>
       </div>
     </form>`;
   document.getElementById('commentForm').addEventListener('submit', submitComment);
-  if(replyTo) document.getElementById('cancelReply').addEventListener('click', ()=> renderCommentForm(null));
+  if (replyTo) document.getElementById('cancelReply').addEventListener('click', () => renderCommentForm(null));
 }
 
-async function submitComment(e){
+async function submitComment(e) {
   e.preventDefault();
-  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+  if (!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
   const name = document.getElementById('cName').value.trim();
   const text = document.getElementById('cText').value.trim();
-  if(!name || !text) return;
-  try{
+  if (!name || !text) return;
+  try {
     await db.collection('comments').add({
       newsId: currentArticleId,
       name, text,
@@ -1302,28 +1281,28 @@ async function submitComment(e){
     });
     renderCommentForm(null);
     showToast('Komentar terkirim', 'fa-comment');
-  }catch(err){ console.error(err); showToast('Gagal mengirim komentar', 'fa-triangle-exclamation'); }
+  } catch (err) { console.error(err); showToast('Gagal mengirim komentar', 'fa-triangle-exclamation'); }
 }
 
-function renderComments(){
+function renderComments() {
   const list = document.getElementById('commentsList');
-  const roots = commentsCache.filter(c=>!c.parentId);
-  if(!roots.length){
+  const roots = commentsCache.filter(c => !c.parentId);
+  if (!roots.length) {
     list.innerHTML = `<div class="empty-state"><i class="fa-regular fa-comment-dots"></i>Belum ada komentar. Jadilah yang pertama!</div>`;
     return;
   }
-  list.innerHTML = roots.map(c=>commentNode(c)).join('');
+  list.innerHTML = roots.map(c => commentNode(c)).join('');
   bindCommentEvents(list);
 }
 
-function commentNode(c, depth=0){
-  const children = commentsCache.filter(x=>x.parentId===c.id);
-  const liked = (c.likedBy||[]).includes(USER_ID);
+function commentNode(c, depth = 0) {
+  const children = commentsCache.filter(x => x.parentId === c.id);
+  const liked = (c.likedBy || []).includes(USER_ID);
   const textHtml = escapeHtml(c.text).replace(/(^|\s)(@[\w.]+)/g, '$1<span class="mention">$2</span>');
   return `
   <div class="comment-item" data-id="${c.id}">
     <div class="c-head">
-      <div class="c-avatar">${escapeHtml((c.name||'?').charAt(0).toUpperCase())}</div>
+      <div class="c-avatar">${escapeHtml((c.name || '?').charAt(0).toUpperCase())}</div>
       <div>
         <span class="c-name">${escapeHtml(c.name)}</span>
         <div class="c-time">${timeAgo(c.createdAtDate)}</div>
@@ -1331,43 +1310,43 @@ function commentNode(c, depth=0){
     </div>
     <div class="c-text" data-textfor="${c.id}">${textHtml}</div>
     <div class="c-actions">
-      <button class="like-c ${liked?'liked':''}" data-id="${c.id}"><i class="fa-solid fa-heart"></i> <span>${(c.likedBy||[]).length}</span></button>
+      <button class="like-c ${liked ? 'liked' : ''}" data-id="${c.id}"><i class="fa-solid fa-heart"></i> <span>${(c.likedBy || []).length}</span></button>
       ${depth < 3 ? `<button class="reply-c" data-id="${c.id}" data-name="${escapeHtml(c.name)}"><i class="fa-solid fa-reply"></i> Balas</button>` : ''}
       <button class="edit-c" data-id="${c.id}"><i class="fa-solid fa-pen"></i> Edit</button>
       <button class="del-c" data-id="${c.id}"><i class="fa-solid fa-trash"></i> Hapus</button>
     </div>
-    ${children.length ? `<div class="replies">${children.map(ch=>commentNode(ch, depth+1)).join('')}</div>` : ''}
+    ${children.length ? `<div class="replies">${children.map(ch => commentNode(ch, depth + 1)).join('')}</div>` : ''}
   </div>`;
 }
 
-function bindCommentEvents(list){
-  list.querySelectorAll('.like-c').forEach(btn=> btn.addEventListener('click', ()=> toggleCommentLike(btn.dataset.id)));
-  list.querySelectorAll('.reply-c').forEach(btn=> btn.addEventListener('click', ()=>{
-    renderCommentForm({ id:btn.dataset.id, name:btn.dataset.name });
-    document.getElementById('mainCommentForm').scrollIntoView({behavior:'smooth', block:'center'});
+function bindCommentEvents(list) {
+  list.querySelectorAll('.like-c').forEach(btn => btn.addEventListener('click', () => toggleCommentLike(btn.dataset.id)));
+  list.querySelectorAll('.reply-c').forEach(btn => btn.addEventListener('click', () => {
+    renderCommentForm({ id: btn.dataset.id, name: btn.dataset.name });
+    document.getElementById('mainCommentForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }));
-  list.querySelectorAll('.edit-c').forEach(btn=> btn.addEventListener('click', ()=> startEditComment(btn.dataset.id)));
-  list.querySelectorAll('.del-c').forEach(btn=> btn.addEventListener('click', ()=> deleteComment(btn.dataset.id)));
+  list.querySelectorAll('.edit-c').forEach(btn => btn.addEventListener('click', () => startEditComment(btn.dataset.id)));
+  list.querySelectorAll('.del-c').forEach(btn => btn.addEventListener('click', () => deleteComment(btn.dataset.id)));
 }
 
-async function toggleCommentLike(id){
-  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+async function toggleCommentLike(id) {
+  if (!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
   const ref = db.collection('comments').doc(id);
-  try{
-    await db.runTransaction(async(tx)=>{
+  try {
+    await db.runTransaction(async (tx) => {
       const doc = await tx.get(ref);
       const data = doc.data() || {};
       const likedBy = data.likedBy || [];
       const already = likedBy.includes(USER_ID);
-      const updated = already ? likedBy.filter(u=>u!==USER_ID) : [...likedBy, USER_ID];
+      const updated = already ? likedBy.filter(u => u !== USER_ID) : [...likedBy, USER_ID];
       tx.update(ref, { likedBy: updated });
     });
-  }catch(e){ console.error(e); }
+  } catch (e) { console.error(e); }
 }
 
-function startEditComment(id){
-  const c = commentsCache.find(x=>x.id===id);
-  if(!c) return;
+function startEditComment(id) {
+  const c = commentsCache.find(x => x.id === id);
+  if (!c) return;
   const target = document.querySelector(`.c-text[data-textfor="${id}"]`);
   target.innerHTML = `
     <textarea id="edit-${id}" style="width:100%;min-height:60px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--ink);">${escapeHtml(c.text)}</textarea>
@@ -1375,30 +1354,30 @@ function startEditComment(id){
       <button class="btn-primary" style="padding:6px 12px;font-size:.78rem;" id="save-${id}"><i class="fa-solid fa-check"></i> Simpan</button>
       <button class="btn-ghost" style="padding:6px 12px;font-size:.78rem;" id="cancel-${id}">Batal</button>
     </div>`;
-  document.getElementById(`save-${id}`).addEventListener('click', async ()=>{
+  document.getElementById(`save-${id}`).addEventListener('click', async () => {
     const newText = document.getElementById(`edit-${id}`).value.trim();
-    if(!newText) return;
-    try{
-      await db.collection('comments').doc(id).update({ text:newText, editedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    if (!newText) return;
+    try {
+      await db.collection('comments').doc(id).update({ text: newText, editedAt: firebase.firestore.FieldValue.serverTimestamp() });
       showToast('Komentar diperbarui', 'fa-pen');
-    }catch(e){ console.error(e); showToast('Gagal memperbarui komentar', 'fa-triangle-exclamation'); }
+    } catch (e) { console.error(e); showToast('Gagal memperbarui komentar', 'fa-triangle-exclamation'); }
   });
   document.getElementById(`cancel-${id}`).addEventListener('click', renderComments);
 }
 
-async function deleteComment(id){
-  if(!confirm('Hapus komentar ini? Balasan di dalamnya juga akan terhapus.')) return;
-  try{
-    // hapus komentar beserta seluruh balasan turunannya
+async function deleteComment(id) {
+  if (!confirm('Hapus komentar ini? Balasan di dalamnya juga akan terhapus.')) return;
+  try {
     const toDelete = [id, ...collectDescendants(id)];
     const batch = db.batch();
-    toDelete.forEach(cid=> batch.delete(db.collection('comments').doc(cid)));
+    toDelete.forEach(cid => batch.delete(db.collection('comments').doc(cid)));
     await batch.commit();
     showToast('Komentar dihapus', 'fa-trash');
-  }catch(e){ console.error(e); showToast('Gagal menghapus komentar', 'fa-triangle-exclamation'); }
+  } catch (e) { console.error(e); showToast('Gagal menghapus komentar', 'fa-triangle-exclamation'); }
 }
-function collectDescendants(id){
-  const direct = commentsCache.filter(c=>c.parentId===id).map(c=>c.id);
+
+function collectDescendants(id) {
+  const direct = commentsCache.filter(c => c.parentId === id).map(c => c.id);
   return direct.concat(direct.flatMap(collectDescendants));
 }
 
@@ -1408,12 +1387,12 @@ function collectDescendants(id){
 const modalOverlay = document.getElementById('modalOverlay');
 let editingNewsId = null;
 
-document.getElementById('fabBtn').addEventListener('click', ()=> openNewsModal(null));
+document.getElementById('fabBtn').addEventListener('click', () => openNewsModal(null));
 document.getElementById('modalClose').addEventListener('click', closeModal);
 document.getElementById('cancelFormBtn').addEventListener('click', closeModal);
-modalOverlay.addEventListener('click', (e)=>{ if(e.target===modalOverlay) closeModal(); });
+modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 
-function openNewsModal(newsToEdit){
+function openNewsModal(newsToEdit) {
   editingNewsId = newsToEdit ? newsToEdit.id : null;
   document.getElementById('modalTitle').textContent = newsToEdit ? 'Edit Berita' : 'Tambah Berita';
   document.getElementById('submitLabel').textContent = newsToEdit ? 'Simpan Perubahan' : 'Publikasikan';
@@ -1426,17 +1405,20 @@ function openNewsModal(newsToEdit){
   updateImgPreview();
   modalOverlay.classList.add('show');
 }
-function closeModal(){ modalOverlay.classList.remove('show'); editingNewsId = null; }
+
+function closeModal() { modalOverlay.classList.remove('show'); editingNewsId = null; }
+
 document.getElementById('fImage').addEventListener('input', updateImgPreview);
-function updateImgPreview(){
+
+function updateImgPreview() {
   const url = document.getElementById('fImage').value.trim();
   const box = document.getElementById('imgPreview');
   box.innerHTML = url ? `<img src="${escapeHtml(url)}" alt="pratinjau" onerror="this.parentElement.innerHTML='URL gambar tidak valid';">` : 'Pratinjau gambar akan muncul di sini';
 }
 
-document.getElementById('newsForm').addEventListener('submit', async(e)=>{
+document.getElementById('newsForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  if(!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
+  if (!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
   const payload = {
     title: document.getElementById('fTitle').value.trim(),
     image: document.getElementById('fImage').value.trim(),
@@ -1445,28 +1427,28 @@ document.getElementById('newsForm').addEventListener('submit', async(e)=>{
     excerpt: document.getElementById('fExcerpt').value.trim(),
     content: document.getElementById('fContent').value.trim(),
   };
-  try{
-    if(editingNewsId){
+  try {
+    if (editingNewsId) {
       await db.collection('news').doc(editingNewsId).update(payload);
       showToast('Berita berhasil diperbarui', 'fa-check');
     } else {
       await db.collection('news').add({
-        ...payload, likes:0, likedBy:[], createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        ...payload, likes: 0, likedBy: [], createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       showToast('Berita berhasil dipublikasikan', 'fa-check');
     }
     closeModal();
-  }catch(err){ console.error(err); showToast('Gagal menyimpan berita', 'fa-triangle-exclamation'); }
+  } catch (err) { console.error(err); showToast('Gagal menyimpan berita', 'fa-triangle-exclamation'); }
 });
 
 /* ================================================================
-   ROUTING SEDERHANA VIA HASH (#artikel/ID)
+   ROUTING VIA HASH
    ================================================================ */
-function handleRoute(){
-  const hash = location.hash.replace('#','');
-  if(hash.startsWith('artikel/')){
+function handleRoute() {
+  const hash = location.hash.replace('#', '');
+  if (hash.startsWith('artikel/')) {
     const id = hash.split('/')[1];
-    if(id) openArticle(id);
+    if (id) openArticle(id);
   } else {
     closeArticle();
   }
@@ -1474,13 +1456,61 @@ function handleRoute(){
 window.addEventListener('hashchange', handleRoute);
 
 /* ================================================================
-   NEWSLETTER (demo lokal — tidak terhubung Firestore sesuai brief)
+   NEWSLETTER
    ================================================================ */
-document.getElementById('subscribeBtn').addEventListener('click', (e)=>{
-  const input = e.target.previousElementSibling;
-  if(input.value.trim()){ showToast('Terima kasih telah berlangganan!', 'fa-envelope-circle-check'); input.value=''; }
+document.getElementById('subscribeBtn').addEventListener('click', () => {
+  const input = document.getElementById('newsletterInput');
+  if (input.value.trim()) { showToast('Terima kasih telah berlangganan!', 'fa-envelope-circle-check'); input.value = ''; }
   else showToast('Masukkan alamat email terlebih dahulu', 'fa-triangle-exclamation');
 });
+
+/* ================================================================
+   VIDEO TUTORIAL
+   ================================================================ */
+document.getElementById('openVideoBtn').addEventListener('click', () => {
+  const popup = document.getElementById('videoPopup');
+  const video = document.getElementById('tutorialVideo');
+  popup.classList.add('show');
+  video.currentTime = 0;
+  video.play().catch(() => {});
+});
+
+document.getElementById('closeVideoBtn').addEventListener('click', () => {
+  const popup = document.getElementById('videoPopup');
+  const video = document.getElementById('tutorialVideo');
+  video.pause();
+  video.currentTime = 0;
+  popup.classList.remove('show');
+});
+
+document.getElementById('videoPopup').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    const popup = document.getElementById('videoPopup');
+    const video = document.getElementById('tutorialVideo');
+    video.pause();
+    video.currentTime = 0;
+    popup.classList.remove('show');
+  }
+});
+
+/* ================================================================
+   ONLINE USER COUNTER (Realtime Database)
+   ================================================================ */
+if (firebaseReady && rtdb) {
+  const userId = localStorage.getItem("kk_user_id") || crypto.randomUUID?.() || 'u_' + Math.random().toString(36).slice(2);
+  localStorage.setItem("kk_user_id", userId);
+
+  const userRef = rtdb.ref("online/" + userId);
+  userRef.set(true);
+  userRef.onDisconnect().remove();
+
+  rtdb.ref("online").on("value", (snapshot) => {
+    const jumlah = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
+    document.getElementById("onlineCount").textContent = jumlah;
+  });
+} else {
+  document.getElementById("onlineCount").textContent = '0';
+}
 
 /* ================================================================
    INISIALISASI
@@ -1489,51 +1519,6 @@ renderNav();
 renderSkeletonOrEmpty();
 listenNews();
 handleRoute();
-
-function updateMarkerLabels(){
-
-    markerElements.forEach(el=>{
-
-        const type = el.dataset.type;
-
-        if(type==="provinsi"){
-
-            if(state.scale < 2.5){
-                el.classList.add("hide-label");
-            }else{
-                el.classList.remove("hide-label");
-            }
-
-        }
-
-    });
-
-}
-
-// ================= ONLINE USER =================
-
-let userId = localStorage.getItem("ufn_user_id");
-
-if (!userId) {
-    userId = crypto.randomUUID();
-    localStorage.setItem("ufn_user_id", userId);
-}
-
-const userRef = ref(rtdb, "online/" + userId);
-
-set(userRef, true);
-
-onDisconnect(userRef).remove();
-
-onValue(ref(rtdb, "online"), (snapshot) => {
-    const jumlah = snapshot.exists()
-        ? Object.keys(snapshot.val()).length
-        : 0;
-
-    document.getElementById("onlineCount").textContent = jumlah;
-});
-
-
 </script>
 </body>
 </html>
