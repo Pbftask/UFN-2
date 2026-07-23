@@ -466,6 +466,44 @@ html[data-theme="light"] .ripple{ background:rgba(20,30,50,.18); }
 .detail-item .dv{ font-family:var(--font-mono); font-size:18px; margin-top:4px; font-weight:500; }
 
 /* =====================================================================
+   11b. EDIT CUACA (form manual -> ditulis ke Firestore)
+   ===================================================================== */
+.edit-weather-btn{
+  margin-left:auto; width:38px; height:38px; border-radius:50%;
+  background:var(--glass-strong); border:1px solid var(--glass-border);
+  display:flex; align-items:center; justify-content:center; font-size:15px;
+  transition:transform .2s ease, background .2s ease;
+}
+.edit-weather-btn:hover{ transform:translateY(-2px) rotate(-6deg); background:var(--glass); }
+
+.edit-form{ margin-top:22px; display:flex; flex-direction:column; gap:16px; }
+.edit-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px;
+}
+.edit-field{ display:flex; flex-direction:column; gap:6px; }
+.edit-field label{
+  font-size:10px; letter-spacing:1.1px; text-transform:uppercase; color:var(--text-2); font-family:var(--font-mono);
+}
+.edit-field input, .edit-field select{
+  background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius-sm);
+  padding:10px 12px; font-family:var(--font-mono); font-size:14px; color:var(--text-0); outline:none;
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+.edit-field input:focus, .edit-field select:focus{
+  border-color:var(--accent-teal); box-shadow:0 0 0 4px rgba(79,209,197,.15);
+}
+.edit-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:4px; }
+.edit-btn{
+  padding:11px 20px; border-radius:999px; font-size:13.5px; font-weight:600;
+  border:1px solid var(--glass-border); transition:transform .2s ease, opacity .2s ease;
+}
+.edit-btn:hover{ transform:translateY(-2px); }
+.edit-btn:active{ transform:translateY(0) scale(.96); }
+.edit-btn.save{ background:linear-gradient(135deg,var(--accent-teal),#3bb6a9); color:#062521; border-color:transparent; }
+.edit-btn.cancel{ background:var(--glass-strong); color:var(--text-1); }
+.edit-btn[disabled]{ opacity:.6; pointer-events:none; }
+
+/* =====================================================================
    12. FLOATING CONTROLS (scroll-to-top, pull-to-refresh)
    ===================================================================== */
 .scroll-top{
@@ -674,7 +712,12 @@ import {
   collection,
   onSnapshot,
   query,
-  orderBy
+  orderBy,
+  doc,
+  updateDoc,
+  writeBatch,
+  serverTimestamp,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 
 import {
@@ -709,13 +752,17 @@ onValue(ref(rtdb, "online"), (snapshot) => {
    BAGIAN 2 — STATE APLIKASI
    ========================================================================= */
 const state = {
-  countries: [],      // data mentah dari Firestore: {id, name, description, createdAt}
+  countries: [],      // data mentah dari Firestore: {id, name, description, createdAt, weather}
   search: "",
   sortBy: "name-asc",
   filterCondition: "all",
   darkMode: true,
   loaded: false
 };
+
+// menyimpan id negara yang sedang dalam proses generate weather awal,
+// supaya tidak memicu updateWeather() berkali-kali untuk dokumen yang sama
+const pendingWeatherGen = new Set();
 
 /* =========================================================================
    BAGIAN 3 — DEFINISI KONDISI CUACA (ikon, label, kelas animasi)
@@ -840,12 +887,73 @@ const rainChance = randInt(rand, 0, 100);
 
   return {
     temp, conditionKey,
-    condition: CONDITIONS[conditionKey],
     humidity, windSpeed, pressure, uv, visibility, aqi, rainChance,
     dewPoint, feelsLike,
     sunrise: `${pad(sunriseH)}:${pad(sunriseM)}`,
     sunset: `${pad(sunsetH)}:${pad(sunsetM)}`
   };
+}
+
+/* Melengkapi objek weather (dari Firestore) dengan field "condition"
+   (icon/label/scene) yang diambil dari CONDITIONS berdasarkan conditionKey.
+   Field ini tidak disimpan di Firestore, hanya dipakai untuk render UI. */
+function attachCondition(weather){
+  if(!weather) return weather;
+  return { ...weather, condition: CONDITIONS[weather.conditionKey] };
+}
+
+/* =========================================================================
+   BAGIAN 5b — TULIS DATA CUACA KE FIRESTORE
+   ========================================================================= */
+
+/* Menghasilkan cuaca baru untuk SATU negara lalu menyimpannya ke
+   field `weather` pada dokumen countries/{countryId} di Firestore.  */
+async function updateWeather(countryId, countryName){
+  if(!db) return;
+  const weatherData = generateWeather(countryName);
+  const ref = doc(db, "countries", countryId);
+  await updateDoc(ref, {
+    weather: {
+      ...weatherData,
+      updatedAt: serverTimestamp()
+    }
+  });
+}
+
+/* Memperbarui cuaca SELURUH negara sekaligus menggunakan writeBatch()
+   agar lebih efisien dibanding memanggil updateWeather() satu-satu.   */
+async function updateAllWeather(){
+  if(!db) return;
+  const snapshot = await getDocs(collection(db, "countries"));
+  if(snapshot.empty) return;
+
+  const batch = writeBatch(db);
+  snapshot.docs.forEach(docSnap=>{
+    const data = docSnap.data();
+    const weatherData = generateWeather(data.name || docSnap.id);
+    batch.update(docSnap.ref, {
+      weather: {
+        ...weatherData,
+        updatedAt: serverTimestamp()
+      }
+    });
+  });
+  await batch.commit();
+}
+
+/* Menyimpan hasil edit manual (dari form di modal) ke field `weather`
+   pada dokumen countries/{countryId} di Firestore. Karena UI lain
+   mendengarkan lewat onSnapshot(), perubahan ini akan otomatis
+   tersebar ke semua client secara realtime. */
+async function saveWeatherEdit(countryId, weatherUpdate){
+  if(!db) throw new Error("Firestore belum dikonfigurasi");
+  const ref = doc(db, "countries", countryId);
+  await updateDoc(ref, {
+    weather: {
+      ...weatherUpdate,
+      updatedAt: serverTimestamp()
+    }
+  });
 }
 
 function aqiLabel(aqi){
@@ -979,7 +1087,8 @@ function renderFilters(){
    BAGIAN 9 — RENDER GRID KARTU
    ========================================================================= */
 function getProcessedList(){
-  let list = state.countries.map(c => ({ ...c, weather: generateWeather(c.name) }));
+  // hanya negara yang sudah memiliki data weather dari Firestore yang ditampilkan
+  let list = state.countries.filter(c => c.weather);
 
   if(state.search.trim() !== ""){
     const q = state.search.trim().toLowerCase();
@@ -1000,7 +1109,7 @@ function getProcessedList(){
 
 function renderGrid(){
   const grid = document.getElementById("grid");
-  const fullList = state.countries.map(c => ({ ...c, weather: generateWeather(c.name) }));
+  const fullList = state.countries.filter(c => c.weather);
   renderStats(fullList);
 
   const list = getProcessedList();
@@ -1064,19 +1173,39 @@ function cardTemplate(c, idx){
 /* =========================================================================
    BAGIAN 10 — MODAL DETAIL NEGARA
    ========================================================================= */
+let currentModalCountry = null; // negara yang sedang tampil di modal (dipakai saat simpan edit)
+
 function openModal(country){
-  const w = country.weather;
-  const cond = w.condition;
-  const aq = aqiLabel(w.aqi);
+  currentModalCountry = country;
+  const cond = country.weather.condition;
 
   const hero = document.getElementById("modalHero");
   hero.className = "modal-hero " + cond.scene;
   hero.innerHTML = `
     <button class="modal-close" id="modalClose">✕</button>
-    ${buildSceneMarkup(w.conditionKey, true)}
+    ${buildSceneMarkup(country.weather.conditionKey, true)}
     <div class="scene-icon" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:3;">${cond.icon}</div>
   `;
   document.getElementById("modalClose").addEventListener("click", closeModal);
+
+  renderModalView(country);
+
+  document.getElementById("modalOverlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal(){
+  document.getElementById("modalOverlay").classList.remove("open");
+  document.body.style.overflow = "";
+  currentModalCountry = null;
+}
+
+/* Tampilan baca (read-only) di dalam modal, lengkap dengan tombol
+   ✎ untuk beralih ke mode edit. */
+function renderModalView(country){
+  const w = country.weather;
+  const cond = w.condition;
+  const aq = aqiLabel(w.aqi);
 
   const desc = country.description && country.description.trim() !== ""
     ? country.description
@@ -1086,7 +1215,10 @@ function openModal(country){
   const updated = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
   document.getElementById("modalContent").innerHTML = `
-    <div class="modal-title fade-in">${escapeHtml(country.name)}</div>
+    <div class="modal-title fade-in">
+      <span>${escapeHtml(country.name)}</span>
+      <button class="edit-weather-btn" id="editWeatherBtn" title="Edit cuaca">✎</button>
+    </div>
     <div class="modal-updated fade-in">Diperbarui pukul ${updated} • sumber: Firestore realtime</div>
     <p class="modal-desc fade-in">${escapeHtml(desc)}</p>
 
@@ -1110,13 +1242,98 @@ function openModal(country){
     </div>
   `;
 
-  document.getElementById("modalOverlay").classList.add("open");
-  document.body.style.overflow = "hidden";
+  document.getElementById("editWeatherBtn").addEventListener("click", ()=> renderModalEdit(country));
 }
 
-function closeModal(){
-  document.getElementById("modalOverlay").classList.remove("open");
-  document.body.style.overflow = "";
+/* Form edit manual: perubahan di sini yang ditulis ke Firestore
+   lewat saveWeatherEdit(). Semua client lain akan melihat perubahan
+   ini otomatis lewat onSnapshot() begitu tersimpan. */
+function renderModalEdit(country){
+  const w = country.weather;
+
+  const conditionOptions = Object.keys(CONDITIONS).map(key=>{
+    const c = CONDITIONS[key];
+    const sel = key === w.conditionKey ? "selected" : "";
+    return `<option value="${key}" ${sel}>${c.icon} ${c.label}</option>`;
+  }).join("");
+
+  document.getElementById("modalContent").innerHTML = `
+    <div class="modal-title fade-in"><span>${escapeHtml(country.name)}</span></div>
+    <div class="modal-updated fade-in">Mode edit • perubahan akan disimpan ke Firestore</div>
+
+    <form class="edit-form fade-in" id="editWeatherForm">
+      <div class="edit-grid">
+        <div class="edit-field">
+          <label for="ef-condition">Kondisi</label>
+          <select id="ef-condition">${conditionOptions}</select>
+        </div>
+        <div class="edit-field"><label for="ef-temp">Suhu (°C)</label><input id="ef-temp" type="number" step="1" value="${w.temp}"></div>
+        <div class="edit-field"><label for="ef-feelsLike">Feels Like (°C)</label><input id="ef-feelsLike" type="number" step="1" value="${w.feelsLike}"></div>
+        <div class="edit-field"><label for="ef-humidity">Humidity (%)</label><input id="ef-humidity" type="number" min="0" max="100" step="1" value="${w.humidity}"></div>
+        <div class="edit-field"><label for="ef-windSpeed">Wind (km/j)</label><input id="ef-windSpeed" type="number" min="0" step="1" value="${w.windSpeed}"></div>
+        <div class="edit-field"><label for="ef-pressure">Pressure (hPa)</label><input id="ef-pressure" type="number" step="1" value="${w.pressure}"></div>
+        <div class="edit-field"><label for="ef-uv">UV Index</label><input id="ef-uv" type="number" min="0" max="11" step="1" value="${w.uv}"></div>
+        <div class="edit-field"><label for="ef-visibility">Visibility (km)</label><input id="ef-visibility" type="number" min="0" step="0.1" value="${w.visibility}"></div>
+        <div class="edit-field"><label for="ef-dewPoint">Dew Point (°C)</label><input id="ef-dewPoint" type="number" step="1" value="${w.dewPoint}"></div>
+        <div class="edit-field"><label for="ef-rainChance">Chance of Rain (%)</label><input id="ef-rainChance" type="number" min="0" max="100" step="1" value="${w.rainChance}"></div>
+        <div class="edit-field"><label for="ef-aqi">AQI</label><input id="ef-aqi" type="number" min="0" step="1" value="${w.aqi}"></div>
+        <div class="edit-field"><label for="ef-sunrise">Sunrise</label><input id="ef-sunrise" type="time" value="${w.sunrise}"></div>
+        <div class="edit-field"><label for="ef-sunset">Sunset</label><input id="ef-sunset" type="time" value="${w.sunset}"></div>
+      </div>
+      <div class="edit-actions">
+        <button type="button" class="edit-btn cancel" id="editCancelBtn">Batal</button>
+        <button type="submit" class="edit-btn save" id="editSaveBtn">Simpan ke Firestore</button>
+      </div>
+    </form>
+  `;
+
+  document.getElementById("editCancelBtn").addEventListener("click", ()=> renderModalView(country));
+
+  document.getElementById("editWeatherForm").addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const saveBtn = document.getElementById("editSaveBtn");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Menyimpan...";
+
+    const weatherUpdate = {
+      conditionKey: document.getElementById("ef-condition").value,
+      temp:        Number(document.getElementById("ef-temp").value),
+      feelsLike:   Number(document.getElementById("ef-feelsLike").value),
+      humidity:    Number(document.getElementById("ef-humidity").value),
+      windSpeed:   Number(document.getElementById("ef-windSpeed").value),
+      pressure:    Number(document.getElementById("ef-pressure").value),
+      uv:          Number(document.getElementById("ef-uv").value),
+      visibility:  Number(document.getElementById("ef-visibility").value),
+      dewPoint:    Number(document.getElementById("ef-dewPoint").value),
+      rainChance:  Number(document.getElementById("ef-rainChance").value),
+      aqi:         Number(document.getElementById("ef-aqi").value),
+      sunrise:     document.getElementById("ef-sunrise").value,
+      sunset:      document.getElementById("ef-sunset").value
+    };
+
+    try{
+      await saveWeatherEdit(country.id, weatherUpdate);
+      showToast("Cuaca " + country.name + " berhasil diperbarui di Firestore");
+      // hero scene ikut diperbarui sesuai kondisi baru
+      const newCond = CONDITIONS[weatherUpdate.conditionKey];
+      const hero = document.getElementById("modalHero");
+      hero.className = "modal-hero " + newCond.scene;
+      hero.innerHTML = `
+        <button class="modal-close" id="modalClose">✕</button>
+        ${buildSceneMarkup(weatherUpdate.conditionKey, true)}
+        <div class="scene-icon" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);z-index:3;">${newCond.icon}</div>
+      `;
+      document.getElementById("modalClose").addEventListener("click", closeModal);
+      // onSnapshot() akan mengisi ulang state.countries; tampilkan versi
+      // lokal terbaru dulu supaya modal langsung terasa responsif
+      renderModalView({ ...country, weather: attachCondition({ ...w, ...weatherUpdate }) });
+    }catch(err){
+      console.error("Gagal menyimpan edit cuaca:", err);
+      showToast("Gagal menyimpan perubahan ke Firestore");
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Simpan ke Firestore";
+    }
+  });
 }
 document.getElementById("modalOverlay").addEventListener("click", (e)=>{
   if(e.target.id === "modalOverlay") closeModal();
@@ -1169,14 +1386,20 @@ document.getElementById("refreshBtn").addEventListener("click", (e)=>{
   manualRefresh();
 });
 
-function manualRefresh(){
+async function manualRefresh(){
   const btn = document.getElementById("refreshBtn");
   btn.classList.add("spinning");
-  renderGrid();
-  setTimeout(()=>{
+  try{
+    // update seluruh cuaca di Firestore; onSnapshot() akan otomatis
+    // memperbarui tampilan untuk semua client begitu data tersimpan
+    await updateAllWeather();
+    showToast("Data cuaca diperbarui di Firestore");
+  }catch(err){
+    console.error("Gagal memperbarui cuaca:", err);
+    showToast("Gagal memperbarui data cuaca");
+  }finally{
     btn.classList.remove("spinning");
-    showToast("Data cuaca disegarkan");
-  }, 650);
+  }
 }
 
 /* =========================================================================
@@ -1269,7 +1492,8 @@ function escapeHtml(str){
 /* =========================================================================
    BAGIAN 18 — KONEKSI FIRESTORE REALTIME
    Mengambil seluruh dokumen pada collection "countries" secara realtime.
-   Data cuaca TIDAK diambil dari Firestore — dihasilkan otomatis dari nama.
+   Data cuaca (field `weather`) dibaca langsung dari Firestore — semua
+   client melihat data yang sama dan berubah otomatis lewat onSnapshot().
    ========================================================================= */
 function startRealtimeListener(){
   if(!db){
@@ -1284,18 +1508,30 @@ function startRealtimeListener(){
     const q = query(countriesRef, orderBy("createdAt", "desc"));
 
     onSnapshot(q, (snapshot)=>{
-      state.countries = snapshot.docs.map(doc=>{
-        const data = doc.data();
+      state.countries = snapshot.docs.map(docSnap=>{
+        const data = docSnap.data();
         return {
-          id: doc.id,
+          id: docSnap.id,
           name: data.name || "Negara Tanpa Nama",
           description: data.description || "",
-          createdAt: data.createdAt || null
+          createdAt: data.createdAt || null,
+          weather: attachCondition(data.weather || null)
         };
       });
       state.loaded = true;
       renderFilters();
       renderGrid();
+
+      // jika ada negara yang belum punya field weather, generate sekali
+      // lalu simpan ke Firestore (client lain akan menerimanya via onSnapshot)
+      state.countries.forEach(c=>{
+        if(!c.weather && !pendingWeatherGen.has(c.id)){
+          pendingWeatherGen.add(c.id);
+          updateWeather(c.id, c.name)
+            .catch(err=> console.error("Gagal membuat cuaca awal untuk", c.name, err))
+            .finally(()=> pendingWeatherGen.delete(c.id));
+        }
+      });
     }, (error)=>{
       console.error("Gagal memuat data Firestore:", error);
       showToast("Gagal memuat data. Periksa koneksi / konfigurasi Database");
@@ -1327,7 +1563,7 @@ init();
     now.getMilliseconds();
 
   setTimeout(() => {
-    renderGrid();          // Perbarui semua cuaca
+    updateAllWeather().catch(err=>console.error("Gagal update cuaca terjadwal:", err)); // Perbarui semua cuaca di Firestore
     scheduleHourlyUpdate(); // Jadwalkan lagi untuk jam berikutnya
   }, msUntilNextHour);
 }
