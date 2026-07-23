@@ -264,7 +264,7 @@ textarea#userInput::placeholder{ color:var(--ink-dim); }
     </div>
     <div class="title-block">
       <h1>UFN AI Assistant</h1>
-      <span class="sub">Union of Federated Nations · Data Terverifikasi</span>
+      <span class="sub">AI BY RIFQY · Data Terverifikasi</span>
     </div>
     <div class="top-actions">
       <button class="icon-btn" id="themeToggle" title="Ganti mode gelap/terang" aria-label="Ganti tema">
@@ -297,6 +297,8 @@ textarea#userInput::placeholder{ color:var(--ink-dim); }
       <button data-q="Mata uang terkuat">💰 Mata Uang</button>
       <button data-q="Berita terbaru">📰 Berita</button>
       <button data-q="Populasi terbesar">👥 Populasi</button>
+      <button data-q="Cuaca di Indonesia">🌤️ Cuaca</button>
+      <button data-q="Tempat menarik UFN">📍 menarik</button>
     </div>
   </footer>
 
@@ -331,7 +333,7 @@ try{
 /* ============================================================
    SKEMA FIRESTORE (sesuai Firestore.md)
    comments/   : { createdAt, likedBy, name, newsId, parentId, text }
-   cauntries/  : { createdAt, description, name }  <-- perhatikan typo "cauntries"
+   cauntries/  : { createdAt, description, name, weather: { temp, conditionKey, humidity, windSpeed, pressure, UV, visibility, aqi, rainChance, feelsLike, dewPoint, sunrise, sunset, updatedAt } }
    news/       : { author, category, content, createdAt, excrept, image, likedBy, likes, title }
    currencies/ : { changePercent, country, createdAt, name, prevValue, symbol, updatedAt, value }
    places/     : { createdAt, name, ownerId, type:"negara/provinsi", x, y }
@@ -349,7 +351,7 @@ const cache = { countries:null, news:null, currencies:null, places:null, reactio
 async function loadCountries(){
   if(cache.countries) return cache.countries;
   try{
-    const snap = await getDocs(collection(db,"cauntries")); // perhatikan typo "cauntries"
+    const snap = await getDocs(collection(db,"countries"));
     cache.countries = snap.docs.map(d=>({ id:d.id, ...d.data() }));
     return cache.countries;
   }catch(e){
@@ -480,7 +482,12 @@ function fmtNumber(n){
 
 function fmtCurrency(n){
   if(n===undefined||n===null||isNaN(n)) return "-";
-  return new Intl.NumberFormat("id-ID", { style:"currency", currency:"IDR" }).format(n).replace("Rp", "Rp ");
+  return new Intl.NumberFormat("id-ID", { style:"currency", currency:"IDR" }).format(n).replace("EFA", "EFA ");
+}
+
+function fmtTemp(n){
+  if(n===undefined||n===null||isNaN(n)) return "-";
+  return `${n}°C`;
 }
 
 function esc(str){
@@ -528,11 +535,12 @@ function detectIntent(rawText){
   if(/\bringkas|rangkum|ringkasan|resume|summary\b/.test(t)) return "summary_news";
   if(/\b(reaksi|like|suka|respon|popularitas)\b.*\b(paling banyak|terbanyak|tertinggi)\b|\bberita.*paling.*reaksi\b/.test(t)) return "top_reaction";
   if(/\b(komentar|comment|comments|diskusi|tanggapan)\b/.test(t)) return "comments";
-  if(/\b(tempat menarik|wisata|pariwisata|lokasi|objek wisata|destinasi|tempat rekomendasi|tempat bagus)\b/.test(t)) return "places";
+  if(/\b(tempat menarik|menarik|parimenarik|lokasi|objek menarik|destinasi|tempat rekomendasi|tempat bagus)\b/.test(t)) return "places";
   if(/\b(kategori|category|jenis|jenis berita)\b/.test(t)) return "news_category";
   if(/\b(penulis|author|penulis berita|wartawan)\b/.test(t)) return "news_author";
   if(/\b(gambar|image|foto|photo|thumbnail)\b/.test(t)) return "news_image";
   if(/\b(bandingkan|dibanding|vs|versus|perbedaan antara|perbandingan)\b/.test(t)) return "compare";
+  if(/\b(cuaca|weather|suhu|temp|temperature|hujan|cerah|berawan)\b/.test(t)) return "weather";
 
   return "general_country";
 }
@@ -558,6 +566,8 @@ async function handleCountryProfile(text){
   let info = `<strong>🏛️ ${esc(c.name)}</strong>`;
   if(c.description) info += `<br><br>${esc(c.description)}`;
   if(c.createdAt) info += `<br><br><span class="hint">Bergabung: ${fmtDate(c.createdAt)}</span>`;
+  if(c.capital) info += `<br><span class="hint">Ibu kota: ${esc(c.capital)}</span>`;
+  if(c.population) info += `<br><span class="hint">Populasi: ${fmtNumber(c.population)} jiwa</span>`;
   return info;
 }
 
@@ -565,7 +575,8 @@ async function handleCapital(text){
   const countries = await loadCountries();
   const c = findCountryInText(text, countries);
   if(!c) return NOT_FOUND;
-  return `Ibu kota <strong>${esc(c.name)}</strong> adalah <strong>${esc(c.capital)}</strong>.`;
+  if(!c.capital) return `Data ibu kota untuk ${esc(c.name)} belum tersedia.`;
+  return `🏙️ Ibu kota <strong>${esc(c.name)}</strong> adalah <strong>${esc(c.capital)}</strong>.`;
 }
 
 async function handleCurrency(text){
@@ -576,9 +587,10 @@ async function handleCurrency(text){
   const currencies = await loadCurrencies();
   const cur = currencies.find(x => norm(x.country) === norm(c.name) || norm(x.name) === norm(c.name));
   if(cur){
-    let info = `<strong>${esc(c.name)}</strong> menggunakan mata uang <strong>${esc(cur.name)}</strong> (${esc(cur.symbol||"")})`;
+    let info = `<strong>💱 ${esc(c.name)}</strong> menggunakan mata uang <strong>${esc(cur.name)}</strong> (${esc(cur.symbol||"")})`;
     if(cur.value !== undefined) info += `<br>Nilai saat ini: <strong>${fmtCurrency(cur.value)}</strong>`;
     if(cur.changePercent !== undefined) info += `<br>Perubahan: <strong>${cur.changePercent > 0 ? "📈" : "📉"} ${fmtNumber(cur.changePercent)}%</strong>`;
+    if(cur.prevValue !== undefined) info += `<br>Nilai sebelumnya: ${fmtCurrency(cur.prevValue)}`;
     if(cur.updatedAt) info += `<br><span class="hint">Update terakhir: ${fmtDateTime(cur.updatedAt)}</span>`;
     return info;
   }
@@ -589,7 +601,6 @@ async function handleCurrencyStrongest(){
   const currencies = await loadCurrencies();
   if(!currencies.length) return NOT_FOUND;
   
-  // Cari mata uang dengan nilai tertinggi
   const valid = currencies.filter(c => c.value !== undefined && c.value !== null);
   if(!valid.length) return "Belum ada data nilai mata uang.";
   
@@ -609,7 +620,8 @@ async function handlePopulation(text){
   const countries = await loadCountries();
   const c = findCountryInText(text, countries);
   if(!c) return NOT_FOUND;
-  return `Populasi <strong>${esc(c.name)}</strong> tercatat sekitar <strong>${fmtNumber(c.population)}</strong> jiwa.`;
+  if(!c.population) return `Data populasi untuk ${esc(c.name)} belum tersedia.`;
+  return `👥 Populasi <strong>${esc(c.name)}</strong> tercatat sekitar <strong>${fmtNumber(c.population)}</strong> jiwa.`;
 }
 
 async function handlePopulationMax(){
@@ -618,7 +630,57 @@ async function handlePopulationMax(){
   if(!withPop.length) return "Belum ada data populasi negara.";
   withPop.sort((a,b)=>b.population - a.population);
   const top = withPop[0];
-  return `👥 Negara dengan populasi terbesar di UFN adalah <strong>${esc(top.name)}</strong>, dengan sekitar <strong>${fmtNumber(top.population)}</strong> jiwa.`;
+  const second = withPop[1];
+  let info = `👥 Negara dengan populasi terbesar di UFN adalah <strong>${esc(top.name)}</strong>, dengan sekitar <strong>${fmtNumber(top.population)}</strong> jiwa.`;
+  if(second) info += `<br><span class="hint">Diikuti oleh ${esc(second.name)} dengan ${fmtNumber(second.population)} jiwa.</span>`;
+  return info;
+}
+
+// --- WEATHER HANDLER ---
+
+async function handleWeather(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  if(!c.weather) return `Data cuaca untuk ${esc(c.name)} belum tersedia.`;
+  
+  const w = c.weather;
+  let info = `🌤️ Cuaca di <strong>${esc(c.name)}</strong>:<br><br>`;
+  
+  // Weather condition with emoji
+  const conditionMap = {
+    'clear': '☀️ Cerah',
+    'clouds': '☁️ Berawan',
+    'rain': '🌧️ Hujan',
+    'thunderstorm': '⛈️ Badai',
+    'snow': '❄️ Salju',
+    'mist': '🌫️ Kabut',
+    'fog': '🌫️ Kabut',
+    'haze': '🌫️ Kabut Asap',
+    'smoke': '💨 Asap',
+    'dust': '🌪️ Debu',
+    'sand': '🏜️ Pasir'
+  };
+  const condition = w.conditionKey ? (conditionMap[w.conditionKey.toLowerCase()] || w.conditionKey) : 'Tidak diketahui';
+  
+  if(w.temp !== undefined) info += `🌡️ Suhu: <strong>${fmtTemp(w.temp)}</strong>`;
+  if(w.feelsLike !== undefined) info += ` (terasa ${fmtTemp(w.feelsLike)})`;
+  info += `<br>`;
+  
+  if(w.conditionKey) info += `☁️ Kondisi: <strong>${condition}</strong><br>`;
+  if(w.humidity !== undefined) info += `💧 Kelembaban: <strong>${w.humidity}%</strong><br>`;
+  if(w.windSpeed !== undefined) info += `💨 Kecepatan angin: <strong>${w.windSpeed} km/h</strong><br>`;
+  if(w.pressure !== undefined) info += `📊 Tekanan: <strong>${w.pressure} hPa</strong><br>`;
+  if(w.UV !== undefined) info += `☀️ UV Index: <strong>${w.UV}</strong><br>`;
+  if(w.visibility !== undefined) info += `👁️ Visibilitas: <strong>${w.visibility} km</strong><br>`;
+  if(w.aqi !== undefined) info += `🌫️ Kualitas Udara (AQI): <strong>${w.aqi}</strong><br>`;
+  if(w.rainChance !== undefined) info += `🌧️ Peluang hujan: <strong>${w.rainChance}%</strong><br>`;
+  if(w.dewPoint !== undefined) info += `💧 Titik embun: <strong>${fmtTemp(w.dewPoint)}</strong><br>`;
+  if(w.sunrise) info += `🌅 Matahari terbit: <strong>${w.sunrise}</strong><br>`;
+  if(w.sunset) info += `🌇 Matahari terbenam: <strong>${w.sunset}</strong><br>`;
+  if(w.updatedAt) info += `<br><span class="hint">Update terakhir: ${fmtDateTime(w.updatedAt)}</span>`;
+  
+  return info;
 }
 
 // --- NEWS HANDLERS ---
@@ -644,6 +706,7 @@ async function handleSummaryNews(text){
   info += `:<br><br>${esc(ringkasan)}`;
   if(n.createdAt) info += `<br><span class="hint">${fmtDateTime(n.createdAt)}</span>`;
   if(n.likes !== undefined) info += ` · ${fmtNumber(n.likes)} suka`;
+  if(n.category) info += ` · Kategori: ${esc(n.category)}`;
   return info;
 }
 
@@ -748,11 +811,11 @@ async function handlePlaces(text){
   const c = findCountryInText(text, countries);
   const places = await loadPlaces();
   
-  if(!places.length) return "Belum ada data tempat wisata.";
+  if(!places.length) return "Belum ada data tempat menarik.";
   
   let filtered = places;
   if(c){
-    filtered = places.filter(p => norm(p.name) === norm(c.name) || norm(p.ownerId) === norm(c.id));
+    filtered = places.filter(p => norm(p.ownerId) === norm(c.id) || norm(p.name) === norm(c.name));
   }
   
   if(!filtered.length){
@@ -772,11 +835,13 @@ async function handlePlaces(text){
 async function handleCompare(text){
   const countries = await loadCountries();
   const found = findAllCountriesInText(text, countries);
-  if(found.length < 2) return "Sebutkan dua negara yang ingin dibandingkan.";
+  if(found.length < 2) return "Sebutkan dua negara yang ingin dibandingkan (contoh: 'bandingkan Indonesia dan Malaysia').";
   const [a,b] = found;
   const rows = [
     ["Nama", esc(a.name||"-"), esc(b.name||"-")],
     ["Deskripsi", esc((a.description||"-").slice(0,50)+(a.description?.length>50?"…":"")), esc((b.description||"-").slice(0,50)+(b.description?.length>50?"…":""))],
+    ["Ibu Kota", esc(a.capital||"-"), esc(b.capital||"-")],
+    ["Populasi", fmtNumber(a.population), fmtNumber(b.population)],
   ].map(([label, va, vb]) => `<tr><td>${label}</td><td>${va}</td><td>${vb}</td></tr>`).join("");
   return `📊 Perbandingan <strong>${esc(a.name)}</strong> vs <strong>${esc(b.name)}</strong>:<table><tr><th></th><th>${esc(a.name)}</th><th>${esc(b.name)}</th></tr>${rows}</table>`;
 }
@@ -789,7 +854,9 @@ async function handleGeneralCountry(text){
   if(!c) return NOT_FOUND;
   let info = `<strong>🏛️ ${esc(c.name)}</strong>`;
   if(c.description) info += `<br><br>${esc(c.description)}`;
-  if(c.createdAt) info += `<br><br><span class="hint">Bergabung: ${fmtDate(c.createdAt)}</span>`;
+  if(c.capital) info += `<br><br>🏙️ Ibu kota: <strong>${esc(c.capital)}</strong>`;
+  if(c.population) info += `<br>👥 Populasi: <strong>${fmtNumber(c.population)}</strong> jiwa`;
+  if(c.createdAt) info += `<br><span class="hint">Bergabung: ${fmtDate(c.createdAt)}</span>`;
   return info;
 }
 
@@ -799,11 +866,12 @@ async function handleGeneralCountry(text){
 
 const HELP_LIST = `
   <li><strong>🏛️ Negara & Info</strong> — "Daftar negara UFN" / "Informasi tentang [negara]"</li>
+  <li><strong>🌤️ Cuaca</strong> — "Cuaca di [negara]" / "Cuaca [negara]"</li>
   <li><strong>💰 Mata uang</strong> — "Mata uang terkuat" / "Mata uang [negara]"</li>
   <li><strong>👥 Populasi</strong> — "Populasi terbesar" / "Populasi [negara]"</li>
   <li><strong>📰 Berita</strong> — "Berita terbaru" / "Ringkas berita" / "Berita dari [penulis]"</li>
   <li><strong>💬 Komentar & Reaksi</strong> — "Komentar pada berita" / "Reaksi terbanyak"</li>
-  <li><strong>📍 Tempat</strong> — "Tempat wisata" / "Tempat di [negara]"</li>
+  <li><strong>📍 Tempat</strong> — "Tempat menarik" / "Tempat di [negara]"</li>
   <li><strong>📊 Perbandingan</strong> — "Bandingkan [negaraA] dan [negaraB]"</li>`;
 
 const JOKES = [
@@ -811,11 +879,12 @@ const JOKES = [
   "Apa persamaan UFN dan koper? Sama-sama tempat menyimpan barang berharga! 😄",
   "Kenapa berita UFN selalu menarik? Karena setiap hari ada cerita baru! 📰",
   "Apa kata mata uang UFN? 'Nilai saya fluktuatif, tapi hati saya stabil!' 💰",
-  "Kenapa negara di UFN suka bekerja sama? Karena lebih baik berkolaborasi daripada berkonflik! 🤝"
+  "Kenapa negara di UFN suka bekerja sama? Karena lebih baik berkolaborasi daripada berkonflik! 🤝",
+  "Apa bedanya UFN dengan organisasi lain? UFN punya data teEFAercaya, yang lain punya... janji! 😂"
 ];
 
 function handleGreeting(){
-  return `Halo! 👋 Senang bertemu Anda. Saya UFN AI Assistant, siap membantu seputar data negara dan berita UFN.<br><br>💡 Ketik "bantuan" untuk melihat daftar perintah.`;
+  return `Halo! 👋 Senang bertemu Anda. Saya UFN AI Assistant, siap membantu seputar data negara dan berita UFN.<br><br>💡 <strong>Ketik "bantuan"</strong> untuk melihat daftar perintah.<br><br>🌤️ <strong>Coba tanyakan:</strong> "Cuaca di Indonesia" atau "Berita terbaru"`;
 }
 
 function handleHelp(){
@@ -823,11 +892,11 @@ function handleHelp(){
 }
 
 function handleThanks(){
-  return ["Sama-sama! Senang bisa membantu. 😊", "Dengan senang hati! Ada lagi yang ingin ditanyakan? 🤗"][Math.floor(Math.random()*2)];
+  return ["Sama-sama! Senang bisa membantu. 😊", "Dengan senang hati! Ada lagi yang ingin ditanyakan? 🤗", "Terima kasih kembali! 🌟"][Math.floor(Math.random()*3)];
 }
 
 function handleBye(){
-  return ["Sampai jumpa! 👋 Kembali lagi kapan saja jika butuh informasi UFN.", "Dadah! 🌺 Saya di sini kalau Anda butuh bantuan lagi."][Math.floor(Math.random()*2)];
+  return ["Sampai jumpa! 👋 Kembali lagi kapan saja jika butuh informasi UFN.", "Dadah! 🌺 Saya di sini kalau Anda butuh bantuan lagi.", "Selamat tinggal! Semoga harimu menyenangkan! ✨"][Math.floor(Math.random()*3)];
 }
 
 function handleHowAreYou(){
@@ -899,6 +968,7 @@ async function generateAnswer(rawText){
       case "currency_strongest": return await handleCurrencyStrongest();
       case "population": return await handlePopulation(rawText);
       case "population_max": return await handlePopulationMax();
+      case "weather": return await handleWeather(rawText);
       case "latest_news": return await handleLatestNews();
       case "summary_news": return await handleSummaryNews(rawText);
       case "news_category": return await handleNewsCategory();
@@ -1010,10 +1080,16 @@ const SUGGESTIONS = [
   "Berita terbaru",
   "Populasi terbesar",
   "Ringkas berita",
-  "Tempat wisata di UFN",
+  "Tempat menarik di UFN",
   "Komentar pada berita terbaru",
   "Berita dengan reaksi terbanyak",
-  "Ceritakan lelucon!"
+  "Ceritakan lelucon!",
+  "Cuaca di Indonesia",
+  "Bandingkan Indonesia dan Malaysia",
+  "Informasi tentang Amerika Serikat",
+  "Apa ibu kota Jepang?",
+  "Populasi Brasil",
+  "Berita dari penulis John Doe"
 ];
 
 suggestBtn.addEventListener("click", () => {
@@ -1049,7 +1125,7 @@ themeToggle.addEventListener("click", ()=>{
 });
 
 function showWelcome(){
-  appendMessage("ai", `Selamat datang di <strong>UFN AI Assistant</strong> 👋<br><br>Saya menjawab berdasarkan data resmi UFN dan bisa diajak ngobrol santai.<br><br>📌 <strong>Ketik "bantuan"</strong> untuk melihat semua yang bisa saya lakukan!<br><br>💡 <strong>Tips:</strong> Klik tombol <strong>❓</strong> untuk saran pertanyaan acak, atau gunakan tombol cepat di bawah.<br><br><span class="hint">Coba mulai dengan "halo" atau tanyakan langsung tentang UFN.</span>`, { animate:false });
+  appendMessage("ai", `Selamat datang di <strong>UFN AI Assistant</strong> 👋<br><br>Saya menjawab berdasarkan data resmi UFN dan bisa diajak ngobrol santai.<br><br>📌 <strong>Ketik "bantuan"</strong> untuk melihat semua yang bisa saya lakukan!<br><br>💡 <strong>Tips:</strong> Klik tombol <strong>❓</strong> untuk saran pertanyaan acak, atau gunakan tombol cepat di bawah.<br><br>🌤️ <strong>Coba tanyakan:</strong> "Cuaca di Indonesia" atau "Berita terbaru"<br><br><span class="hint">Coba mulai dengan "halo" atau tanyakan langsung tentang UFN.</span>`, { animate:false });
 }
 showWelcome();
 
