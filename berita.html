@@ -478,6 +478,45 @@ footer b{ color:var(--ink); }
   filter:brightness(1.1);
 }
 
+/* Status validasi gambar */
+.image-validation-status {
+  font-size: .78rem;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: none;
+}
+.image-validation-status.show {
+  display: block;
+}
+.image-validation-status.valid {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+.image-validation-status.invalid {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+.image-validation-status.checking {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+}
+body.dark .image-validation-status.valid {
+  background: #1e3a2a;
+  color: #7ddb9a;
+}
+body.dark .image-validation-status.invalid {
+  background: #3a1e22;
+  color: #f5a3aa;
+}
+body.dark .image-validation-status.checking {
+  background: #3a3220;
+  color: #f0d060;
+}
+
 /* Responsive */
 @media(max-width:980px){
   .layout-grid{ grid-template-columns:1fr; }
@@ -621,6 +660,7 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
         <label>URL Gambar</label>
         <input type="url" id="fImage" required placeholder="https://contoh.com/gambar.jpg">
         <div class="preview-img" id="imgPreview">Pratinjau gambar akan muncul di sini</div>
+        <div class="image-validation-status" id="imageValidationStatus"></div>
       </div>
       <div class="field">
         <label>Nama Penulis</label>
@@ -640,7 +680,7 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-ghost" id="cancelFormBtn">Batal</button>
-        <button type="submit" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> <span id="submitLabel">Publikasikan</span></button>
+        <button type="submit" class="btn-primary" id="submitNewsBtn"><i class="fa-solid fa-paper-plane"></i> <span id="submitLabel">Publikasikan</span></button>
       </div>
     </form>
   </div>
@@ -756,6 +796,7 @@ let reactionUnsub = null;
 let bookmarkUnsub = null;
 let commentsCache = [];
 let replyTarget = null;
+let imageValidationResult = null;
 
 /* ================================================================
    UTILITAS
@@ -819,6 +860,91 @@ function debounce(fn, ms) {
 }
 
 /* ================================================================
+   VALIDASI GAMBAR
+   ================================================================ */
+function validateImageUrl(url) {
+  return new Promise((resolve) => {
+    // CEK APAKAH URL ADA DAN BUKAN UNDEFINED
+    if (!url || typeof url !== 'string' || !url.trim()) {
+      resolve({ valid: false, message: 'URL gambar tidak boleh kosong' });
+      return;
+    }
+    
+    const trimmedUrl = url.trim();
+    
+    // Cek apakah URL dimulai dengan http:// atau https://
+    if (!trimmedUrl.match(/^https?:\/\/.+/i)) {
+      resolve({ valid: false, message: 'URL harus diawali dengan http:// atau https://' });
+      return;
+    }
+    
+    const statusDiv = document.getElementById('imageValidationStatus');
+    if (!statusDiv) {
+      resolve({ valid: false, message: 'Elemen status tidak ditemukan' });
+      return;
+    }
+    
+    statusDiv.className = 'image-validation-status show checking';
+    statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sedang memeriksa gambar...';
+    
+    const img = new Image();
+    let timeoutId;
+    let isResolved = false;
+    
+    const cleanup = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      img.onload = null;
+      img.onerror = null;
+    };
+    
+    const handleResult = (valid, message) => {
+      if (isResolved) return;
+      isResolved = true;
+      cleanup();
+      imageValidationResult = { valid, message };
+      const statusDiv = document.getElementById('imageValidationStatus');
+      if (statusDiv) {
+        if (valid) {
+          statusDiv.className = 'image-validation-status show valid';
+          statusDiv.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${message}`;
+        } else {
+          statusDiv.className = 'image-validation-status show invalid';
+          statusDiv.innerHTML = `<i class="fa-solid fa-exclamation-circle"></i> ${message}`;
+        }
+      }
+      const submitBtn = document.getElementById('submitNewsBtn');
+      if (submitBtn) {
+        submitBtn.disabled = valid ? false : true;
+      }
+      resolve({ valid, message });
+    };
+    
+    timeoutId = setTimeout(() => {
+      handleResult(false, '⏱️ Waktu muat gambar habis. Pastikan URL benar dan server dapat diakses.');
+    }, 10000);
+    
+    img.onload = function() {
+      handleResult(true, '✅ Gambar valid dan dapat diakses.');
+    };
+    
+    img.onerror = function() {
+      handleResult(false, '❌ Gambar tidak dapat diakses. Periksa URL atau coba gambar lain.');
+    };
+    
+    img.crossOrigin = 'anonymous';
+    img.src = trimmedUrl;
+    
+    if (img.complete) {
+      if (img.naturalWidth > 0) {
+        handleResult(true, '✅ Gambar valid dan dapat diakses (dari cache).');
+      } else {
+        handleResult(false, '❌ Gambar tidak valid atau tidak dapat diakses.');
+      }
+    }
+  });
+}
+
+/* ================================================================
    TEMA
    ================================================================ */
 function initTheme() {
@@ -877,7 +1003,7 @@ document.getElementById('hamburgerBtn').addEventListener('click', () => {
 });
 
 document.getElementById('searchInput').addEventListener('input', debounce((e) => {
-  searchQuery = e.target.value.trim().toLowerCase();
+  searchQuery = (e.target.value || '').trim().toLowerCase();
   currentPage = 1;
   applyFilters();
 }, 220));
@@ -942,7 +1068,7 @@ function renderHero() {
   const c = catInfo(hero.category);
   wrap.innerHTML = `
     <div class="hero" data-id="${hero.id}">
-      <img src="${escapeHtml(hero.image)}" alt="${escapeHtml(hero.title)}" loading="lazy">
+      <img src="${escapeHtml(hero.image)}" alt="${escapeHtml(hero.title)}" loading="lazy" onerror="this.style.display='none'">
       <div class="hero-content">
         <span class="cat-chip" style="background:${c.color}">${c.label}</span>
         <h1>${escapeHtml(hero.title)}</h1>
@@ -980,7 +1106,7 @@ function cardHtml(n) {
   const c = catInfo(n.category);
   return `
   <div class="news-card" data-id="${n.id}" style="--card-cat:${c.color}">
-    <div class="thumb"><img src="${escapeHtml(n.image)}" alt="${escapeHtml(n.title)}" loading="lazy"></div>
+    <div class="thumb"><img src="${escapeHtml(n.image)}" alt="${escapeHtml(n.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-faint);font-size:.8rem;\\'>Gambar tidak tersedia</div>'"></div>
     <div class="body">
       <span class="cat-chip" style="background:${c.color}">${c.label}</span>
       <h3>${escapeHtml(n.title)}</h3>
@@ -1093,7 +1219,7 @@ function renderArticleCore(n) {
         </span>
       </div>
     </div>`;
-  document.getElementById('articleImg').innerHTML = `<img src="${escapeHtml(n.image)}" alt="${escapeHtml(n.title)}" loading="lazy">`;
+  document.getElementById('articleImg').innerHTML = `<img src="${escapeHtml(n.image)}" alt="${escapeHtml(n.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-faint);padding:20px;text-align:center;\\'>Gambar tidak tersedia</div>'">`;
   document.getElementById('articleBody').innerHTML = (n.content || '').split(/\n+/).filter(Boolean).map(p => `<p>${escapeHtml(p)}</p>`).join('');
   renderActionBar(n);
 }
@@ -1268,8 +1394,8 @@ function renderCommentForm(replyTo) {
 async function submitComment(e) {
   e.preventDefault();
   if (!firebaseReady) return showToast('Firebase belum dikonfigurasi', 'fa-triangle-exclamation');
-  const name = document.getElementById('cName').value.trim();
-  const text = document.getElementById('cText').value.trim();
+  const name = (document.getElementById('cName')?.value || '').trim();
+  const text = (document.getElementById('cText')?.value || '').trim();
   if (!name || !text) return;
   try {
     await db.collection('comments').add({
@@ -1355,7 +1481,7 @@ function startEditComment(id) {
       <button class="btn-ghost" style="padding:6px 12px;font-size:.78rem;" id="cancel-${id}">Batal</button>
     </div>`;
   document.getElementById(`save-${id}`).addEventListener('click', async () => {
-    const newText = document.getElementById(`edit-${id}`).value.trim();
+    const newText = (document.getElementById(`edit-${id}`)?.value || '').trim();
     if (!newText) return;
     try {
       await db.collection('comments').doc(id).update({ text: newText, editedAt: firebase.firestore.FieldValue.serverTimestamp() });
@@ -1402,27 +1528,78 @@ function openNewsModal(newsToEdit) {
   document.getElementById('fCategory').value = newsToEdit?.category || CATEGORIES[0].id;
   document.getElementById('fExcerpt').value = newsToEdit?.excerpt || '';
   document.getElementById('fContent').value = newsToEdit?.content || '';
+  
+  const statusDiv = document.getElementById('imageValidationStatus');
+  statusDiv.className = 'image-validation-status';
+  statusDiv.innerHTML = '';
+  imageValidationResult = null;
+  document.getElementById('submitNewsBtn').disabled = false;
+  
   updateImgPreview();
+  
+  if ((document.getElementById('fImage')?.value || '').trim()) {
+    validateImageUrl((document.getElementById('fImage')?.value || '').trim());
+  }
+  
   modalOverlay.classList.add('show');
 }
 
-function closeModal() { modalOverlay.classList.remove('show'); editingNewsId = null; }
+function closeModal() { 
+  modalOverlay.classList.remove('show'); 
+  editingNewsId = null;
+  const statusDiv = document.getElementById('imageValidationStatus');
+  statusDiv.className = 'image-validation-status';
+  statusDiv.innerHTML = '';
+  imageValidationResult = null;
+  document.getElementById('submitNewsBtn').disabled = false;
+}
 
-document.getElementById('fImage').addEventListener('input', updateImgPreview);
+document.getElementById('fImage').addEventListener('input', debounce(function() {
+  const url = (this.value || '').trim();
+  updateImgPreview();
+  if (url) {
+    validateImageUrl(url);
+  } else {
+    const statusDiv = document.getElementById('imageValidationStatus');
+    statusDiv.className = 'image-validation-status';
+    statusDiv.innerHTML = '';
+    imageValidationResult = null;
+    document.getElementById('submitNewsBtn').disabled = false;
+  }
+}, 500));
 
 function updateImgPreview() {
-  const url = document.getElementById('fImage').value.trim();
+  const url = (document.getElementById('fImage')?.value || '').trim();
   const box = document.getElementById('imgPreview');
-  box.innerHTML = url ? `<img src="${escapeHtml(url)}" alt="pratinjau" onerror="this.parentElement.innerHTML='URL gambar tidak valid';">` : 'Pratinjau gambar akan muncul di sini';
+  if (url) {
+    box.innerHTML = `<img src="${escapeHtml(url)}" alt="pratinjau" onerror="this.parentElement.innerHTML='<div style=\\'color:var(--ink-faint);padding:10px;\\'>❌ URL gambar tidak valid</div>';">`;
+  } else {
+    box.innerHTML = 'Pratinjau gambar akan muncul di sini';
+  }
 }
 
 document.getElementById('newsForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   
-  // Validasi tambahan: pastikan semua field terisi (seharusnya sudah oleh required attribute)
   const form = document.getElementById('newsForm');
   if (!form.checkValidity()) {
     form.reportValidity();
+    return;
+  }
+  
+  const imageUrl = (document.getElementById('fImage')?.value || '').trim();
+  if (!imageUrl) {
+    showToast('URL gambar wajib diisi', 'fa-triangle-exclamation');
+    return;
+  }
+  
+  if (!imageValidationResult) {
+    showToast('Sedang memeriksa gambar, tunggu sebentar...', 'fa-spinner fa-spin');
+    return;
+  }
+  
+  if (!imageValidationResult.valid) {
+    showToast('Gambar tidak valid: ' + imageValidationResult.message, 'fa-triangle-exclamation');
     return;
   }
   
@@ -1432,13 +1609,17 @@ document.getElementById('newsForm').addEventListener('submit', async (e) => {
   }
   
   const payload = {
-    title: document.getElementById('fTitle').value.trim(),
-    image: document.getElementById('fImage').value.trim(),
-    author: document.getElementById('fAuthor').value.trim(),
+    title: (document.getElementById('fTitle')?.value || '').trim(),
+    image: imageUrl,
+    author: (document.getElementById('fAuthor')?.value || '').trim(),
     category: document.getElementById('fCategory').value,
-    excerpt: document.getElementById('fExcerpt').value.trim(),
-    content: document.getElementById('fContent').value.trim(),
+    excerpt: (document.getElementById('fExcerpt')?.value || '').trim(),
+    content: (document.getElementById('fContent')?.value || '').trim(),
   };
+  
+  const submitBtn = document.getElementById('submitNewsBtn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
   
   try {
     if (editingNewsId) {
@@ -1456,7 +1637,10 @@ document.getElementById('newsForm').addEventListener('submit', async (e) => {
     closeModal();
   } catch (err) { 
     console.error(err); 
-    showToast('Gagal menyimpan berita', 'fa-triangle-exclamation'); 
+    showToast('Gagal menyimpan berita: ' + err.message, 'fa-triangle-exclamation'); 
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span id="submitLabel">' + (editingNewsId ? 'Simpan Perubahan' : 'Publikasikan') + '</span>';
   }
 });
 
@@ -1479,7 +1663,7 @@ window.addEventListener('hashchange', handleRoute);
    ================================================================ */
 document.getElementById('subscribeBtn').addEventListener('click', () => {
   const input = document.getElementById('newsletterInput');
-  if (input.value.trim()) { showToast('Terima kasih telah berlangganan!', 'fa-envelope-circle-check'); input.value = ''; }
+  if ((input.value || '').trim()) { showToast('Terima kasih telah berlangganan!', 'fa-envelope-circle-check'); input.value = ''; }
   else showToast('Masukkan alamat email terlebih dahulu', 'fa-triangle-exclamation');
 });
 
