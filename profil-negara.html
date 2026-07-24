@@ -557,7 +557,6 @@ textarea{ resize: vertical; min-height: 92px; line-height:1.5; }
   <div id="dashboard" class="shell hidden">
     <div class="topbar">
       <div class="brand"><i class="fa-solid fa-satellite-dish"></i> UFN CONTROL</div>
-      <button class="icon-btn" id="logout-btn" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button>
     </div>
 
     <!-- ============================= TAB: INFO NEGARA ============================= -->
@@ -872,10 +871,6 @@ function mapAuthError(err){
     default: return err && err.message ? err.message : "Authentication failed.";
   }
 }
-
-$("logout-btn").addEventListener("click", () => {
-  auth.signOut();
-});
 
 /* ============================================================
    APP STATE
