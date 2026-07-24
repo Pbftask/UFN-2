@@ -167,7 +167,7 @@ main#chat::-webkit-scrollbar-thumb{ background:var(--glass-border); border-radiu
 .bubble strong{ color:var(--gold-soft); }
 .bubble .hint{ color:var(--ink-dim); font-size:12.5px; }
 .bubble .error{ color:var(--danger); }
-.bubble .flag-img{ display:block; width:100%; max-width:220px; border-radius:var(--radius-sm); margin-bottom:10px; border:1px solid var(--glass-border); box-shadow:var(--shadow); }
+.bubble .flag-img{ display:block; width:100%; max-width:280px; aspect-ratio:16/9; object-fit:cover; border-radius:var(--radius-sm); margin-bottom:10px; border:1px solid var(--glass-border); box-shadow:var(--shadow); }
 
 .timestamp{
   font-family:'IBM Plex Mono', monospace; font-size:10.5px;
@@ -866,7 +866,9 @@ async function handleGeneralCountry(text){
   const countries = await loadCountries();
   const c = findCountryInText(text, countries);
   if(!c) return NOT_FOUND;
-  let info = `<strong>🏛️ ${esc(c.name)}</strong>`;
+  let info = "";
+  if(c.flag) info += `<img src="${esc(c.flag)}" alt="Bendera ${esc(c.name)}" class="flag-img">`;
+  info += `<strong>🏛️ ${esc(c.name)}</strong>`;
   if(c.description) info += `<br><br>${esc(c.description)}`;
   if(c.capitalCity) info += `<br><br>🏙️ Ibu kota: <strong>${esc(c.capitalCity)}</strong>`;
   if(c.population) info += `<br>👥 Populasi: <strong>${fmtNumber(c.population)}</strong> jiwa`;
