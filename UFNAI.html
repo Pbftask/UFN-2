@@ -308,7 +308,7 @@ textarea#userInput::placeholder{ color:var(--ink-dim); }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, query, orderBy, limit, getDocs, where
+  getFirestore, collection, query, orderBy, limit, getDocs, where, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -331,6 +331,8 @@ try{
   console.error("❌ Gagal inisialisasi Firebase:", err);
 }
 
+
+
 /* ============================================================
    SKEMA FIRESTORE (sesuai Firestore.md)
    comments/   : { createdAt, likedBy, name, newsId, parentId, text }
@@ -343,6 +345,85 @@ try{
 
 const NOT_FOUND = "Maaf, data tersebut belum tersedia di database UFN.";
 const FETCH_ERROR = "Maaf, terjadi kendala saat menghubungi database UFN. Coba lagi sebentar lagi.";
+
+/* ============================================================
+   MODUL: CUSTOM COMMANDS (Firestore: "ai_commands")
+   ------------------------------------------------------------
+   Fitur tambahan yang berjalan SEBELUM sistem AI utama.
+   Tidak mengubah/menghapus fungsi, intent, atau logika lain
+   yang sudah ada. Cukup lapisan pengecekan tambahan.
+
+   Struktur dokumen di collection "ai_commands":
+   {
+     enabled: true,
+     priority: 1,
+     keywords: ["halo", "hai"],
+     answer: "Halo juga!",
+     contains: true,     // true = includes(), false = exact match
+     ignoreCase: true     // true = abaikan huruf besar/kecil
+   }
+   ============================================================ */
+
+/** Cache lokal berisi command yang sudah difilter (enabled) & diurutkan (priority ASC) */
+let customCommandsCache = [];
+let customCommandsUnsub = null;
+
+/**
+ * Mengaktifkan listener realtime ke collection "ai_commands".
+ * Data di-cache di memori (customCommandsCache) agar hemat pembacaan Firestore.
+ * Setiap ada perubahan (tambah/ubah/hapus command) di Firestore, cache
+ * langsung diperbarui otomatis tanpa perlu refresh halaman.
+ */
+function initCustomCommandsListener(){
+  if(!db) return;
+  try{
+    if(customCommandsUnsub) customCommandsUnsub(); // hindari listener ganda
+    customCommandsUnsub = onSnapshot(
+      collection(db, "ai_commands"),
+      (snap) => {
+        customCommandsCache = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(cmd => cmd.enabled === true)
+          .sort((a, b) => (Number(a.priority) || 0) - (Number(b.priority) || 0));
+        console.log(`✅ Custom commands dimuat: ${customCommandsCache.length} aktif`);
+      },
+      (err) => {
+        console.error("❌ Gagal memuat ai_commands:", err);
+      }
+    );
+  }catch(err){
+    console.error("❌ Gagal inisialisasi listener ai_commands:", err);
+  }
+}
+
+/**
+ * Mencocokkan pesan pengguna dengan daftar custom command.
+ * Mengembalikan field "answer" dari command pertama yang cocok
+ * (sesuai urutan priority ASC), atau null jika tidak ada yang cocok.
+ */
+function matchCustomCommand(rawText){
+  if(!customCommandsCache.length) return null;
+  const message = String(rawText ?? "");
+
+  for(const cmd of customCommandsCache){
+    if(!Array.isArray(cmd.keywords) || typeof cmd.answer !== "string") continue;
+
+    const ignoreCase = cmd.ignoreCase !== false;   // default true
+    const useContains = cmd.contains !== false;    // default true
+    const compareMessage = ignoreCase ? message.toLowerCase() : message;
+
+    const isMatch = cmd.keywords.some(keyword => {
+      if(typeof keyword !== "string") return false;
+      const compareKeyword = ignoreCase ? keyword.toLowerCase() : keyword;
+      return useContains
+        ? compareMessage.includes(compareKeyword)
+        : compareMessage === compareKeyword;
+    });
+
+    if(isMatch) return cmd.answer;
+  }
+  return null;
+}
 
 /* -------- cache -------- */
 const cache = { countries:null, news:null, currencies:null, places:null, reactions:null, comments:null };
@@ -896,7 +977,8 @@ const HELP_LIST = `
   <li><strong>💬 Komentar</strong> — "Komentar pada berita [judul]"</li>
   <li><strong>❤️ Reaksi Terbanyak</strong> — "Berita dengan reaksi paling banyak"</li>
   <li><strong>📍 Tempat Menarik</strong> — "Tempat menarik" / "Tempat di [negara]"</li>
-  <li><strong>📊 Perbandingan</strong> — "Bandingkan [negaraA] dan [negaraB]"</li>`;
+  <li><strong>📊 Perbandingan</strong> — "Bandingkan [negaraA] dan [negaraB]"</li>
+  <li><strong>📡 cara upload berita</strong> ─ "Cara upload berita gimana?"</li>`;
 
 const JOKES = [
   "Kenapa UFN tidak pernah ribut? Karena semua negara sepakat damai... dan kalau tidak, ada sanksi! 😄",
@@ -963,6 +1045,11 @@ function handleMiss(){
    ROUTER UTAMA
    ============================================================ */
 async function generateAnswer(rawText){
+  // === Lapisan Custom Commands (ai_commands) — dicek lebih dulu ===
+  const customAnswer = matchCustomCommand(rawText);
+  if(customAnswer !== null) return customAnswer;
+  // === Jika tidak ada command yang cocok, lanjut ke sistem AI lama ===
+
   const intent = detectIntent(rawText);
 
   switch(intent){
@@ -1153,6 +1240,11 @@ function showWelcome(){
   appendMessage("ai", `Selamat datang di <strong>UFN AI Assistant</strong> 👋<br><br>Saya menjawab berdasarkan data resmi UFN dan bisa diajak ngobrol santai.<br><br>📌 <strong>Ketik "bantuan"</strong> untuk melihat semua yang bisa saya lakukan!<br><br>💡 <strong>Tips:</strong> Klik tombol <strong>❓</strong> untuk saran pertanyaan acak, atau gunakan tombol cepat di bawah.<br><br>🌤️ <strong>Coba tanyakan:</strong> "Cuaca di Indonesia" atau "Berita terbaru"<br><br><span class="hint">Coba mulai dengan "halo" atau tanyakan langsung tentang UFN.</span>`, { animate:false });
 }
 showWelcome();
+
+// Aktifkan listener Custom Commands (lapisan tambahan, tidak mengganggu sistem AI lama)
+if(firebaseReady){
+  initCustomCommandsListener();
+}
 
 if(!firebaseReady){
   appendMessage("ai", `⚠️ Konfigurasi Firebase belum terhubung. Periksa koneksi internet Anda.<br><br>${handleHelp()}`, { animate:false });
