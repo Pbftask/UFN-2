@@ -365,6 +365,19 @@ body.dark .action-btn.bookmark-btn.active{ background:#33290F; color:#F0B25E; }
 .modal-box textarea{ min-height:140px; resize:vertical; }
 .modal-box .preview-img{ width:100%; aspect-ratio:16/9; border-radius:9px; overflow:hidden; background:var(--surface-2); margin-top:8px; border:1px dashed var(--line); display:flex; align-items:center; justify-content:center; color:var(--ink-faint); font-size:.8rem; }
 .modal-box .preview-img img{ width:100%; height:100%; object-fit:cover; }
+.image-upload-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.btn-upload{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:9px 16px; border-radius:20px; font-size:.82rem; font-weight:600;
+  background:var(--surface-2); color:var(--ink); border:1px solid var(--line);
+  cursor:pointer; transition:.2s;
+}
+.btn-upload:hover{ border-color:var(--accent); color:var(--accent); transform:translateY(-1px); }
+.btn-upload.uploading{ pointer-events:none; opacity:.7; }
+.btn-upload input[type="file"]{ display:none; }
+.upload-hint{ font-size:.76rem; color:var(--ink-faint); }
+.upload-divider{ display:flex; align-items:center; gap:10px; margin:10px 0 8px; color:var(--ink-faint); font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; }
+.upload-divider::before, .upload-divider::after{ content:''; flex:1; height:1px; background:var(--line); }
 .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
 .close-x{ font-size:1.1rem; color:var(--ink-faint); }
 .close-x:hover{ color:var(--accent); }
@@ -413,69 +426,6 @@ footer b{ color:var(--ink); }
 .online-counter .jumlah{
   font-weight: 600;
   font-family: var(--font-mono);
-}
-
-/* Tutorial / Video Popup */
-.popup{
-  position:fixed;
-  inset:0;
-  display:none;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,.85);
-  backdrop-filter:blur(5px);
-  z-index:9999;
-}
-.popup.show{
-  display:flex;
-}
-.video-box{
-  position:relative;
-  width:min(90vw,800px);
-  aspect-ratio:16/9;
-  background:#000;
-  border-radius:15px;
-  overflow:hidden;
-}
-.video-box video{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  display:block;
-}
-.video-box .close{
-  position:absolute;
-  top:10px;
-  right:10px;
-  width:35px;
-  height:35px;
-  border:none;
-  border-radius:50%;
-  background:rgba(255,255,255,.2);
-  color:#fff;
-  font-size:20px;
-  cursor:pointer;
-  z-index:1;
-  transition:background .2s;
-}
-.video-box .close:hover{
-  background:rgba(255,255,255,.4);
-}
-
-/* Tutorial button header */
-.btn-tutorial{
-  padding:6px 14px;
-  border-radius:20px;
-  background:var(--accent);
-  color:var(--accent-ink);
-  font-weight:600;
-  font-size:.82rem;
-  border:1px solid transparent;
-  transition:.2s;
-}
-.btn-tutorial:hover{
-  transform:translateY(-1px);
-  filter:brightness(1.1);
 }
 
 /* Status validasi gambar */
@@ -561,7 +511,6 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
       </div>
       <button class="icon-btn" id="themeToggle" title="Ganti tema"><i class="fa-solid fa-moon"></i></button>
       <button class="icon-btn hamburger" id="hamburgerBtn" title="Menu"><i class="fa-solid fa-bars"></i></button>
-      <button class="btn-tutorial" id="openVideoBtn"><i class="fa-solid fa-play"></i> Tutorial</button>
     </div>
   </div>
   <div class="breaking-bar">
@@ -657,7 +606,15 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
         <input type="text" id="fTitle" required placeholder="Judul berita yang menarik">
       </div>
       <div class="field">
-        <label>URL Gambar</label>
+        <label>Gambar Berita</label>
+        <div class="image-upload-row">
+          <label class="btn-upload" id="btnUploadImage" for="fImageFile">
+            <i class="fa-solid fa-cloud-arrow-up"></i> <span id="btnUploadLabel">Upload Gambar dari galeri</span>
+            <input type="file" id="fImageFile" accept="image/*">
+          </label>
+          <span class="upload-hint">Gambar diunggah otomatis ke imgbb</span>
+        </div>
+        <div class="upload-divider">atau tempel URL</div>
         <input type="url" id="fImage" required placeholder="https://contoh.com/gambar.jpg">
         <div class="preview-img" id="imgPreview">Pratinjau gambar akan muncul di sini</div>
         <div class="image-validation-status" id="imageValidationStatus"></div>
@@ -686,17 +643,6 @@ nav.main-nav.mobile-open button{ text-align:left; padding:11px 8px; border-radiu
   </div>
 </div>
 
-<!-- ============================== VIDEO POPUP ============================== -->
-<div class="popup" id="videoPopup">
-  <div class="video-box">
-    <button class="close" id="closeVideoBtn"><i class="fa-solid fa-xmark"></i></button>
-    <video id="tutorialVideo" controls>
-      <source src="video.mp4" type="video/mp4">
-      Browser Anda tidak mendukung video.
-    </video>
-  </div>
-</div>
-
 <div id="toast-wrap"></div>
 
 <!-- ============================== FIREBASE SDK ============================== -->
@@ -717,6 +663,12 @@ const firebaseConfig = {
   messagingSenderId: "343647284151",
   appId: "1:343647284151:web:c26e7f5f75235c187a1632"
 };
+
+/* ================================================================
+   KONFIGURASI IMGBB (untuk upload gambar berita)
+   Daftar & ambil API key gratis di https://api.imgbb.com/
+   ================================================================ */
+const IMGBB_API_KEY = "4b5b5ba36295e875f1c44a632408c8c7";
 
 /* ================================================================
    INISIALISASI FIREBASE
@@ -1554,6 +1506,79 @@ function closeModal() {
   document.getElementById('submitNewsBtn').disabled = false;
 }
 
+/* ================================================================
+   UPLOAD GAMBAR VIA IMGBB
+   ================================================================ */
+async function uploadToImgbb(file) {
+  const statusDiv = document.getElementById('imageValidationStatus');
+  const submitBtn = document.getElementById('submitNewsBtn');
+  const uploadBtn = document.getElementById('btnUploadImage');
+  const uploadLabel = document.getElementById('btnUploadLabel');
+
+  imageValidationResult = null;
+  if (submitBtn) submitBtn.disabled = true;
+  uploadBtn?.classList.add('uploading');
+  if (uploadLabel) uploadLabel.textContent = 'Mengunggah...';
+
+  statusDiv.className = 'image-validation-status show checking';
+  statusDiv.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengunggah gambar ke imgbb...';
+
+  try {
+    if (!IMGBB_API_KEY || IMGBB_API_KEY.includes('GANTI_DENGAN')) {
+      throw new Error('API key imgbb belum diatur. Isi konstanta IMGBB_API_KEY di kode.');
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(IMGBB_API_KEY)}`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data?.error?.message || 'Upload ke imgbb gagal, coba lagi.');
+    }
+
+    const url = data.data.display_url || data.data.url;
+    const fImage = document.getElementById('fImage');
+    fImage.value = url;
+    updateImgPreview();
+    await validateImageUrl(url);
+    showToast('Gambar berhasil diunggah ke imgbb', 'fa-check');
+  } catch (err) {
+    console.error(err);
+    imageValidationResult = { valid: false, message: err.message };
+    statusDiv.className = 'image-validation-status show invalid';
+    statusDiv.innerHTML = `<i class="fa-solid fa-exclamation-circle"></i> ${escapeHtml(err.message)}`;
+    if (submitBtn) submitBtn.disabled = true;
+    showToast('Gagal mengunggah gambar: ' + err.message, 'fa-triangle-exclamation');
+  } finally {
+    uploadBtn?.classList.remove('uploading');
+    if (uploadLabel) uploadLabel.textContent = 'Upload Gambar';
+  }
+}
+
+document.getElementById('fImageFile').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    showToast('File yang dipilih harus berupa gambar', 'fa-triangle-exclamation');
+    e.target.value = '';
+    return;
+  }
+  if (file.size > 32 * 1024 * 1024) {
+    showToast('Ukuran gambar maksimal 32MB (batas imgbb)', 'fa-triangle-exclamation');
+    e.target.value = '';
+    return;
+  }
+
+  await uploadToImgbb(file);
+  e.target.value = '';
+});
+
 document.getElementById('fImage').addEventListener('input', debounce(function() {
   const url = (this.value || '').trim();
   updateImgPreview();
@@ -1665,35 +1690,6 @@ document.getElementById('subscribeBtn').addEventListener('click', () => {
   const input = document.getElementById('newsletterInput');
   if ((input.value || '').trim()) { showToast('Terima kasih telah berlangganan!', 'fa-envelope-circle-check'); input.value = ''; }
   else showToast('Masukkan alamat email terlebih dahulu', 'fa-triangle-exclamation');
-});
-
-/* ================================================================
-   VIDEO TUTORIAL
-   ================================================================ */
-document.getElementById('openVideoBtn').addEventListener('click', () => {
-  const popup = document.getElementById('videoPopup');
-  const video = document.getElementById('tutorialVideo');
-  popup.classList.add('show');
-  video.currentTime = 0;
-  video.play().catch(() => {});
-});
-
-document.getElementById('closeVideoBtn').addEventListener('click', () => {
-  const popup = document.getElementById('videoPopup');
-  const video = document.getElementById('tutorialVideo');
-  video.pause();
-  video.currentTime = 0;
-  popup.classList.remove('show');
-});
-
-document.getElementById('videoPopup').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) {
-    const popup = document.getElementById('videoPopup');
-    const video = document.getElementById('tutorialVideo');
-    video.pause();
-    video.currentTime = 0;
-    popup.classList.remove('show');
-  }
 });
 
 /* ================================================================
