@@ -454,6 +454,68 @@ textarea{ resize: vertical; min-height: 92px; line-height:1.5; }
   .hero h1{ font-size: 22px; }
   .weather-hero .temp{ font-size: 34px; }
 }
+
+/* ============================================================
+   Bottom tab navigation
+   ============================================================ */
+.tabbar{
+  position: fixed; left:50%; bottom: 18px; transform: translateX(-50%);
+  width: calc(100% - 32px); max-width: 480px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 8px; gap: 4px;
+  z-index: 500;
+  background: rgba(10,14,26,0.72);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.tab-btn{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+  background:transparent; border:none; cursor:pointer;
+  padding: 8px 4px 7px;
+  border-radius: 999px;
+  color: var(--text-2);
+  font-family: var(--font-body); font-weight:600;
+  transition: color .25s var(--ease), background .25s var(--ease);
+}
+.tab-btn i{ font-size: 16px; }
+.tab-btn span{ font-size: 9.5px; letter-spacing: .6px; text-transform: uppercase; }
+.tab-btn.active{ color: var(--cyan); background: rgba(0,230,255,0.08); }
+.tab-btn:hover{ color: var(--text-0); }
+.tab-panel{ display:none; }
+.tab-panel.active{ display:block; animation: fadeUp .4s var(--ease) both; }
+
+/* ============================================================
+   Registered countries list
+   ============================================================ */
+.nation-list{ display:flex; flex-direction:column; gap:10px; }
+.nation-row{
+  display:flex; align-items:center; gap:14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--glass-border);
+  transition: border-color .3s var(--ease), transform .3s var(--ease);
+}
+.nation-row:hover{ border-color: var(--cyan-dim); transform: translateY(-2px); }
+.nation-flag{
+  width: 46px; height: 46px; border-radius: 10px; flex-shrink:0;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+}
+.nation-flag img{ width:100%; height:100%; object-fit:cover; }
+.nation-flag i{ color: var(--text-2); font-size:16px; }
+.nation-meta{ flex:1; min-width:0; }
+.nation-meta .name{ font-weight:700; font-size:15px; color: var(--text-0); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nation-meta .sub{ font-size:12px; color: var(--text-2); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nation-pop{ text-align:right; flex-shrink:0; }
+.nation-pop .n{ font-family: var(--font-mono); font-size:14px; font-weight:600; color: var(--cyan); }
+.nation-pop .l{ font-size:9px; letter-spacing:1px; text-transform:uppercase; color: var(--text-2); }
+.list-refresh-row{ display:flex; justify-content:flex-end; margin-bottom:12px; }
 </style>
 </head>
 <body>
@@ -498,84 +560,122 @@ textarea{ resize: vertical; min-height: 92px; line-height:1.5; }
       <button class="icon-btn" id="logout-btn" title="Sign out"><i class="fa-solid fa-right-from-bracket"></i></button>
     </div>
 
-    <!-- HERO -->
-    <div class="hero" id="hero-block">
-      <div class="flag-frame">
-        <div class="flag-inner" id="hero-flag-inner"><i class="fa-solid fa-flag"></i></div>
+    <!-- ============================= TAB: INFO NEGARA ============================= -->
+    <div class="tab-panel active" id="tab-info" data-tab="info">
+
+      <!-- HERO -->
+      <div class="hero" id="hero-block">
+        <div class="flag-frame">
+          <div class="flag-inner" id="hero-flag-inner"><i class="fa-solid fa-flag"></i></div>
+        </div>
+        <h1 id="hero-name">Unnamed Nation</h1>
+        <div class="subtitle">Manage your nation.</div>
       </div>
-      <h1 id="hero-name">Unnamed Nation</h1>
-      <div class="subtitle">Manage your nation.</div>
+
+      <!-- FLAG CARD -->
+      <div class="card glass">
+        <div class="card-title"><i class="fa-solid fa-flag"></i> National Flag <span class="rule"></span></div>
+        <div class="flag-row">
+          <div class="flag-preview" id="flag-preview"><i class="fa-solid fa-image"></i></div>
+          <div class="flag-actions">
+            <button class="btn btn-ghost btn-sm" id="upload-flag-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Flag</button>
+            <input type="file" id="flag-file-input" accept="image/*" class="hidden">
+            <div class="upload-progress" id="upload-progress"><div class="bar" id="upload-bar"></div></div>
+            <div class="upload-status" id="upload-status"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COUNTRY INFO CARD -->
+      <div class="card glass">
+        <div class="card-title"><i class="fa-solid fa-landmark"></i> National Information <span class="rule"></span></div>
+        <div class="info-grid">
+          <div class="field full">
+            <label for="input-name">Country Name</label>
+            <input type="text" id="input-name" maxlength="40" placeholder="e.g. Aurelia">
+            <div class="field-error" id="err-name"></div>
+          </div>
+          <div class="field">
+            <label for="input-language">Language</label>
+            <input type="text" id="input-language" maxlength="40" placeholder="e.g. Aurelian">
+            <div class="field-error" id="err-language"></div>
+          </div>
+          <div class="field">
+            <label for="input-capital">Capital City</label>
+            <input type="text" id="input-capital" maxlength="40" placeholder="e.g. Novaris">
+            <div class="field-error" id="err-capital"></div>
+          </div>
+        </div>
+
+        <div class="sync-panel hidden" id="sync-panel">
+          <div class="lbl"><i class="fa-solid fa-satellite"></i> Community Description Sync</div>
+          <div id="sync-content">No description available.</div>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn btn-primary btn-sm" id="save-info-btn"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+        </div>
+      </div>
+
+      <!-- DESCRIPTION CARD -->
+      <div class="card glass">
+        <div class="card-title"><i class="fa-solid fa-feather-pointer"></i> Description <span class="rule"></span></div>
+        <div class="field full" style="margin-bottom:0;">
+          <textarea id="input-description" maxlength="1000" placeholder="Describe your nation's history, culture, and ambitions..."></textarea>
+        </div>
+        <div class="actions-row">
+          <button class="btn btn-primary btn-sm" id="save-description-btn"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+        </div>
+      </div>
+
     </div>
 
-    <!-- FLAG CARD -->
-    <div class="card glass">
-      <div class="card-title"><i class="fa-solid fa-flag"></i> National Flag <span class="rule"></span></div>
-      <div class="flag-row">
-        <div class="flag-preview" id="flag-preview"><i class="fa-solid fa-image"></i></div>
-        <div class="flag-actions">
-          <button class="btn btn-ghost btn-sm" id="upload-flag-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Flag</button>
-          <input type="file" id="flag-file-input" accept="image/*" class="hidden">
-          <div class="upload-progress" id="upload-progress"><div class="bar" id="upload-bar"></div></div>
-          <div class="upload-status" id="upload-status"></div>
+    <!-- ============================= TAB: POPULASI ============================= -->
+    <div class="tab-panel" id="tab-populasi" data-tab="populasi">
+      <div class="card glass">
+        <div class="card-title"><i class="fa-solid fa-users"></i> Population <span class="rule"></span></div>
+        <div class="pop-value"><span id="pop-number">0</span><small>CITIZENS</small></div>
+        <div class="pop-sub"><i class="fa-solid fa-circle"></i> <span id="pop-updated">Awaiting first sync</span></div>
+      </div>
+    </div>
+
+    <!-- ============================= TAB: CUACA ============================= -->
+    <div class="tab-panel" id="tab-cuaca" data-tab="cuaca">
+      <div class="card glass">
+        <div class="card-title"><i class="fa-solid fa-cloud-bolt"></i> Weather <span class="rule"></span></div>
+        <div id="weather-content"></div>
+      </div>
+    </div>
+
+    <!-- ============================= TAB: NEGARA TERDAFTAR ============================= -->
+    <div class="tab-panel" id="tab-daftar" data-tab="daftar">
+      <div class="card glass">
+        <div class="card-title"><i class="fa-solid fa-globe"></i> Registered Nations <span class="rule"></span></div>
+        <div class="list-refresh-row">
+          <button class="btn btn-ghost btn-sm" id="refresh-list-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+        <div id="nation-list-content">
+          <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Loading nations...</div>
         </div>
       </div>
     </div>
 
-    <!-- COUNTRY INFO CARD -->
-    <div class="card glass">
-      <div class="card-title"><i class="fa-solid fa-landmark"></i> National Information <span class="rule"></span></div>
-      <div class="info-grid">
-        <div class="field full">
-          <label for="input-name">Country Name</label>
-          <input type="text" id="input-name" maxlength="40" placeholder="e.g. Aurelia">
-          <div class="field-error" id="err-name"></div>
-        </div>
-        <div class="field">
-          <label for="input-language">Language</label>
-          <input type="text" id="input-language" maxlength="40" placeholder="e.g. Aurelian">
-          <div class="field-error" id="err-language"></div>
-        </div>
-        <div class="field">
-          <label for="input-capital">Capital City</label>
-          <input type="text" id="input-capital" maxlength="40" placeholder="e.g. Novaris">
-          <div class="field-error" id="err-capital"></div>
-        </div>
-      </div>
+  </div>
 
-      <div class="sync-panel hidden" id="sync-panel">
-        <div class="lbl"><i class="fa-solid fa-satellite"></i> Community Description Sync</div>
-        <div id="sync-content">No description available.</div>
-      </div>
-
-      <div class="actions-row">
-        <button class="btn btn-primary btn-sm" id="save-info-btn"><i class="fa-solid fa-floppy-disk"></i> Save</button>
-      </div>
-    </div>
-
-    <!-- DESCRIPTION CARD -->
-    <div class="card glass">
-      <div class="card-title"><i class="fa-solid fa-feather-pointer"></i> Description <span class="rule"></span></div>
-      <div class="field full" style="margin-bottom:0;">
-        <textarea id="input-description" maxlength="1000" placeholder="Describe your nation's history, culture, and ambitions..."></textarea>
-      </div>
-      <div class="actions-row">
-        <button class="btn btn-primary btn-sm" id="save-description-btn"><i class="fa-solid fa-floppy-disk"></i> Save</button>
-      </div>
-    </div>
-
-    <!-- POPULATION CARD -->
-    <div class="card glass">
-      <div class="card-title"><i class="fa-solid fa-users"></i> Population <span class="rule"></span></div>
-      <div class="pop-value"><span id="pop-number">0</span><small>CITIZENS</small></div>
-      <div class="pop-sub"><i class="fa-solid fa-circle"></i> <span id="pop-updated">Awaiting first sync</span></div>
-    </div>
-
-    <!-- WEATHER CARD -->
-    <div class="card glass">
-      <div class="card-title"><i class="fa-solid fa-cloud-bolt"></i> Weather <span class="rule"></span></div>
-      <div id="weather-content"></div>
-    </div>
-
+  <!-- ============================= BOTTOM TAB BAR ============================= -->
+  <div class="tabbar glass hidden" id="tabbar">
+    <button class="tab-btn active" data-tab-target="tab-info">
+      <i class="fa-solid fa-landmark"></i><span>Info</span>
+    </button>
+    <button class="tab-btn" data-tab-target="tab-populasi">
+      <i class="fa-solid fa-users"></i><span>Populasi</span>
+    </button>
+    <button class="tab-btn" data-tab-target="tab-cuaca">
+      <i class="fa-solid fa-cloud-bolt"></i><span>Cuaca</span>
+    </button>
+    <button class="tab-btn" data-tab-target="tab-daftar">
+      <i class="fa-solid fa-globe"></i><span>Negara</span>
+    </button>
   </div>
 
   <!-- ============================= SKELETON (loading) ============================= -->
@@ -650,6 +750,7 @@ const $ = (id) => document.getElementById(id);
 const loginScreen = $("login-screen");
 const dashboard = $("dashboard");
 const loadingScreen = $("loading-screen");
+const tabbar = $("tabbar");
 
 const authForm = $("auth-form");
 const authEmail = $("auth-email");
@@ -784,20 +885,26 @@ let unsubscribeDoc = null;
 let popIntervalHandle = null;
 let currentData = null;
 let nameSyncDebounce = null;
+let unsubscribeList = null;
+let listLoadedOnce = false;
 
 auth.onAuthStateChanged((user) => {
   if(unsubscribeDoc){ unsubscribeDoc(); unsubscribeDoc = null; }
   if(popIntervalHandle){ clearInterval(popIntervalHandle); popIntervalHandle = null; }
 
+  if(unsubscribeList){ unsubscribeList(); unsubscribeList = null; }
+
   if(user){
     currentUid = user.uid;
     loginScreen.classList.add("hidden");
     dashboard.classList.add("hidden");
+    tabbar.classList.add("hidden");
     loadingScreen.classList.remove("hidden");
     initCountryDoc(user.uid);
   } else {
     currentUid = null;
     dashboard.classList.add("hidden");
+    tabbar.classList.add("hidden");
     loadingScreen.classList.add("hidden");
     loginScreen.classList.remove("hidden");
     authForm.reset();
@@ -839,6 +946,7 @@ async function initCountryDoc(uid){
     checkPopulationTick(ref, data);
     loadingScreen.classList.add("hidden");
     dashboard.classList.remove("hidden");
+    tabbar.classList.remove("hidden");
   }, (err) => {
     showSnackbar("Connection to Firestore failed.", true);
     console.error(err);
@@ -953,6 +1061,84 @@ async function checkPopulationTick(ref, data){
   } finally {
     populationUpdateInFlight = false;
   }
+}
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+document.querySelectorAll(".tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const targetId = btn.getAttribute("data-tab-target");
+    document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b === btn));
+    document.querySelectorAll(".tab-panel").forEach((panel) => {
+      panel.classList.toggle("active", panel.id === targetId);
+    });
+    if(targetId === "tab-daftar"){
+      loadRegisteredCountries();
+    }
+  });
+});
+
+/* ============================================================
+   REGISTERED COUNTRIES LIST
+   ============================================================ */
+$("refresh-list-btn").addEventListener("click", () => loadRegisteredCountries(true));
+
+async function loadRegisteredCountries(forceRefresh){
+  const container = $("nation-list-content");
+  if(!listLoadedOnce || forceRefresh){
+    container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Loading nations...</div>';
+  }
+  try{
+    const snap = await db.collection("countries").orderBy("population", "desc").limit(100).get();
+    listLoadedOnce = true;
+    if(snap.empty){
+      container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-globe"></i>No nations registered yet.</div>';
+      return;
+    }
+    let rows = "";
+    snap.forEach((doc) => {
+      const d = doc.data();
+      rows += renderNationRow(d);
+    });
+    container.innerHTML = '<div class="nation-list">' + rows + '</div>';
+  } catch(err){
+    console.error("Failed to load nations list", err);
+    container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Failed to load nations.</div>';
+  }
+}
+
+function renderNationRow(d){
+  const name = escapeHtml(d.name || "Unnamed Nation");
+  const capital = escapeHtml(d.capitalCity || "Unknown capital");
+  const language = escapeHtml(d.language || "");
+  const pop = formatPopulation(d.population);
+  const flagHtml = d.flag
+    ? '<img src="' + d.flag + '" alt="' + name + ' flag">'
+    : '<i class="fa-solid fa-flag"></i>';
+  const sub = capital + (language ? " · " + language : "");
+  return (
+    '<div class="nation-row">' +
+      '<div class="nation-flag">' + flagHtml + '</div>' +
+      '<div class="nation-meta">' +
+        '<div class="name">' + name + '</div>' +
+        '<div class="sub">' + sub + '</div>' +
+      '</div>' +
+      '<div class="nation-pop">' +
+        '<div class="n">' + pop + '</div>' +
+        '<div class="l">Citizens</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 /* ============================================================
