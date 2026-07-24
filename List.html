@@ -330,11 +330,46 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     text-align: left;
   }
 
+  .country-card__head-main{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .country-card__flag-thumb{
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--color-outline);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .country-card__flag-thumb img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .country-card__flag-thumb i{
+    color: var(--color-text-disabled);
+    font-size: 14px;
+  }
+
   .country-card__name{
     font-size: 17px;
     font-weight: 700;
     color: var(--color-text-primary);
     letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .country-card__chevron{
@@ -382,6 +417,39 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
   .country-card__body-inner{
     overflow: hidden;
     min-height: 0;
+  }
+
+  .country-card__flag-large{
+    margin: 0 20px 16px;
+    border-radius: 14px;
+    overflow: hidden;
+    height: 140px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--color-outline);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity var(--dur-medium) var(--ease-standard) 40ms,
+                transform var(--dur-medium) var(--ease-standard) 40ms;
+  }
+
+  .country-card.is-open .country-card__flag-large{
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .country-card__flag-large img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .country-card__flag-large.is-empty i{
+    font-size: 30px;
+    color: var(--color-text-disabled);
   }
 
   .country-card__desc{
@@ -1234,10 +1302,21 @@ const countriesRef = collection(firestore, "countries");
       /** Membuat markup HTML untuk satu card negara. */
       buildCardMarkup(country){
         const isOpen = AppState.openCardId === country.id;
+        const hasFlag = typeof country.flag === "string" && country.flag.trim().length > 0;
+        const flagUrl = hasFlag ? escapeHtml(country.flag) : "";
+        const flagThumbMarkup = hasFlag
+          ? `<img src="${flagUrl}" alt="Bendera ${escapeHtml(country.name)}" loading="lazy">`
+          : `<i class="fa-solid fa-flag"></i>`;
+        const flagLargeMarkup = hasFlag
+          ? `<div class="country-card__flag-large"><img src="${flagUrl}" alt="Bendera ${escapeHtml(country.name)}" loading="lazy"></div>`
+          : `<div class="country-card__flag-large is-empty"><i class="fa-solid fa-flag"></i></div>`;
         return `
           <article class="country-card ${isOpen ? "is-open" : ""}" data-id="${country.id}">
             <button class="country-card__head" type="button" aria-expanded="${isOpen}">
-              <span class="country-card__name">${escapeHtml(country.name)}</span>
+              <span class="country-card__head-main">
+                <span class="country-card__flag-thumb">${flagThumbMarkup}</span>
+                <span class="country-card__name">${escapeHtml(country.name)}</span>
+              </span>
               <span class="country-card__chevron">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="6 9 12 15 18 9"></polyline>
@@ -1246,6 +1325,7 @@ const countriesRef = collection(firestore, "countries");
             </button>
             <div class="country-card__body">
               <div class="country-card__body-inner">
+                ${flagLargeMarkup}
                 <p class="country-card__desc">${escapeHtml(country.description)}</p>
                 <div class="country-card__meta">🗓️ Ditambahkan ${formatDate(country.createdAt)}</div>
               </div>
