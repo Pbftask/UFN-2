@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>UFN — Ultimate Football Network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --pitch-900:#0b3d2e; --pitch-700:#12573f; --pitch-500:#1d7a55; --pitch-300:#3fae7c;
+  --ink:#0e1b16; --paper:#f5f8f6; --card:rgba(255,255,255,0.62); --card-brd:rgba(255,255,255,0.85);
+  --blue:#2f6fed; --blue-deep:#1a4bc4; --gold:#e2b13c; --red:#d64545;
+  --line:rgba(14,27,22,0.10); --shadow:0 8px 30px rgba(11,61,46,0.10);
+  --radius:18px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Inter',sans-serif; color:var(--ink); background:
+    radial-gradient(circle at 15% 0%, #d9f2e4 0%, transparent 45%),
+    radial-gradient(circle at 90% 10%, #dbe8ff 0%, transparent 40%),
+    repeating-linear-gradient(0deg, #eef5f0 0px, #eef5f0 42px, #e7f1ea 42px, #e7f1ea 84px),
+    var(--paper);
+  min-height:100vh; padding-bottom:86px; overflow-x:hidden;
+}
+h1,h2,h3,.brand,.stat-num{font-family:'Space Grotesk',sans-serif;}
+.mono,.score,.rank-num{font-family:'Rajdhani',sans-serif; font-weight:700;}
+a{color:inherit; text-decoration:none;}
+button{font-family:inherit; cursor:pointer; border:none;}
+::-webkit-scrollbar{width:0; height:0;}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40; display:flex; align-items:center; justify-content:space-between;
+  padding:14px 18px; background:rgba(11,61,46,0.92); backdrop-filter:blur(14px);
+  color:#fff; box-shadow:0 4px 20px rgba(0,0,0,0.15);
+}
+.brand{display:flex; align-items:center; gap:10px; font-size:1.05rem; font-weight:700; letter-spacing:.3px;}
+.brand .crest{
+  width:34px; height:34px; border-radius:50%; background:conic-gradient(from 90deg, var(--gold), var(--pitch-300), var(--blue), var(--gold));
+  display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; color:#0b3d2e; background-color:#fff;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,0.5);
+}
+.topbar-actions{display:flex; gap:14px; align-items:center;}
+.icon-btn{
+  width:36px; height:36px; border-radius:12px; background:rgba(255,255,255,0.12); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:.95rem; transition:.2s;
+}
+.icon-btn:active{transform:scale(.92); background:rgba(255,255,255,0.25);}
+
+/* ---------- Layout ---------- */
+.app{max-width:520px; margin:0 auto; position:relative;}
+.page{display:none; padding:16px; animation:fadeUp .35s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+.section-title{display:flex; align-items:center; justify-content:space-between; margin:22px 0 10px;}
+.section-title h2{font-size:1.02rem; font-weight:700;}
+.section-title .see-all{font-size:.78rem; color:var(--blue-deep); font-weight:600;}
+.eyebrow{font-size:.68rem; text-transform:uppercase; letter-spacing:1.4px; color:var(--pitch-500); font-weight:700;}
+
+.card{
+  background:var(--card); border:1px solid var(--card-brd); border-radius:var(--radius);
+  box-shadow:var(--shadow); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+}
+.pad{padding:16px;}
+
+/* ---------- Hero / Dashboard ---------- */
+.hero{
+  border-radius:22px; padding:20px; color:#fff; position:relative; overflow:hidden;
+  background:linear-gradient(135deg, var(--pitch-900) 0%, var(--pitch-700) 55%, var(--blue-deep) 130%);
+  box-shadow:var(--shadow);
+}
+.hero::before{
+  content:""; position:absolute; inset:0; opacity:.15; background-image:
+    repeating-linear-gradient(90deg, transparent 0 38px, rgba(255,255,255,.5) 38px 40px);
+  mask-image:radial-gradient(circle at 30% 20%, black, transparent 70%);
+}
+.hero .eyebrow{color:#bfe8d2;}
+.hero h1{font-size:1.35rem; margin:6px 0 4px;}
+.hero p{font-size:.82rem; opacity:.85; max-width:280px;}
+.hero-stats{display:flex; gap:10px; margin-top:16px;}
+.hero-stat{flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18); border-radius:12px; padding:10px 8px; text-align:center;}
+.hero-stat .stat-num{font-size:1.15rem;}
+.hero-stat .stat-lbl{font-size:.62rem; opacity:.8; text-transform:uppercase; letter-spacing:.6px;}
+
+.hscroll{display:flex; gap:10px; overflow-x:auto; padding:2px 2px 8px; scroll-snap-type:x mandatory;}
+.hscroll>*{scroll-snap-align:start;}
+
+.match-chip{
+  min-width:210px; padding:12px; display:flex; flex-direction:column; gap:8px;
+}
+.match-chip .tourn-tag{font-size:.62rem; color:var(--pitch-500); font-weight:700; text-transform:uppercase; letter-spacing:.5px;}
+.match-row{display:flex; align-items:center; justify-content:space-between;}
+.team-mini{display:flex; align-items:center; gap:7px; font-size:.82rem; font-weight:600; flex:1; min-width:0;}
+.team-mini span{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.flag{width:22px; height:22px; border-radius:50%; object-fit:cover; background:#dfe9e3; flex-shrink:0; border:1px solid rgba(0,0,0,.06);}
+.score-box{font-size:.95rem; font-weight:700; padding:2px 8px; border-radius:8px; background:rgba(29,122,85,0.1); color:var(--pitch-700);}
+.status-pill{font-size:.6rem; font-weight:700; padding:3px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:.4px; align-self:flex-start;}
+.st-live{background:#fde3e3; color:var(--red);} .st-live::before{content:"● "; }
+.st-done{background:#e2ede7; color:var(--pitch-700);}
+.st-sched{background:#e6edfb; color:var(--blue-deep);}
+.st-post{background:#f3e7cf; color:#9a6c15;}
+
+.rank-strip{display:flex; flex-direction:column; gap:8px;}
+.rank-item{display:flex; align-items:center; gap:10px; padding:9px 12px;}
+.rank-num{width:22px; text-align:center; color:var(--pitch-700); font-size:.95rem;}
+.rank-item .team-mini{font-weight:600;}
+.rank-move{font-size:.72rem; font-weight:700; display:flex; align-items:center; gap:2px;}
+.up{color:#1e9e5a;} .down{color:var(--red);} .same{color:#98a1a0;}
+.rank-pts{font-size:.72rem; color:#5c6b64; margin-left:auto;}
+
+.news-card{padding:0; overflow:hidden; display:flex; flex-direction:column;}
+.news-card img{width:100%; height:110px; object-fit:cover;}
+.news-card .body{padding:10px 12px;}
+.news-card .cat{font-size:.6rem; font-weight:700; color:var(--blue-deep); text-transform:uppercase;}
+.news-card h3{font-size:.82rem; line-height:1.3; margin-top:3px;}
+
+/* ---------- Bottom nav ---------- */
+.bottomnav{
+  position:fixed; bottom:0; left:0; right:0; z-index:50; display:flex;
+  background:rgba(255,255,255,0.85); backdrop-filter:blur(18px); border-top:1px solid var(--line);
+  box-shadow:0 -6px 24px rgba(0,0,0,0.06);
+}
+.nav-item{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 0 8px;
+  color:#7d8b84; font-size:.62rem; font-weight:600; transition:.2s;
+}
+.nav-item i{font-size:1.05rem;}
+.nav-item.active{color:var(--pitch-700);}
+.nav-item.active i{color:var(--blue-deep);}
+
+/* ---------- Buttons/inputs ---------- */
+.btn{padding:11px 18px; border-radius:12px; font-weight:700; font-size:.85rem; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:.15s;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:linear-gradient(135deg,var(--pitch-500),var(--pitch-700)); color:#fff; box-shadow:0 6px 16px rgba(18,87,63,.28);}
+.btn-blue{background:linear-gradient(135deg,var(--blue),var(--blue-deep)); color:#fff; box-shadow:0 6px 16px rgba(47,111,237,.28);}
+.btn-ghost{background:rgba(14,27,22,0.06); color:var(--ink);}
+.btn-danger{background:#fde3e3; color:var(--red);}
+.btn-block{width:100%;}
+.btn-sm{padding:7px 12px; font-size:.72rem; border-radius:9px;}
+input,select,textarea{
+  width:100%; padding:11px 12px; border-radius:11px; border:1px solid var(--line); background:rgba(255,255,255,0.7);
+  font-family:inherit; font-size:.85rem; color:var(--ink);
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--blue); outline-offset:1px;}
+label{font-size:.72rem; font-weight:700; color:#3f4d47; margin-bottom:5px; display:block; text-transform:uppercase; letter-spacing:.3px;}
+.field{margin-bottom:12px;}
+.row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.chip-tag{display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:20px; background:rgba(29,122,85,.1); color:var(--pitch-700); font-size:.74rem; font-weight:600;}
+.chip-tag button{background:none; color:inherit; opacity:.6; font-size:.9rem;}
+
+/* ---------- Tabs / segmented ---------- */
+.tabs{display:flex; gap:6px; background:rgba(14,27,22,0.05); padding:4px; border-radius:12px; margin-bottom:14px; overflow-x:auto;}
+.tab{flex:1; text-align:center; padding:8px 10px; border-radius:9px; font-size:.76rem; font-weight:700; color:#5c6b64; white-space:nowrap;}
+.tab.active{background:#fff; color:var(--pitch-700); box-shadow:0 3px 10px rgba(0,0,0,.08);}
+
+/* ---------- Ranking table ---------- */
+.rk-row{display:grid; grid-template-columns:34px 1fr 60px 46px; align-items:center; gap:8px; padding:11px 8px; border-bottom:1px solid var(--line);}
+.rk-row:last-child{border-bottom:none;}
+.rk-row .rk-country{display:flex; align-items:center; gap:9px; min-width:0;}
+.rk-row .rk-country .nm{font-weight:600; font-size:.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.rk-row .rk-country .conf{font-size:.62rem; color:#8a978f;}
+.rk-search-bar{display:flex; gap:8px; margin-bottom:10px;}
+.rk-search-bar input{flex:1;}
+.rk-updated{font-size:.68rem; color:#7d8b84; text-align:right; margin-top:8px;}
+
+/* ---------- Standings table ---------- */
+.std-table{width:100%; border-collapse:collapse; font-size:.74rem;}
+.std-table th{font-size:.6rem; text-transform:uppercase; color:#7d8b84; padding:8px 4px; text-align:center; letter-spacing:.3px;}
+.std-table th:first-child, .std-table td:first-child{text-align:left; padding-left:8px;}
+.std-table td{padding:8px 4px; text-align:center; border-top:1px solid var(--line);}
+.std-team{display:flex; align-items:center; gap:7px; font-weight:600;}
+.std-team span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:90px;}
+.qual-row td:first-child{border-left:3px solid var(--pitch-500);}
+
+/* ---------- Groups grid (drawing) ---------- */
+.groups-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.group-card{padding:12px;}
+.group-card h3{font-size:.8rem; color:var(--pitch-700); margin-bottom:8px; display:flex; align-items:center; gap:6px;}
+.group-card .g-team{display:flex; align-items:center; gap:8px; padding:6px 4px; font-size:.78rem; font-weight:600;}
+.group-card .g-team .pos{width:16px; color:#9aa6a0; font-size:.68rem;}
+
+.draw-anim{
+  height:150px; border-radius:16px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;
+  background:radial-gradient(circle, var(--pitch-500), var(--pitch-900));
+}
+.draw-anim .ball{
+  font-size:2.6rem; color:#fff; animation:spin 0.5s linear infinite;
+}
+@keyframes spin{from{transform:rotate(0deg) scale(1);} to{transform:rotate(360deg) scale(1);}}
+.draw-anim .drawn-name{color:#fff; font-family:'Space Grotesk'; font-weight:700; font-size:1.1rem; text-align:center;}
+
+/* ---------- Bracket ---------- */
+.bracket{display:flex; gap:22px; overflow-x:auto; padding:8px 2px 14px;}
+.bracket-col{display:flex; flex-direction:column; justify-content:space-around; gap:14px; min-width:150px;}
+.bracket-col .rlabel{font-size:.62rem; text-transform:uppercase; letter-spacing:.5px; color:var(--pitch-500); font-weight:700; text-align:center; margin-bottom:4px;}
+.bmatch{background:var(--card); border:1px solid var(--card-brd); border-radius:12px; padding:8px; font-size:.72rem; box-shadow:var(--shadow);}
+.bmatch .bteam{display:flex; justify-content:space-between; align-items:center; padding:4px 2px;}
+.bmatch .bteam.winner{font-weight:700; color:var(--pitch-700);}
+.bmatch .bteam+.bteam{border-top:1px dashed var(--line);}
+
+/* ---------- Tournament card ---------- */
+.tourn-card{display:flex; gap:12px; padding:13px; align-items:center;}
+.tourn-logo{width:52px; height:52px; border-radius:14px; background:linear-gradient(135deg,var(--pitch-500),var(--blue)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.3rem; flex-shrink:0; overflow:hidden;}
+.tourn-logo img{width:100%; height:100%; object-fit:cover;}
+.tourn-info{flex:1; min-width:0;}
+.tourn-info h3{font-size:.88rem; margin-bottom:2px;}
+.tourn-info .meta{font-size:.68rem; color:#7d8b84;}
+.status-dot{width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:4px;}
+
+/* ---------- Match list item (full page) ---------- */
+.match-full{padding:13px; margin-bottom:10px;}
+.match-full .top-meta{display:flex; justify-content:space-between; font-size:.66rem; color:#7d8b84; margin-bottom:8px;}
+.match-full .teams{display:flex; align-items:center; justify-content:space-between; gap:6px;}
+.match-full .team-full{display:flex; flex-direction:column; align-items:center; gap:6px; flex:1;}
+.match-full .team-full span{font-size:.76rem; font-weight:700; text-align:center;}
+.match-full .score-mid{font-size:1.2rem; font-weight:700; font-family:'Rajdhani'; padding:0 8px;}
+.match-full .vs{font-size:.7rem; color:#9aa6a0; font-weight:700;}
+
+/* ---------- Empty state ---------- */
+.empty{text-align:center; padding:34px 16px; color:#7d8b84;}
+.empty i{font-size:1.8rem; margin-bottom:8px; color:var(--pitch-300);}
+.empty p{font-size:.8rem;}
+
+/* ---------- Modal ---------- */
+.modal-overlay{position:fixed; inset:0; background:rgba(11,20,17,0.5); z-index:100; display:none; align-items:flex-end; justify-content:center; backdrop-filter:blur(3px);}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:#f7faf8; width:100%; max-width:520px; border-radius:22px 22px 0 0; max-height:88vh; overflow-y:auto;
+  padding:18px 18px 26px; animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+.modal-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+.modal-head h2{font-size:1rem;}
+.modal-close{width:32px; height:32px; border-radius:10px; background:rgba(14,27,22,.06); display:flex; align-items:center; justify-content:center;}
+
+.toast-wrap{position:fixed; top:70px; left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; width:90%; max-width:460px;}
+.toast{background:var(--ink); color:#fff; padding:11px 16px; border-radius:12px; font-size:.8rem; display:flex; align-items:center; gap:9px; box-shadow:0 8px 24px rgba(0,0,0,.25); animation:toastIn .25s ease;}
+.toast.err{background:var(--red);} .toast.ok{background:var(--pitch-700);}
+@keyframes toastIn{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
+
+.spin-loader{width:34px; height:34px; border-radius:50%; border:3px solid rgba(29,122,85,.2); border-top-color:var(--pitch-500); animation:sp .7s linear infinite; margin:0 auto;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+.fab{
+  position:fixed; bottom:98px; right:18px; width:54px; height:54px; border-radius:50%;
+  background:linear-gradient(135deg,var(--pitch-500),var(--blue-deep)); color:#fff; font-size:1.2rem;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 10px 24px rgba(18,87,63,.35); z-index:30;
+}
+.admin-badge{position:fixed; top:66px; left:50%; transform:translateX(-50%); z-index:35; background:var(--gold); color:#4a3a06; font-size:.65rem; font-weight:700; padding:4px 12px; border-radius:20px; display:none; box-shadow:0 4px 12px rgba(0,0,0,.2);}
+.admin-badge.show{display:block;}
+
+@media (min-width:540px){ .groups-grid{grid-template-columns:1fr 1fr 1fr;} }
+</style>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<div class="admin-badge" id="adminBadge"><i class="fa-solid fa-shield-halved"></i> Mode Admin Aktif</div>
+
+<div class="topbar">
+  <div class="brand"><div class="crest">UFN</div> Ultimate Football Network</div>
+  <div class="topbar-actions">
+    <div class="icon-btn" onclick="App.openAdminGate()"><i class="fa-solid fa-user-shield"></i></div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ============ HOME / DASHBOARD ============ -->
+  <section class="page active" id="page-home">
+    <div class="hero">
+      <div class="eyebrow">Musim Berjalan</div>
+      <h1>Selamat datang di UFN</h1>
+      <p>Pantau turnamen, klasemen, dan ranking FIFA dari seluruh dunia dalam satu tempat.</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="stat-num" id="stTournCount">0</div><div class="stat-lbl">Turnamen</div></div>
+        <div class="hero-stat"><div class="stat-num" id="stMatchCount">0</div><div class="stat-lbl">Pertandingan</div></div>
+        <div class="hero-stat"><div class="stat-num" id="stCountryCount">0</div><div class="stat-lbl">Negara</div></div>
+      </div>
+    </div>
+
+    <div class="section-title"><h2><i class="fa-solid fa-bolt"></i> Pertandingan Terbaru</h2><span class="see-all" data-nav="matches">Lihat semua</span></div>
+    <div class="hscroll" id="recentMatches"></div>
+
+    <div class="section-title"><h2><i class="fa-regular fa-clock"></i> Pertandingan Berikutnya</h2><span class="see-all" data-nav="matches">Lihat semua</span></div>
+    <div class="hscroll" id="upcomingMatches"></div>
+
+    <div class="section-title"><h2><i class="fa-solid fa-trophy"></i> Turnamen Berlangsung</h2><span class="see-all" data-nav="tournaments">Lihat semua</span></div>
+    <div id="liveTournaments"></div>
+
+    <div class="section-title"><h2><i class="fa-solid fa-ranking-star"></i> Top Ranking FIFA</h2><span class="see-all" data-nav="ranking">Lihat semua</span></div>
+    <div class="card pad rank-strip" id="topRanking"></div>
+
+    <div class="section-title"><h2><i class="fa-solid fa-shuffle"></i> Drawing Terbaru</h2><span class="see-all" data-nav="drawing">Lihat semua</span></div>
+    <div id="latestDrawing"></div>
+
+    <div class="section-title"><h2><i class="fa-regular fa-newspaper"></i> Berita</h2></div>
+    <div class="hscroll" id="newsFeed"></div>
+  </section>
+
+  <!-- ============ RANKING FIFA ============ -->
+  <section class="page" id="page-ranking">
+    <h1 style="font-size:1.15rem; margin-bottom:12px;"><i class="fa-solid fa-ranking-star"></i> Ranking FIFA</h1>
+    <div class="rk-search-bar">
+      <input type="text" id="rkSearch" placeholder="Cari negara...">
+      <select id="rkConf" style="max-width:110px;">
+        <option value="">Semua</option>
+        <option>AFC</option><option>UEFA</option><option>CAF</option>
+        <option>CONMEBOL</option><option>CONCACAF</option><option>OFC</option>
+      </select>
+    </div>
+    <div class="tabs" id="rkTabs">
+      <div class="tab active" data-limit="10">Top 10</div>
+      <div class="tab" data-limit="20">Top 20</div>
+      <div class="tab" data-limit="0">Semua</div>
+    </div>
+    <div class="card" id="rkList"></div>
+    <div class="rk-updated" id="rkUpdated"></div>
+  </section>
+
+  <!-- ============ DRAWING GRUP ============ -->
+  <section class="page" id="page-drawing">
+    <h1 style="font-size:1.15rem; margin-bottom:12px;"><i class="fa-solid fa-shuffle"></i> Drawing Grup</h1>
+    <div class="card pad" id="drawSetupCard">
+      <div class="field">
+        <label>Pilih Turnamen</label>
+        <select id="drawTournSelect"></select>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Jumlah Grup</label>
+          <input type="number" id="drawGroupCount" min="2" max="12" value="4">
+        </div>
+        <div class="field">
+          <label>Lolos / Grup</label>
+          <input type="number" id="drawQualCount" min="1" max="6" value="2">
+        </div>
+      </div>
+      <div class="field">
+        <label>Mode Drawing</label>
+        <select id="drawMode">
+          <option value="auto">Otomatis (acak)</option>
+          <option value="manual">Manual</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Peserta (dari Firestore countries)</label>
+        <div id="drawParticipantsPicked" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;"></div>
+        <select id="drawAddParticipant"><option value="">+ Tambah negara peserta...</option></select>
+      </div>
+      <button class="btn btn-primary btn-block" id="btnStartDraw"><i class="fa-solid fa-dice"></i> Mulai Drawing</button>
+    </div>
+
+    <div id="drawAnimWrap" style="display:none; margin-top:16px;">
+      <div class="draw-anim" id="drawAnim"><i class="fa-solid fa-futbol ball"></i></div>
+    </div>
+
+    <div id="drawResultWrap" style="margin-top:16px;"></div>
+  </section>
+
+  <!-- ============ TURNAMEN ============ -->
+  <section class="page" id="page-tournaments">
+    <div class="section-title" style="margin-top:0;"><h1 style="font-size:1.15rem;"><i class="fa-solid fa-trophy"></i> Turnamen</h1></div>
+    <div id="tournamentList"></div>
+  </section>
+
+  <!-- ============ TOURNAMENT DETAIL ============ -->
+  <section class="page" id="page-tourndetail">
+    <div id="tdHeader"></div>
+    <div class="tabs" id="tdTabs">
+      <div class="tab active" data-tab="groups">Grup</div>
+      <div class="tab" data-tab="knockout">Knockout</div>
+      <div class="tab" data-tab="matches">Pertandingan</div>
+    </div>
+    <div id="tdBody"></div>
+  </section>
+
+  <!-- ============ PERTANDINGAN ============ -->
+  <section class="page" id="page-matches">
+    <div class="section-title" style="margin-top:0;"><h1 style="font-size:1.15rem;"><i class="fa-solid fa-futbol"></i> Pertandingan</h1></div>
+    <div class="tabs" id="matchFilterTabs">
+      <div class="tab active" data-f="all">Semua</div>
+      <div class="tab" data-f="sched">Belum Mulai</div>
+      <div class="tab" data-f="live">Berlangsung</div>
+      <div class="tab" data-f="done">Selesai</div>
+      <div class="tab" data-f="post">Ditunda</div>
+    </div>
+    <div id="matchesFullList"></div>
+  </section>
+
+  <!-- ============ PROFIL ============ -->
+  <section class="page" id="page-profile">
+    <h1 style="font-size:1.15rem; margin-bottom:14px;"><i class="fa-solid fa-user"></i> Profil</h1>
+    <div class="card pad" style="text-align:center; margin-bottom:14px;">
+      <div style="width:64px; height:64px; border-radius:50%; margin:0 auto 10px; background:linear-gradient(135deg,var(--pitch-500),var(--blue)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.4rem;"><i class="fa-solid fa-user"></i></div>
+      <h3 id="profileStatus">Pengunjung</h3>
+      <p style="font-size:.75rem; color:#7d8b84; margin-top:4px;">Masuk sebagai administrator untuk mengelola turnamen, ranking, dan pertandingan.</p>
+    </div>
+    <button class="btn btn-blue btn-block" id="btnAdminGateProfile" style="margin-bottom:10px;"><i class="fa-solid fa-user-shield"></i> Masuk Admin</button>
+    <button class="btn btn-ghost btn-block" id="btnAdminLogout" style="display:none;"><i class="fa-solid fa-right-from-bracket"></i> Keluar Admin</button>
+    <div id="adminPanelLinks" style="display:none; margin-top:16px;">
+      <div class="section-title" style="margin-top:0;"><h2>Panel Admin</h2></div>
+      <div class="card pad" style="display:flex; flex-direction:column; gap:8px;">
+        <button class="btn btn-ghost" data-admin-open="tournament"><i class="fa-solid fa-plus"></i> Buat Turnamen Baru</button>
+        <button class="btn btn-ghost" data-admin-open="ranking"><i class="fa-solid fa-ranking-star"></i> Kelola Ranking FIFA</button>
+        <button class="btn btn-ghost" data-admin-open="match"><i class="fa-solid fa-pen"></i> Input Hasil Pertandingan</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="fab" id="fabAdd" style="display:none;"><i class="fa-solid fa-plus"></i></div>
+
+<div class="bottomnav">
+  <div class="nav-item active" data-nav="home"><i class="fa-solid fa-house"></i>Home</div>
+  <div class="nav-item" data-nav="ranking"><i class="fa-solid fa-ranking-star"></i>Ranking</div>
+  <div class="nav-item" data-nav="drawing"><i class="fa-solid fa-shuffle"></i>Drawing</div>
+  <div class="nav-item" data-nav="tournaments"><i class="fa-solid fa-trophy"></i>Turnamen</div>
+  <div class="nav-item" data-nav="matches"><i class="fa-solid fa-futbol"></i>Match</div>
+  <div class="nav-item" data-nav="profile"><i class="fa-solid fa-user"></i>Profil</div>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalBody"></div></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+/* =========================================================================
+   UFN — ULTIMATE FOOTBALL NETWORK  (single-file module)
+   Firestore collections used (new, namespaced "ufn_" to avoid collisions):
+     ufn_tournaments/{id}: {name, logoUrl, host, year, format, status, groupCount,
+                             qualifyCount, participants:[countryId], groups:{A:[countryId,...]},
+                             knockout:{...}, createdAt}
+     ufn_matches/{id}: {tournamentId, stage ('group'|'ro16'|'qf'|'sf'|'3rd'|'final'),
+                         groupName, teamA, teamB, scoreA, scoreB, date, time, stadium,
+                         status ('scheduled'|'live'|'done'|'postponed'), createdAt}
+     ufn_rankings/{countryId}: {points, prevPosition, confederation, updatedAt, history:[{date,position}]}
+     ufn_drawings/{id}: {tournamentId, groups, createdAt}
+   Reference (existing, read-only): countries/{id}: {name, flag, ...}
+   Admin gate: client-side password check (consistent with UFN hub pattern) — replace ADMIN_PASSWORD below.
+   Image upload for tournament/club logos: ImgBB API — set IMGBB_KEY below.
+   ========================================================================= */
+
+const IMGBB_KEY = "4b5b5ba36295e875f1c44a632408c8c7";
+const ADMIN_PASSWORD = "Sw53huVP"; // TODO: ganti sebelum publish
+
+const firebaseConfig = {
+  apiKey: "GANTI_DENGAN_API_KEY",
+  authDomain: "puki-678bf.firebaseapp.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.appspot.com",
+  messagingSenderId: "GANTI",
+  appId: "GANTI"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const CONFEDERATIONS = ["AFC","UEFA","CAF","CONMEBOL","CONCACAF","OFC"];
+const STAGE_LABEL = {group:"Fase Grup", ro16:"Babak 16 Besar", qf:"Perempat Final", sf:"Semi Final", "3rd":"Perebutan Tempat Ketiga", final:"Final"};
+const STATUS_LABEL = {scheduled:"Belum Dimulai", live:"Sedang Berlangsung", done:"Selesai", postponed:"Ditunda"};
+const STATUS_CLASS = {scheduled:"st-sched", live:"st-live", done:"st-done", postponed:"st-post"};
+
+const App = {
+  countries: [],       // {id, name, flag}
+  countryMap: {},
+  tournaments: [],
+  matches: [],
+  rankings: [],        // merged with country info, sorted by points desc
+  drawings: [],
+  news: [],
+  isAdmin: false,
+  currentTournamentId: null,
+  drawParticipants: [], // countryIds picked for the drawing form
+  rkFilter: {search:"", conf:"", limit:10},
+  matchFilter: "all",
+
+  async init(){
+    this.bindNav();
+    this.bindTopLevelEvents();
+    await this.loadCountries();
+    this.listenTournaments();
+    this.listenMatches();
+    this.listenRankings();
+    this.listenNews();
+  },
+
+  toast(msg, type){
+    const wrap = document.getElementById('toastWrap');
+    const el = document.createElement('div');
+    el.className = 'toast' + (type ? ' '+type : '');
+    el.innerHTML = `<i class="fa-solid fa-${type==='err'?'circle-exclamation':(type==='ok'?'circle-check':'info-circle')}"></i> ${msg}`;
+    wrap.appendChild(el);
+    setTimeout(()=>{ el.style.opacity='0'; el.style.transition='.3s'; setTimeout(()=>el.remove(),300); }, 2800);
+  },
+
+  /* ---------------- NAV ---------------- */
+  bindNav(){
+    document.querySelectorAll('[data-nav]').forEach(el=>{
+      el.addEventListener('click', ()=> this.goTo(el.dataset.nav));
+    });
+  },
+  goTo(name, params){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    const page = document.getElementById('page-'+name);
+    if(page) page.classList.add('active');
+    const navBtn = document.querySelector(`.nav-item[data-nav="${name}"]`);
+    if(navBtn) navBtn.classList.add('active');
+    else {
+      // sub-pages (tourndetail) keep "tournaments" tab highlighted
+      const fallback = document.querySelector(`.nav-item[data-nav="tournaments"]`);
+      if(name==='tourndetail' && fallback) fallback.classList.add('active');
+    }
+    window.scrollTo(0,0);
+    if(name==='tourndetail' && params) this.openTournamentDetail(params);
+    if(name==='ranking') this.renderRanking();
+    if(name==='drawing') this.renderDrawingPage();
+    if(name==='tournaments') this.renderTournamentList();
+    if(name==='matches') this.renderMatchesFull();
+  },
+
+  bindTopLevelEvents(){
+    document.getElementById('rkSearch').addEventListener('input', e=>{ this.rkFilter.search = e.target.value.toLowerCase(); this.renderRanking(); });
+    document.getElementById('rkConf').addEventListener('change', e=>{ this.rkFilter.conf = e.target.value; this.renderRanking(); });
+    document.querySelectorAll('#rkTabs .tab').forEach(t=>t.addEventListener('click', ()=>{
+      document.querySelectorAll('#rkTabs .tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+      this.rkFilter.limit = parseInt(t.dataset.limit); this.renderRanking();
+    }));
+    document.querySelectorAll('#matchFilterTabs .tab').forEach(t=>t.addEventListener('click', ()=>{
+      document.querySelectorAll('#matchFilterTabs .tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+      this.matchFilter = t.dataset.f; this.renderMatchesFull();
+    }));
+    document.getElementById('btnStartDraw').addEventListener('click', ()=>this.startDrawing());
+    document.getElementById('drawAddParticipant').addEventListener('change', e=>{
+      if(e.target.value){ this.drawParticipants.push(e.target.value); e.target.value=''; this.renderDrawParticipants(); }
+    });
+    document.getElementById('drawTournSelect').addEventListener('change', ()=>this.onDrawTournamentChange());
+
+    document.getElementById('btnAdminGateProfile').addEventListener('click', ()=>this.openAdminGate());
+    document.getElementById('btnAdminLogout').addEventListener('click', ()=>this.adminLogout());
+    document.querySelectorAll('[data-admin-open]').forEach(b=>b.addEventListener('click', ()=>{
+      const t = b.dataset.adminOpen;
+      if(t==='tournament') this.openTournamentForm();
+      if(t==='ranking') this.openRankingAdmin();
+      if(t==='match') this.openMatchForm();
+    }));
+    document.getElementById('fabAdd').addEventListener('click', ()=>{
+      const active = document.querySelector('.page.active').id;
+      if(active==='page-tournaments') this.openTournamentForm();
+      else if(active==='page-matches') this.openMatchForm();
+      else if(active==='page-ranking') this.openRankingAdmin();
+    });
+    document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target.id==='modalOverlay') this.closeModal(); });
+  },
+
+  closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); document.getElementById('modalBody').innerHTML=''; },
+  openModal(html){ document.getElementById('modalBody').innerHTML = html; document.getElementById('modalOverlay').classList.add('open'); },
+
+  /* ---------------- ADMIN GATE ---------------- */
+  openAdminGate(){
+    if(this.isAdmin){ this.toast('Anda sudah masuk sebagai admin.'); return; }
+    this.openModal(`
+      <div class="modal-head"><h2><i class="fa-solid fa-user-shield"></i> Masuk sebagai Admin</h2><div class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></div></div>
+      <div class="field"><label>Kata Sandi Admin</label><input type="password" id="adminPwInput" placeholder="••••••••"></div>
+      <button class="btn btn-primary btn-block" onclick="App.checkAdminPassword()">Masuk</button>
+    `);
+  },
+  checkAdminPassword(){
+    const v = document.getElementById('adminPwInput').value;
+    if(v === ADMIN_PASSWORD){
+      this.isAdmin = true;
+      document.getElementById('adminBadge').classList.add('show');
+      document.getElementById('fabAdd').style.display='flex';
+      document.getElementById('profileStatus').textContent = 'Administrator';
+      document.getElementById('btnAdminGateProfile').style.display='none';
+      document.getElementById('btnAdminLogout').style.display='flex';
+      document.getElementById('adminPanelLinks').style.display='block';
+      this.closeModal();
+      this.toast('Berhasil masuk sebagai admin.','ok');
+      this.renderTournamentList(); this.renderMatchesFull(); this.renderRanking();
+    } else {
+      this.toast('Kata sandi salah.','err');
+    }
+  },
+  adminLogout(){
+    this.isAdmin=false;
+    document.getElementById('adminBadge').classList.remove('show');
+    document.getElementById('fabAdd').style.display='none';
+    document.getElementById('profileStatus').textContent='Pengunjung';
+    document.getElementById('btnAdminGateProfile').style.display='flex';
+    document.getElementById('btnAdminLogout').style.display='none';
+    document.getElementById('adminPanelLinks').style.display='none';
+    this.toast('Keluar dari mode admin.');
+    this.renderTournamentList(); this.renderMatchesFull(); this.renderRanking();
+  },
+
+  /* ---------------- IMGBB UPLOAD ---------------- */
+  async uploadToImgbb(file){
+    const fd = new FormData();
+    fd.append('image', file);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:'POST', body: fd });
+    const json = await res.json();
+    if(json.success) return json.data.url;
+    throw new Error('Upload gambar gagal');
+  },
+
+  /* ---------------- DATA: COUNTRIES ---------------- */
+  async loadCountries(){
+    try{
+      const snap = await db.collection('countries').get();
+      this.countries = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      this.countryMap = {}; this.countries.forEach(c=>this.countryMap[c.id]=c);
+      document.getElementById('stCountryCount').textContent = this.countries.length;
+      this.fillCountrySelects();
+    }catch(e){ this.toast('Gagal memuat data negara dari Firestore.','err'); }
+  },
+  fillCountrySelects(){
+    const addSel = document.getElementById('drawAddParticipant');
+    addSel.innerHTML = '<option value="">+ Tambah negara peserta...</option>' +
+      this.countries.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  },
+  countryName(id){ return this.countryMap[id] ? this.countryMap[id].name : '(Tidak diketahui)'; },
+  countryFlag(id){ return this.countryMap[id] && this.countryMap[id].flag ? this.countryMap[id].flag : 'https://via.placeholder.com/40x40/1d7a55/ffffff?text=%20'; },
+
+  /* ---------------- DATA: TOURNAMENTS ---------------- */
+  listenTournaments(){
+    db.collection('ufn_tournaments').orderBy('createdAt','desc').onSnapshot(snap=>{
+      this.tournaments = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      document.getElementById('stTournCount').textContent = this.tournaments.length;
+      this.fillTournamentSelects();
+      this.renderDashboard();
+      this.renderTournamentList();
+      if(this.currentTournamentId) this.openTournamentDetail(this.currentTournamentId, true);
+    }, ()=> this.toast('Gagal memuat turnamen.','err'));
+  },
+  fillTournamentSelects(){
+    const sel = document.getElementById('drawTournSelect');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Pilih turnamen...</option>' + this.tournaments.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+    if(cur) sel.value = cur;
+  },
+
+  /* ---------------- DATA: MATCHES ---------------- */
+  listenMatches(){
+    db.collection('ufn_matches').orderBy('createdAt','desc').onSnapshot(snap=>{
+      this.matches = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      document.getElementById('stMatchCount').textContent = this.matches.length;
+      this.renderDashboard();
+      this.renderMatchesFull();
+      if(this.currentTournamentId) this.renderTournamentDetailBody();
+    }, ()=> this.toast('Gagal memuat pertandingan.','err'));
+  },
+
+  /* ---------------- DATA: RANKINGS ---------------- */
+  listenRankings(){
+    db.collection('ufn_rankings').onSnapshot(snap=>{
+      const raw = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      this.rankings = raw
+        .filter(r=>this.countryMap[r.id])
+        .map(r=>({...r, name:this.countryMap[r.id].name, flag:this.countryMap[r.id].flag}))
+        .sort((a,b)=> (b.points||0)-(a.points||0));
+      this.rankings.forEach((r,i)=> r.position = i+1);
+      this.renderDashboard();
+      this.renderRanking();
+    }, ()=> this.toast('Gagal memuat ranking FIFA.','err'));
+  },
+
+  /* ---------------- DATA: NEWS ---------------- */
+  listenNews(){
+    db.collection('news').orderBy('createdAt','desc').limit(6).onSnapshot(snap=>{
+      this.news = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      this.renderDashboard();
+    }, ()=>{});
+  },
+
+  /* ================= DASHBOARD ================= */
+  renderDashboard(){
+    const now = Date.now();
+    const sorted = [...this.matches].sort((a,b)=> new Date(b.date+'T'+(b.time||'00:00')) - new Date(a.date+'T'+(a.time||'00:00')));
+    const recent = sorted.filter(m=>m.status==='done' || m.status==='live').slice(0,8);
+    const upcoming = [...this.matches].filter(m=>m.status==='scheduled')
+      .sort((a,b)=> new Date(a.date+'T'+(a.time||'00:00')) - new Date(b.date+'T'+(b.time||'00:00'))).slice(0,8);
+
+    document.getElementById('recentMatches').innerHTML = recent.length ? recent.map(m=>this.matchChip(m)).join('') : this.emptyChip('Belum ada pertandingan selesai');
+    document.getElementById('upcomingMatches').innerHTML = upcoming.length ? upcoming.map(m=>this.matchChip(m)).join('') : this.emptyChip('Belum ada jadwal mendatang');
+
+    const live = this.tournaments.filter(t=>t.status==='ongoing').slice(0,4);
+    document.getElementById('liveTournaments').innerHTML = live.length
+      ? `<div class="card">${live.map(t=>this.tournamentRow(t)).join('')}</div>`
+      : `<div class="card"><div class="empty"><i class="fa-solid fa-trophy"></i><p>Belum ada turnamen yang berlangsung</p></div></div>`;
+
+    const topR = this.rankings.slice(0,5);
+    document.getElementById('topRanking').innerHTML = topR.length ? topR.map(r=>this.rankRowMini(r)).join('') : `<div class="empty"><i class="fa-solid fa-ranking-star"></i><p>Belum ada data ranking</p></div>`;
+
+    const lastDraw = [...this.tournaments].filter(t=>t.groups).sort((a,b)=> (b.drawnAt?.seconds||0)-(a.drawnAt?.seconds||0))[0];
+    document.getElementById('latestDrawing').innerHTML = lastDraw
+      ? `<div class="card pad"><div class="eyebrow" style="margin-bottom:6px;">${lastDraw.name}</div><div class="groups-grid">${this.groupsGridHtml(lastDraw.groups, false)}</div></div>`
+      : `<div class="card"><div class="empty"><i class="fa-solid fa-shuffle"></i><p>Belum ada hasil drawing</p></div></div>`;
+
+    document.getElementById('newsFeed').innerHTML = this.news.length
+      ? this.news.map(n=>`
+        <div class="card news-card" style="min-width:200px;">
+          ${n.image?`<img src="${n.image}" alt="">`:''}
+          <div class="body"><div class="cat">${n.category||'Berita'}</div><h3>${n.title||''}</h3></div>
+        </div>`).join('')
+      : this.emptyChip('Belum ada berita');
+  },
+  emptyChip(msg){ return `<div class="card" style="min-width:200px; padding:20px 14px; text-align:center; color:#7d8b84; font-size:.78rem;"><i class="fa-regular fa-face-frown" style="font-size:1.3rem; color:var(--pitch-300); display:block; margin-bottom:6px;"></i>${msg}</div>`; },
+
+  matchChip(m){
+    const tourn = this.tournaments.find(t=>t.id===m.tournamentId);
+    return `<div class="card match-chip">
+      <div class="tourn-tag">${tourn?tourn.name:'Turnamen'} · ${STAGE_LABEL[m.stage]||''}</div>
+      <div class="match-row">
+        <div class="team-mini"><img class="flag" src="${this.countryFlag(m.teamA)}"><span>${this.countryName(m.teamA)}</span></div>
+        ${m.status==='scheduled' ? '' : `<div class="score-box">${m.scoreA ?? 0} - ${m.scoreB ?? 0}</div>`}
+      </div>
+      <div class="match-row">
+        <div class="team-mini"><img class="flag" src="${this.countryFlag(m.teamB)}"><span>${this.countryName(m.teamB)}</span></div>
+      </div>
+      <span class="status-pill ${STATUS_CLASS[m.status]}">${STATUS_LABEL[m.status]}</span>
+    </div>`;
+  },
+  rankRowMini(r){
+    const arrow = r.prevPosition==null ? `<span class="same"><i class="fa-solid fa-minus"></i></span>`
+      : r.prevPosition > r.position ? `<span class="up"><i class="fa-solid fa-caret-up"></i> ${r.prevPosition-r.position}</span>`
+      : r.prevPosition < r.position ? `<span class="down"><i class="fa-solid fa-caret-down"></i> ${r.position-r.prevPosition}</span>`
+      : `<span class="same"><i class="fa-solid fa-minus"></i></span>`;
+    return `<div class="rank-item">
+      <div class="rank-num">${r.position}</div>
+      <div class="team-mini"><img class="flag" src="${r.flag||''}"><span>${r.name}</span></div>
+      ${arrow}
+      <div class="rank-pts">${r.points||0} pts</div>
+    </div>`;
+  },
+  tournamentRow(t){
+    const dotColor = t.status==='ongoing' ? '#1e9e5a' : t.status==='upcoming' ? '#2f6fed' : '#9aa6a0';
+    return `<div class="tourn-card" style="cursor:pointer;" onclick="App.goTo('tourndetail','${t.id}')">
+      <div class="tourn-logo">${t.logoUrl?`<img src="${t.logoUrl}">`:'<i class="fa-solid fa-trophy"></i>'}</div>
+      <div class="tourn-info">
+        <h3>${t.name}</h3>
+        <div class="meta"><span class="status-dot" style="background:${dotColor}"></span>${t.host||'-'} · ${t.year||''} · ${(t.participants||[]).length} tim</div>
+      </div>
+      <i class="fa-solid fa-chevron-right" style="color:#b7c2bc;"></i>
+    </div>`;
+  },
+
+  /* ================= RANKING PAGE ================= */
+  renderRanking(){
+    let list = [...this.rankings];
+    if(this.rkFilter.search) list = list.filter(r=>r.name.toLowerCase().includes(this.rkFilter.search));
+    if(this.rkFilter.conf) list = list.filter(r=>r.confederation===this.rkFilter.conf);
+    if(this.rkFilter.limit) list = list.slice(0, this.rkFilter.limit);
+    document.getElementById('rkList').innerHTML = list.length ? list.map(r=>{
+      const arrow = r.prevPosition==null ? `<span class="same"><i class="fa-solid fa-minus"></i></span>`
+        : r.prevPosition > r.position ? `<span class="up"><i class="fa-solid fa-caret-up"></i>${r.prevPosition-r.position}</span>`
+        : r.prevPosition < r.position ? `<span class="down"><i class="fa-solid fa-caret-down"></i>${r.position-r.prevPosition}</span>`
+        : `<span class="same"><i class="fa-solid fa-minus"></i></span>`;
+      return `<div class="rk-row" style="cursor:pointer;" onclick="App.openCountryProfile('${r.id}')">
+        <div class="rank-num">${r.position}</div>
+        <div class="rk-country"><img class="flag" src="${r.flag||''}"><div><div class="nm">${r.name}</div><div class="conf">${r.confederation||'-'}</div></div></div>
+        <div class="rk-pts" style="margin:0; text-align:right; font-weight:700;">${r.points||0}</div>
+        <div style="text-align:center;">${arrow}</div>
+      </div>`;
+    }).join('') : `<div class="empty"><i class="fa-solid fa-ranking-star"></i><p>Tidak ada data ranking yang cocok</p></div>`;
+    document.getElementById('rkUpdated').textContent = this.rankings.length ? `Diperbarui berdasarkan data terbaru · ${this.rankings.length} negara terdaftar` : '';
+  },
+  openCountryProfile(id){
+    const r = this.rankings.find(x=>x.id===id);
+    const c = this.countryMap[id] || {};
+    if(!r) return;
+    const hist = (r.history||[]).slice(-6).reverse();
+    this.openModal(`
+      <div class="modal-head"><h2>${r.name}</h2><div class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></div></div>
+      <div style="text-align:center; margin-bottom:14px;"><img class="flag" src="${r.flag||''}" style="width:64px;height:64px;"></div>
+      <div class="row2" style="margin-bottom:14px;">
+        <div class="card pad" style="text-align:center;"><div class="eyebrow">Peringkat</div><div class="stat-num" style="font-size:1.3rem;">#${r.position}</div></div>
+        <div class="card pad" style="text-align:center;"><div class="eyebrow">Poin</div><div class="stat-num" style="font-size:1.3rem;">${r.points||0}</div></div>
+      </div>
+      <div class="eyebrow" style="margin-bottom:6px;">Konfederasi</div>
+      <p style="font-size:.82rem; margin-bottom:14px;">${r.confederation||'-'}</p>
+      <div class="eyebrow" style="margin-bottom:6px;">Riwayat Perubahan Ranking</div>
+      ${hist.length ? `<div class="card pad">${hist.map(h=>`<div style="display:flex; justify-content:space-between; font-size:.78rem; padding:6px 0; border-bottom:1px solid var(--line);"><span>${h.date}</span><span>Peringkat #${h.position}</span></div>`).join('')}</div>` : `<p style="font-size:.78rem; color:#7d8b84;">Belum ada riwayat.</p>`}
+    `);
+  },
+  openRankingAdmin(){
+    if(!this.isAdmin){ this.toast('Khusus admin.','err'); return; }
+    this.openModal(`
+      <div class="modal-head"><h2><i class="fa-solid fa-ranking-star"></i> Kelola Ranking FIFA</h2><div class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></div></div>
+      <div class="field"><label>Negara</label><select id="rkAdminCountry">${this.countries.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
+      <div class="row2">
+        <div class="field"><label>Poin</label><input type="number" id="rkAdminPoints" placeholder="1500"></div>
+        <div class="field"><label>Konfederasi</label><select id="rkAdminConf">${CONFEDERATIONS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="App.saveRankingAdmin()">Simpan Ranking</button>
+      <p style="font-size:.68rem; color:#7d8b84; margin-top:10px;">Poin juga akan diperbarui otomatis mengikuti hasil pertandingan yang diinput di menu Pertandingan.</p>
+    `);
+  },
+  async saveRankingAdmin(){
+    const id = document.getElementById('rkAdminCountry').value;
+    const points = parseInt(document.getElementById('rkAdminPoints').value)||0;
+    const confederation = document.getElementById('rkAdminConf').value;
+    const existing = this.rankings.find(r=>r.id===id);
+    const history = existing?.history || [];
+    if(existing) history.push({date:new Date().toISOString().slice(0,10), position:existing.position});
+    try{
+      await db.collection('ufn_rankings').doc(id).set({
+        points, confederation, prevPosition: existing?existing.position:null, history,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, {merge:true});
+      this.toast('Ranking disimpan.','ok'); this.closeModal();
+    }catch(e){ this.toast('Gagal menyimpan ranking.','err'); }
+  },
+
+  /* apply automatic ranking-point adjustment after a match result is entered */
+  async updateRankingsFromMatch(m){
+    if(m.scoreA==null || m.scoreB==null) return;
+    const K = 6; // simple point delta per result, keeps this a lightweight FIFA-style adjustment
+    let deltaA=0, deltaB=0;
+    if(m.scoreA>m.scoreB){ deltaA=K; deltaB=-Math.round(K/2); }
+    else if(m.scoreB>m.scoreA){ deltaB=K; deltaA=-Math.round(K/2); }
+    else { deltaA=Math.round(K/3); deltaB=Math.round(K/3); }
+    for(const [teamId, delta] of [[m.teamA,deltaA],[m.teamB,deltaB]]){
+      const ref = db.collection('ufn_rankings').doc(teamId);
+      const doc = await ref.get();
+      const cur = doc.exists ? doc.data() : {points:1000, confederation:CONFEDERATIONS[0], history:[]};
+      const newPoints = Math.max(0, (cur.points||1000) + delta);
+      await ref.set({ points:newPoints, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+    }
+  },
+
+  /* ================= DRAWING GRUP ================= */
+  renderDrawParticipants(){
+    document.getElementById('drawParticipantsPicked').innerHTML = this.drawParticipants.map(id=>
+      `<span class="chip-tag">${this.countryName(id)}<button onclick="App.removeDrawParticipant('${id}')"><i class="fa-solid fa-xmark"></i></button></span>`
+    ).join('') || `<span style="font-size:.75rem; color:#8a978f;">Belum ada peserta dipilih</span>`;
+  },
+  removeDrawParticipant(id){ this.drawParticipants = this.drawParticipants.filter(x=>x!==id); this.renderDrawParticipants(); },
+  onDrawTournamentChange(){
+    const tId = document.getElementById('drawTournSelect').value;
+    const t = this.tournaments.find(x=>x.id===tId);
+    if(t && t.participants){ this.drawParticipants = [...t.participants]; this.renderDrawParticipants(); }
+    this.renderDrawingPage();
+  },
+  renderDrawingPage(){
+    this.renderDrawParticipants();
+    const tId = document.getElementById('drawTournSelect').value;
+    const t = this.tournaments.find(x=>x.id===tId);
+    document.getElementById('drawResultWrap').innerHTML = (t && t.groups)
+      ? `<div class="section-title" style="margin-top:0;"><h2>Hasil Drawing Tersimpan</h2>
+          <span class="see-all" style="cursor:pointer;" onclick="App.shareDrawing('${t.id}')"><i class="fa-solid fa-share-nodes"></i> Bagikan</span></div>
+         <div class="groups-grid">${this.groupsGridHtml(t.groups, true)}</div>`
+      : '';
+  },
+  groupsGridHtml(groups, editable){
+    return Object.keys(groups).sort().map(gName=>`
+      <div class="card group-card">
+        <h3><i class="fa-solid fa-layer-group"></i> Grup ${gName}</h3>
+        ${groups[gName].map((id,i)=>`<div class="g-team"><span class="pos">${i+1}</span><img class="flag" src="${this.countryFlag(id)}"><span>${this.countryName(id)}</span></div>`).join('')}
+      </div>`).join('');
+  },
+  async startDrawing(){
+    const tId = document.getElementById('drawTournSelect').value;
+    if(!tId){ this.toast('Pilih turnamen terlebih dahulu.','err'); return; }
+    if(!this.isAdmin){ this.toast('Hanya admin yang dapat melakukan drawing.','err'); return; }
+    const groupCount = parseInt(document.getElementById('drawGroupCount').value)||4;
+    const qualCount = parseInt(document.getElementById('drawQualCount').value)||2;
+    const mode = document.getElementById('drawMode').value;
+    if(this.drawParticipants.length < groupCount){ this.toast('Jumlah peserta harus lebih banyak dari jumlah grup.','err'); return; }
+
+    const groupNames = Array.from({length:groupCount}, (_,i)=>String.fromCharCode(65+i));
+    const groups = {}; groupNames.forEach(g=>groups[g]=[]);
+
+    document.getElementById('drawAnimWrap').style.display='block';
+    const animEl = document.getElementById('drawAnim');
+    let pool = [...this.drawParticipants];
+    if(mode==='auto'){
+      // Fisher-Yates shuffle
+      for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+    }
+    let gi = 0;
+    for(const id of pool){
+      animEl.innerHTML = `<div class="drawn-name">${this.countryName(id)}<div style="font-size:.65rem; opacity:.75; margin-top:4px;">masuk Grup ${groupNames[gi%groupNames.length]}</div></div>`;
+      await new Promise(r=>setTimeout(r, 420));
+      groups[groupNames[gi%groupNames.length]].push(id);
+      gi++;
+    }
+    animEl.innerHTML = `<div class="drawn-name"><i class="fa-solid fa-circle-check"></i><br>Drawing Selesai!</div>`;
+    await new Promise(r=>setTimeout(r,500));
+    document.getElementById('drawAnimWrap').style.display='none';
+
+    try{
+      await db.collection('ufn_tournaments').doc(tId).set({
+        groups, groupCount, qualifyCount:qualCount, participants:this.drawParticipants,
+        status:'ongoing', drawnAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, {merge:true});
+      await db.collection('ufn_drawings').add({ tournamentId:tId, groups, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      this.toast('Hasil drawing tersimpan.','ok');
+      this.renderDrawingPage();
+    }catch(e){ this.toast('Gagal menyimpan hasil drawing.','err'); }
+  },
+  shareDrawing(tId){
+    const t = this.tournaments.find(x=>x.id===tId); if(!t||!t.groups) return;
+    let text = `Hasil Drawing Grup — ${t.name}\n\n`;
+    Object.keys(t.groups).sort().forEach(g=>{
+      text += `Grup ${g}:\n` + t.groups[g].map(id=>`- ${this.countryName(id)}`).join('\n') + '\n\n';
+    });
+    if(navigator.share){ navigator.share({title:t.name, text}); }
+    else { navigator.clipboard.writeText(text); this.toast('Hasil drawing disalin ke clipboard.','ok'); }
+  },
+
+  /* ================= TOURNAMENTS LIST ================= */
+  renderTournamentList(){
+    const wrap = document.getElementById('tournamentList');
+    wrap.innerHTML = this.tournaments.length
+      ? `<div class="card">${this.tournaments.map(t=>this.tournamentRow(t)).join('')}</div>`
+      : `<div class="empty"><i class="fa-solid fa-trophy"></i><p>Belum ada turnamen. ${this.isAdmin?'Tekan tombol + untuk membuat.':''}</p></div>`;
+  },
+  openTournamentForm(){
+    if(!this.isAdmin){ this.toast('Khusus admin.','err'); return; }
+    this.openModal(`
+      <div class="modal-head"><h2><i class="fa-solid fa-trophy"></i> Buat Turnamen</h2><div class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></div></div>
+      <div class="field"><label>Nama Turnamen</label><input id="tfName" placeholder="Piala Dunia UFN 2026"></div>
+      <div class="row2">
+        <div class="field"><label>Negara Penyelenggara</label><input id="tfHost" placeholder="Negara tuan rumah"></div>
+        <div class="field"><label>Tahun</label><input id="tfYear" type="number" placeholder="2026"></div>
+      </div>
+      <div class="field"><label>Format</label>
+        <select id="tfFormat">
+          <option value="group_knockout">Fase Grup + Knockout</option>
+          <option value="knockout">Knockout Langsung</option>
+        </select>
+      </div>
+      <div class="field"><label>Logo Turnamen (opsional)</label><input type="file" id="tfLogo" accept="image/*"></div>
+      <button class="btn btn-primary btn-block" onclick="App.saveTournamentForm()">Simpan Turnamen</button>
+    `);
+  },
+  async saveTournamentForm(){
+    const name = document.getElementById('tfName').value.trim();
+    if(!name){ this.toast('Nama turnamen wajib diisi.','err'); return; }
+    const host = document.getElementById('tfHost').value.trim();
+    const year = document.getElementById('tfYear').value;
+    const format = document.getElementById('tfFormat').value;
+    const fileInput = document.getElementById('tfLogo');
+    let logoUrl = '';
+    try{
+      if(fileInput.files[0]) logoUrl = await this.uploadToImgbb(fileInput.files[0]);
+      await db.collection('ufn_tournaments').add({
+        name, host, year, format, status:'upcoming', participants:[], logoUrl,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      this.toast('Turnamen berhasil dibuat.','ok'); this.closeModal();
+    }catch(e){ this.toast('Gagal membuat turnamen.','err'); }
+  },
+
+  /* ================= TOURNAMENT DETAIL ================= */
+  openTournamentDetail(tId){
+    this.currentTournamentId = tId;
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-tourndetail').classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.querySelector('.nav-item[data-nav="tournaments"]').classList.add('active');
+    if(!document.getElementById('tdTabs').dataset.bound){
+      document.querySelectorAll('#tdTabs .tab').forEach(t=>t.addEventListener('click', ()=>{
+        document.querySelectorAll('#tdTabs .tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+        this.renderTournamentDetailBody();
+      }));
+      document.getElementById('tdTabs').dataset.bound = '1';
+    }
+    this.renderTournamentDetailHeader();
+    this.renderTournamentDetailBody();
+  },
+  renderTournamentDetailHeader(){
+    const t = this.tournaments.find(x=>x.id===this.currentTournamentId);
+    if(!t){ document.getElementById('tdHeader').innerHTML = `<div class="empty"><p>Turnamen tidak ditemukan.</p></div>`; return; }
+    document.getElementById('tdHeader').innerHTML = `
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; cursor:pointer;" onclick="App.goTo('tournaments')">
+        <i class="fa-solid fa-arrow-left"></i><span style="font-size:.8rem; font-weight:600;">Kembali</span>
+      </div>
+      <div class="tourn-card card" style="margin-bottom:14px;">
+        <div class="tourn-logo">${t.logoUrl?`<img src="${t.logoUrl}">`:'<i class="fa-solid fa-trophy"></i>'}</div>
+        <div class="tourn-info"><h3>${t.name}</h3><div class="meta">${t.host||'-'} · ${t.year||''} · ${(t.participants||[]).length} tim · ${STATUS_LABEL[t.status]||t.status}</div></div>
+      </div>`;
+  },
+  renderTournamentDetailBody(){
+    const t = this.tournaments.find(x=>x.id===this.currentTournamentId);
+    if(!t) return;
+    const activeTab = document.querySelector('#tdTabs .tab.active')?.dataset.tab || 'groups';
+    const body = document.getElementById('tdBody');
+    if(activeTab==='groups'){
+      body.innerHTML = t.groups ? `<div class="groups-grid">${Object.keys(t.groups).sort().map(g=>this.standingsCard(t,g)).join('')}</div>`
+        : `<div class="empty"><i class="fa-solid fa-layer-group"></i><p>Belum ada grup. Lakukan drawing terlebih dahulu di menu Drawing.</p></div>`;
+    } else if(activeTab==='knockout'){
+      body.innerHTML = this.renderBracket(t);
+    } else {
+      const tMatches = this.matches.filter(m=>m.tournamentId===t.id);
+      body.innerHTML = tMatches.length ? tMatches.map(m=>this.matchFullCard(m)).join('') : `<div class="empty"><i class="fa-solid fa-futbol"></i><p>Belum ada pertandingan di turnamen ini.</p></div>`;
+    }
+  },
+  computeStandings(t, groupName){
+    const teams = t.groups[groupName];
+    const table = {}; teams.forEach(id=>table[id]={id, main:0,menang:0,seri:0,kalah:0,gm:0,gk:0,poin:0});
+    this.matches.filter(m=>m.tournamentId===t.id && m.stage==='group' && m.groupName===groupName && m.status==='done').forEach(m=>{
+      const a=table[m.teamA], b=table[m.teamB]; if(!a||!b) return;
+      a.main++; b.main++; a.gm+=m.scoreA; a.gk+=m.scoreB; b.gm+=m.scoreB; b.gk+=m.scoreA;
+      if(m.scoreA>m.scoreB){ a.menang++; a.poin+=3; b.kalah++; }
+      else if(m.scoreB>m.scoreA){ b.menang++; b.poin+=3; a.kalah++; }
+      else { a.seri++; b.seri++; a.poin++; b.poin++; }
+    });
+    return Object.values(table).sort((x,y)=> y.poin-x.poin || (y.gm-y.gk)-(x.gm-x.gk) || y.gm-x.gm);
+  },
+  standingsCard(t, groupName){
+    const rows = this.computeStandings(t, groupName);
+    const qualify = t.qualifyCount || 2;
+    return `<div class="card" style="padding:12px; grid-column:span 1;">
+      <h3 style="font-size:.82rem; color:var(--pitch-700); margin-bottom:8px;"><i class="fa-solid fa-layer-group"></i> Grup ${groupName}</h3>
+      <table class="std-table"><thead><tr><th>Tim</th><th>M</th><th>MN</th><th>S</th><th>K</th><th>SG</th><th>P</th></tr></thead>
+      <tbody>${rows.map((r,i)=>`<tr class="${i<qualify?'qual-row':''}">
+        <td><div class="std-team"><img class="flag" src="${this.countryFlag(r.id)}"><span>${this.countryName(r.id)}</span></div></td>
+        <td>${r.main}</td><td>${r.menang}</td><td>${r.seri}</td><td>${r.kalah}</td><td>${r.gm-r.gk}</td><td><b>${r.poin}</b></td>
+      </tr>`).join('')}</tbody></table>
+      <div style="font-size:.62rem; color:#7d8b84; margin-top:6px;"><span style="border-left:3px solid var(--pitch-500); padding-left:5px;">${qualify} tim teratas lolos ke babak knockout</span></div>
+    </div>`;
+  },
+  renderBracket(t){
+    const stages = ['ro16','qf','sf','3rd','final'].filter(s=>this.matches.some(m=>m.tournamentId===t.id && m.stage===s));
+    if(!stages.length) return `<div class="empty"><i class="fa-solid fa-diagram-project"></i><p>Bracket knockout belum tersedia. Bracket akan muncul otomatis setelah fase grup selesai.</p></div>`;
+    return `<div class="bracket">${stages.filter(s=>s!=='3rd').map(stage=>{
+      const ms = this.matches.filter(m=>m.tournamentId===t.id && m.stage===stage);
+      return `<div class="bracket-col"><div class="rlabel">${STAGE_LABEL[stage]}</div>${ms.map(m=>this.bracketMatchHtml(m)).join('')}</div>`;
+    }).join('')}
+    ${stages.includes('3rd') ? `<div class="bracket-col"><div class="rlabel">${STAGE_LABEL['3rd']}</div>${this.matches.filter(m=>m.tournamentId===t.id&&m.stage==='3rd').map(m=>this.bracketMatchHtml(m)).join('')}</div>` : ''}
+    </div>`;
+  },
+  bracketMatchHtml(m){
+    const winA = m.status==='done' && m.scoreA>m.scoreB, winB = m.status==='done' && m.scoreB>m.scoreA;
+    return `<div class="bmatch">
+      <div class="bteam ${winA?'winner':''}"><span>${this.countryName(m.teamA)}</span><span>${m.status==='scheduled'?'-':m.scoreA}</span></div>
+      <div class="bteam ${winB?'winner':''}"><span>${this.countryName(m.teamB)}</span><span>${m.status==='scheduled'?'-':m.scoreB}</span></div>
+    </div>`;
+  },
+  /* Auto-generate next knockout round when all matches of previous stage are done */
+  async maybeAdvanceKnockout(t){
+    if(!t.groups) return;
+    const groupNames = Object.keys(t.groups);
+    const allGroupsDone = groupNames.every(g=>{
+      const gm = this.matches.filter(m=>m.tournamentId===t.id && m.stage==='group' && m.groupName===g);
+      const teams = t.groups[g]; const expected = teams.length*(teams.length-1)/2;
+      return gm.filter(m=>m.status==='done').length >= expected && expected>0;
+    });
+    const ro16Exists = this.matches.some(m=>m.tournamentId===t.id && m.stage==='ro16');
+    if(allGroupsDone && !ro16Exists){
+      const qualifiers = [];
+      groupNames.sort().forEach(g=>{
+        const standing = this.computeStandings(t,g);
+        standing.slice(0, t.qualifyCount||2).forEach(s=>qualifiers.push(s.id));
+      });
+      if(qualifiers.length>=2){
+        const stage = qualifiers.length>=16?'ro16':qualifiers.length>=8?'qf':qualifiers.length>=4?'sf':'final';
+        for(let i=0;i<qualifiers.length;i+=2){
+          if(!qualifiers[i+1]) break;
+          await db.collection('ufn_matches').add({
+            tournamentId:t.id, stage, teamA:qualifiers[i], teamB:qualifiers[i+1],
+            scoreA:null, scoreB:null, date:'', time:'', stadium:'', status:'scheduled',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        this.toast('Bracket knockout dibuat otomatis dari hasil fase grup.','ok');
+      }
+    }
+  },
+
+  /* ================= MATCHES (FULL PAGE) ================= */
+  renderMatchesFull(){
+    let list = [...this.matches];
+    if(this.matchFilter!=='all'){
+      const map = {sched:'scheduled', live:'live', done:'done', post:'postponed'};
+      list = list.filter(m=>m.status===map[this.matchFilter]);
+    }
+    document.getElementById('matchesFullList').innerHTML = list.length ? list.map(m=>this.matchFullCard(m)).join('') : `<div class="empty"><i class="fa-solid fa-futbol"></i><p>Tidak ada pertandingan pada kategori ini.</p></div>`;
+  },
+  matchFullCard(m){
+    const t = this.tournaments.find(x=>x.id===m.tournamentId);
+    return `<div class="card match-full" ${this.isAdmin?`style="cursor:pointer;" onclick="App.openMatchForm('${m.id}')"`:''}>
+      <div class="top-meta"><span>${t?t.name:''} · ${STAGE_LABEL[m.stage]||''}${m.groupName?(' '+m.groupName):''}</span><span class="status-pill ${STATUS_CLASS[m.status]}">${STATUS_LABEL[m.status]}</span></div>
+      <div class="teams">
+        <div class="team-full"><img class="flag" src="${this.countryFlag(m.teamA)}" style="width:34px;height:34px;"><span>${this.countryName(m.teamA)}</span></div>
+        <div class="score-mid">${m.status==='scheduled' ? '<span class="vs">VS</span>' : `${m.scoreA ?? 0} - ${m.scoreB ?? 0}`}</div>
+        <div class="team-full"><img class="flag" src="${this.countryFlag(m.teamB)}" style="width:34px;height:34px;"><span>${this.countryName(m.teamB)}</span></div>
+      </div>
+      <div class="top-meta" style="margin-top:8px; margin-bottom:0;"><span>${m.date||'Tanggal belum ditentukan'} ${m.time||''}</span><span>${m.stadium||''}</span></div>
+    </div>`;
+  },
+  openMatchForm(matchId){
+    if(!this.isAdmin){ this.toast('Khusus admin.','err'); return; }
+    const m = matchId ? this.matches.find(x=>x.id===matchId) : null;
+    const tOptions = this.tournaments.map(t=>`<option value="${t.id}" ${m&&m.tournamentId===t.id?'selected':''}>${t.name}</option>`).join('');
+    const cOptions = this.countries.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    this.openModal(`
+      <div class="modal-head"><h2><i class="fa-solid fa-futbol"></i> ${m?'Update':'Tambah'} Pertandingan</h2><div class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></div></div>
+      <div class="field"><label>Turnamen</label><select id="mfTourn">${tOptions}</select></div>
+      <div class="row2">
+        <div class="field"><label>Babak</label>
+          <select id="mfStage">${Object.keys(STAGE_LABEL).map(s=>`<option value="${s}" ${m&&m.stage===s?'selected':''}>${STAGE_LABEL[s]}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Nama Grup (jika fase grup)</label><input id="mfGroup" placeholder="A" value="${m?.groupName||''}"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Tim A</label><select id="mfTeamA">${cOptions}</select></div>
+        <div class="field"><label>Tim B</label><select id="mfTeamB">${cOptions}</select></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Skor Tim A</label><input type="number" id="mfScoreA" value="${m?.scoreA ?? ''}"></div>
+        <div class="field"><label>Skor Tim B</label><input type="number" id="mfScoreB" value="${m?.scoreB ?? ''}"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Tanggal</label><input type="date" id="mfDate" value="${m?.date||''}"></div>
+        <div class="field"><label>Waktu</label><input type="time" id="mfTime" value="${m?.time||''}"></div>
+      </div>
+      <div class="field"><label>Stadion</label><input id="mfStadium" value="${m?.stadium||''}" placeholder="Nama stadion"></div>
+      <div class="field"><label>Status</label>
+        <select id="mfStatus">${Object.keys(STATUS_LABEL).map(s=>`<option value="${s}" ${m&&m.status===s?'selected':''}>${STATUS_LABEL[s]}</option>`).join('')}</select>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="App.saveMatch('${matchId||''}')">Simpan Pertandingan</button>
+      ${m?`<button class="btn btn-danger btn-block" style="margin-top:8px;" onclick="App.deleteMatch('${m.id}')">Hapus Pertandingan</button>`:''}
+    `);
+    if(m){ setTimeout(()=>{ document.getElementById('mfTourn').value=m.tournamentId; document.getElementById('mfTeamA').value=m.teamA; document.getElementById('mfTeamB').value=m.teamB; },0); }
+  },
+  async saveMatch(matchId){
+    const data = {
+      tournamentId: document.getElementById('mfTourn').value,
+      stage: document.getElementById('mfStage').value,
+      groupName: document.getElementById('mfGroup').value.trim().toUpperCase(),
+      teamA: document.getElementById('mfTeamA').value,
+      teamB: document.getElementById('mfTeamB').value,
+      scoreA: document.getElementById('mfScoreA').value===''?null:parseInt(document.getElementById('mfScoreA').value),
+      scoreB: document.getElementById('mfScoreB').value===''?null:parseInt(document.getElementById('mfScoreB').value),
+      date: document.getElementById('mfDate').value,
+      time: document.getElementById('mfTime').value,
+      stadium: document.getElementById('mfStadium').value,
+      status: document.getElementById('mfStatus').value,
+    };
+    if(data.teamA===data.teamB){ this.toast('Tim A dan Tim B tidak boleh sama.','err'); return; }
+    try{
+      if(matchId){ await db.collection('ufn_matches').doc(matchId).update(data); }
+      else{ data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection('ufn_matches').add(data); }
+      if(data.status==='done'){
+        await this.updateRankingsFromMatch(data);
+        const t = this.tournaments.find(x=>x.id===data.tournamentId);
+        if(t) await this.maybeAdvanceKnockout(t);
+      }
+      this.toast('Pertandingan disimpan. Klasemen diperbarui otomatis.','ok'); this.closeModal();
+    }catch(e){ this.toast('Gagal menyimpan pertandingan.','err'); }
+  },
+  async deleteMatch(matchId){
+    try{ await db.collection('ufn_matches').doc(matchId).delete(); this.toast('Pertandingan dihapus.','ok'); this.closeModal(); }
+    catch(e){ this.toast('Gagal menghapus pertandingan.','err'); }
+  },
+};
+
+document.addEventListener('DOMContentLoaded', ()=>App.init());
+</script>
+</body>
+</html>
