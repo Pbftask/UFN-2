@@ -1,1317 +1,1369 @@
 <!DOCTYPE html>
 <html lang="id" data-theme="dark">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>UFN AI · Asisten Resmi</title>
-    <meta name="description" content="Asisten AI resmi Union of Federated Nations (UFN) — informasi negara, berita, mata uang, dan tempat berdasarkan data resmi." />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <style>
-        /* ===== RESET & VARIABEL ===== */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>UFN AI Assistant</title>
+<meta name="description" content="Asisten AI resmi Union of Federated Nations (UFN) — informasi negara, berita, mata uang, dan tempat berdasarkan data resmi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent: #b8905a;
+  --danger: #c0655a;
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
+}
 
-        :root {
-            --gold: #c6a15b;
-            --gold-soft: #e2c98a;
-            --blue-accent: #5c86ad;
-            --radius-sm: 8px;
-            --radius-md: 14px;
-            --radius-lg: 20px;
-            --ease: cubic-bezier(0.2, 0.9, 0.3, 1);
-            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --font-mono: 'IBM Plex Mono', monospace;
-        }
+html[data-theme="dark"]{
+  --bg: #14181f;
+  --surface: #1c212b;
+  --surface-2: #232a36;
+  --ink: #e9edf3;
+  --ink-dim: #8f97a3;
+  --line: #2a313d;
+  --bubble-ai: #232a36;
+  --bubble-user: #8e4700;
+}
+html[data-theme="light"]{
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --surface-2: #efece5;
+  --ink: #22262d;
+  --ink-dim: #6a6f78;
+  --line: #e2ded4;
+  --bubble-ai: #bdbdbd;
+  --bubble-user: #ff9402;
+}
 
-        /* Tema gelap (default) */
-        html[data-theme="dark"] {
-            --bg-body: #0d1117;
-            --bg-chat: #161b22;
-            --bg-input: #0d1117;
-            --bg-user-msg: #2d333b;
-            --bg-ai-msg: #1c2128;
-            --bg-hover: #30363d;
-            --border-subtle: #30363d;
-            --border-strong: #484f58;
-            --text-primary: #f0f6fc;
-            --text-secondary: #8b949e;
-            --text-muted: #484f58;
-            --shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-            --ring-glow: rgba(198, 161, 91, 0.15);
-        }
+*{box-sizing:border-box;}
+html,body{height:100%;margin:0;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  color:var(--ink);
+  background:var(--bg);
+  min-height:100vh;
+  overflow:hidden;
+  -webkit-tap-highlight-color:#ff7e06 ;
+  -webkit-touch-callout: none;
+}
 
-        /* Tema terang */
-        html[data-theme="light"] {
-            --bg-body: #ffffff;
-            --bg-chat: #f7f7f8;
-            --bg-input: #ffffff;
-            --bg-user-msg: #e5e5ea;
-            --bg-ai-msg: #f0f0f2;
-            --bg-hover: #e5e5ea;
-            --border-subtle: #d9d9e3;
-            --border-strong: #b0b0bf;
-            --text-primary: #1e1e2a;
-            --text-secondary: #5c5c70;
-            --text-muted: #8e8ea0;
-            --shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
-            --ring-glow: rgba(198, 161, 91, 0.12);
-        }
+.app{
+  display:flex; flex-direction:column;
+  height:100vh; height:100dvh;
+  max-width:720px; margin:0 auto;
+  background:var(--bg);
+}
 
-        /* ===== BASE ===== */
-        html,
-        body {
-            height: 100%;
-            margin: 0;
-            font-family: var(--font-sans);
-            background-color: var(--bg-body);
-            color: var(--text-primary);
-            transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
-            -webkit-font-smoothing: antialiased;
-        }
+header.top{
+  display:flex; align-items:center; gap:12px;
+  padding:14px 16px;
+  background:var(--surface);
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
+}
 
-        /* ===== APP ===== */
-        .app {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100dvh;
-            max-width: 820px;
-            margin: 0 auto;
-            background-color: var(--bg-body);
-            position: relative;
-        }
+.emblem{
+  width:36px; height:36px; flex:none;
+  border-radius:10px;
+  background:var(--accent);
+  color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; font-weight:600;
+}
 
-        /* ===== HEADER (minimalis) ===== */
-        .top {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background-color: var(--bg-body);
-            border-bottom: 1px solid var(--border-subtle);
-            flex-shrink: 0;
-            z-index: 5;
-        }
+.title-block{ display:flex; flex-direction:column; line-height:1.2; flex:1; min-width:0;}
+.title-block h1{
+  margin:0; font-family:'Fraunces', serif; font-weight:600;
+  font-size:17px; letter-spacing:.1px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.title-block .sub{
+  font-size:11px; color:var(--ink-dim);
+}
 
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-            min-width: 0;
-        }
+.top-actions{ display:flex; gap:6px; flex:none; }
+.icon-btn{
+  width:34px; height:34px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  background:transparent; border:1px solid var(--line);
+  color:var(--ink); cursor:pointer;
+}
+.icon-btn:hover{ background:var(--surface-2); }
+.icon-btn:active{ transform:scale(.94); }
+.icon-btn svg{ width:17px; height:17px; }
 
-        .emblem {
-            width: 32px;
-            height: 32px;
-            flex: none;
-            position: relative;
-        }
-        .emblem svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-        .emblem .ring {
-            transform-origin: 50% 50%;
-            animation: spin 24s linear infinite;
-        }
-        .emblem .core {
-            animation: pulse 2.8s ease-in-out infinite;
-        }
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        @keyframes pulse {
-            0%,
-            100% {
-                opacity: 0.5;
-            }
-            50% {
-                opacity: 1;
-            }
-        }
+main#chat{
+  flex:1; overflow-y:auto; padding:16px;
+  display:flex; flex-direction:column; gap:14px;
+  scroll-behavior:smooth;
+}
+main#chat::-webkit-scrollbar{ width:5px; }
+main#chat::-webkit-scrollbar-thumb{ background:var(--line); border-radius:6px; }
 
-        .brand {
-            font-weight: 600;
-            font-size: 16px;
-            letter-spacing: -0.3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .brand .highlight {
-            color: var(--gold-soft);
-        }
-        .brand .sub {
-            font-weight: 400;
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-left: 6px;
-            letter-spacing: 0.2px;
-        }
+.msg-row{ display:flex; gap:8px; max-width:100%; }
+.msg-row.user{ flex-direction:row-reverse; }
 
-        .top-actions {
-            display: flex;
-            gap: 4px;
-            flex: none;
-        }
+.avatar{
+  width:28px; height:28px; border-radius:8px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--surface-2); border:1px solid var(--line);
+  font-size:13px;
+}
+.avatar.ai{ color:var(--accent); }
+.avatar.user{ color:var(--ink-dim); }
 
-        .icon-btn {
-            width: 34px;
-            height: 34px;
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: background 0.2s var(--ease), transform 0.15s var(--ease), color 0.2s;
-        }
-        .icon-btn:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-        .icon-btn:active {
-            transform: scale(0.93);
-        }
-        .icon-btn svg {
-            width: 18px;
-            height: 18px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 1.8;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
+.msg-col{ display:flex; flex-direction:column; max-width:82%; }
+.msg-row.user .msg-col{ align-items:flex-end; }
 
-        /* ===== CHAT AREA ===== */
-        #chat {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px 16px 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background-color: var(--bg-chat);
-            scroll-behavior: smooth;
-        }
-        #chat::-webkit-scrollbar {
-            width: 5px;
-        }
-        #chat::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #chat::-webkit-scrollbar-thumb {
-            background: var(--border-subtle);
-            border-radius: 6px;
-        }
+.bubble{
+  padding:10px 13px; border-radius:var(--radius-md);
+  border:1px solid var(--line);
+  font-size:14.5px; line-height:1.55;
+  word-wrap:break-word;
+  overflow-x:auto;
+}
+.msg-row.ai .bubble{ background:var(--bubble-ai); border-top-left-radius:3px; }
+.msg-row.user .bubble{ background:var(--bubble-user); border-top-right-radius:3px; }
 
-        /* ===== PESAN ===== */
-        .msg-row {
-            display: flex;
-            gap: 10px;
-            max-width: 100%;
-            animation: rise 0.3s var(--ease) both;
-        }
-        @keyframes rise {
-            from {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .msg-row.user {
-            flex-direction: row-reverse;
-        }
+.bubble table{ border-collapse:collapse; width:100%; margin-top:6px; font-size:13px; }
+.bubble th, .bubble td{ padding:6px 8px; border-bottom:1px solid var(--line); text-align:left; }
+.bubble th{ color:var(--ink-dim); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.4px; }
+.bubble ul{ margin:6px 0 0; padding-left:18px; }
+.bubble li{ margin-bottom:4px; }
+.bubble strong{ color:var(--accent); }
+.bubble .hint{ color:var(--ink-dim); font-size:12.5px; }
+.bubble .error{ color:var(--danger); }
+.bubble .flag-img{ display:block; width:100%; max-width:260px; aspect-ratio:16/9; object-fit:cover; border-radius:var(--radius-sm); margin-bottom:8px; border:1px solid var(--line); }
 
-        .avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            flex: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 500;
-            background: var(--bg-hover);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-subtle);
-            user-select: none;
-            flex-shrink: 0;
-        }
-        .avatar.ai {
-            background: var(--bg-ai-msg);
-            color: var(--gold-soft);
-            border-color: var(--border-subtle);
-        }
-        .avatar.user {
-            background: var(--bg-user-msg);
-            color: var(--text-primary);
-        }
+.timestamp{
+  font-size:10.5px;
+  color:var(--ink-dim); margin-top:4px; padding:0 3px;
+}
 
-        .msg-col {
-            display: flex;
-            flex-direction: column;
-            max-width: 85%;
-        }
-        .msg-row.user .msg-col {
-            align-items: flex-end;
-        }
+.typing{ display:flex; gap:4px; padding:12px 13px; }
+.typing span{
+  width:6px; height:6px; border-radius:50%; background:var(--ink-dim);
+  animation:bounce 1.2s ease-in-out infinite;
+}
+.typing span:nth-child(2){ animation-delay:.15s; }
+.typing span:nth-child(3){ animation-delay:.3s; }
+@keyframes bounce{ 0%,60%,100%{ transform:translateY(0); opacity:.4; } 30%{ transform:translateY(-4px); opacity:1; } }
 
-        .bubble {
-            padding: 10px 14px;
-            border-radius: var(--radius-md);
-            font-size: 14px;
-            line-height: 1.6;
-            word-wrap: break-word;
-            overflow-x: auto;
-            background: var(--bg-ai-msg);
-            border: 1px solid var(--border-subtle);
-            transition: background 0.2s, border-color 0.2s;
-        }
-        .msg-row.ai .bubble {
-            border-top-left-radius: 4px;
-            background: var(--bg-ai-msg);
-        }
-        .msg-row.user .bubble {
-            border-top-right-radius: 4px;
-            background: var(--bg-user-msg);
-            border-color: var(--border-subtle);
-        }
+footer.input-bar{
+  padding:10px 12px calc(12px + env(safe-area-inset-bottom));
+  background:var(--surface);
+  border-top:1px solid var(--line);
+  flex-shrink:0;
+}
+.input-shell{
+  display:flex; align-items:flex-end; gap:8px;
+  background:var(--surface-2); border:1px solid var(--line);
+  border-radius:var(--radius-lg); padding:6px 6px 6px 14px;
+}
+.input-shell:focus-within{ border-color:var(--accent); }
+textarea#userInput{
+  flex:1; resize:none; border:none; outline:none; background:transparent;
+  color:var(--ink); font-family:'Inter',sans-serif; font-size:14.5px; line-height:1.4;
+  max-height:120px; padding:8px 0;
+}
+textarea#userInput::placeholder{ color:var(--ink-dim); }
 
-        /* gaya inline di dalam bubble */
-        .bubble table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 6px;
-            font-size: 13px;
-        }
-        .bubble th,
-        .bubble td {
-            padding: 5px 8px;
-            border-bottom: 1px solid var(--border-subtle);
-            text-align: left;
-        }
-        .bubble th {
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-family: var(--font-mono);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-        .bubble ul {
-            margin: 6px 0 0;
-            padding-left: 20px;
-        }
-        .bubble li {
-            margin-bottom: 3px;
-        }
-        .bubble strong {
-            color: var(--gold-soft);
-            font-weight: 600;
-        }
-        .bubble .hint {
-            color: var(--text-secondary);
-            font-size: 12.5px;
-        }
-        .bubble .error {
-            color: #d4766a;
-        }
-        .bubble .flag-img {
-            display: block;
-            width: 100%;
-            max-width: 240px;
-            aspect-ratio: 16/9;
-            object-fit: cover;
-            border-radius: var(--radius-sm);
-            margin-bottom: 10px;
-            border: 1px solid var(--border-subtle);
-        }
-        .bubble a {
-            color: var(--gold-soft);
-            text-decoration: none;
-            border-bottom: 1px dotted var(--gold-soft);
-        }
-        .bubble a:hover {
-            opacity: 0.8;
-        }
+.send-btn{
+  width:36px; height:36px; border-radius:10px; flex:none; border:none; cursor:pointer;
+  background:var(--accent);
+  color:#fff; display:flex; align-items:center; justify-content:center;
+}
+.send-btn:hover{ filter:brightness(1.08); }
+.send-btn:active{ transform:scale(.92); }
+.send-btn:disabled{ opacity:.4; cursor:not-allowed; }
+.send-btn svg{ width:16px; height:16px; }
 
-        .timestamp {
-            font-family: var(--font-mono);
-            font-size: 10px;
-            color: var(--text-muted);
-            margin-top: 4px;
-            padding: 0 4px;
-            letter-spacing: 0.2px;
-        }
+.hint-row{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:7px 4px 0; font-size:10.5px; color:var(--ink-dim);
+}
 
-        /* ===== TYPING INDICATOR ===== */
-        .typing {
-            display: flex;
-            gap: 4px;
-            padding: 4px 0;
-        }
-        .typing span {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--text-secondary);
-            animation: bounce 1.2s ease-in-out infinite;
-        }
-        .typing span:nth-child(2) {
-            animation-delay: 0.15s;
-        }
-        .typing span:nth-child(3) {
-            animation-delay: 0.3s;
-        }
-        @keyframes bounce {
-            0%,
-            60%,
-            100% {
-                transform: translateY(0);
-                opacity: 0.4;
-            }
-            30% {
-                transform: translateY(-5px);
-                opacity: 1;
-            }
-        }
+.quick-replies{
+  display:flex; gap:6px; flex-wrap:wrap; padding:4px 0 0;
+}
+.quick-replies button{
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:5px 12px;
+  font-size:12px;
+  color:var(--ink);
+  cursor:pointer;
+  font-family:'Inter',sans-serif;
+  white-space:nowrap;
+}
+.quick-replies button:hover{ border-color:var(--accent); }
 
-        /* ===== INPUT BAR ===== */
-        .input-bar {
-            padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
-            background-color: var(--bg-body);
-            border-top: 1px solid var(--border-subtle);
-            flex-shrink: 0;
-        }
-
-        .input-shell {
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 6px 6px 6px 16px;
-            transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-        }
-        .input-shell:focus-within {
-            border-color: var(--gold);
-            box-shadow: 0 0 0 3px var(--ring-glow);
-        }
-
-        textarea#userInput {
-            flex: 1;
-            resize: none;
-            border: none;
-            outline: none;
-            background: transparent;
-            color: var(--text-primary);
-            font-family: var(--font-sans);
-            font-size: 14px;
-            line-height: 1.5;
-            max-height: 120px;
-            padding: 8px 0;
-            min-height: 24px;
-        }
-        textarea#userInput::placeholder {
-            color: var(--text-muted);
-        }
-
-        .send-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            flex: none;
-            border: none;
-            cursor: pointer;
-            background: var(--gold);
-            color: #0d1117;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.18s var(--ease), background 0.2s, opacity 0.2s;
-        }
-        .send-btn:hover {
-            background: var(--gold-soft);
-            transform: scale(1.04);
-        }
-        .send-btn:active {
-            transform: scale(0.92);
-        }
-        .send-btn:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .send-btn svg {
-            width: 16px;
-            height: 16px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2.2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        /* ===== QUICK REPLIES (chip) ===== */
-        .quick-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            padding: 8px 2px 2px;
-        }
-        .quick-wrap button {
-            background: transparent;
-            border: 1px solid var(--border-subtle);
-            border-radius: 30px;
-            padding: 5px 14px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.2s var(--ease);
-            font-family: var(--font-sans);
-            white-space: nowrap;
-            background: var(--bg-body);
-        }
-        .quick-wrap button:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-            border-color: var(--border-strong);
-            transform: translateY(-1px);
-        }
-
-        /* ===== STATUS ===== */
-        .status-row {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            padding: 4px 4px 0;
-            font-size: 10.5px;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            gap: 6px;
-        }
-        .status-dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #3fb950;
-            transition: background 0.3s;
-        }
-        .status-dot.busy {
-            background: #d29922;
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (min-width: 640px) {
-            .app {
-                border-left: 1px solid var(--border-subtle);
-                border-right: 1px solid var(--border-subtle);
-                box-shadow: var(--shadow);
-            }
-            .msg-col {
-                max-width: 78%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .brand .sub {
-                display: none;
-            }
-            .top {
-                padding: 10px 12px;
-            }
-            #chat {
-                padding: 12px 12px 6px;
-            }
-            .bubble {
-                font-size: 13.5px;
-                padding: 8px 12px;
-            }
-            .quick-wrap button {
-                font-size: 11px;
-                padding: 4px 10px;
-            }
-        }
-
-        /* aksesibilitas */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.001s !important;
-                transition-duration: 0.001s !important;
-            }
-        }
-    </style>
+@media (min-width:640px){
+  .app{ border-left:1px solid var(--line); border-right:1px solid var(--line); }
+  .msg-col{ max-width:72%; }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ animation-duration:.001s !important; transition-duration:.001s !important; }
+}
+</style>
 </head>
 <body>
+<div class="app">
 
-    <div class="app">
-
-        <!-- HEADER minimal -->
-        <header class="top">
-            <div class="logo-area">
-                <div class="emblem" aria-hidden="true">
-                    <svg viewBox="0 0 44 44" fill="none">
-                        <circle class="ring" cx="22" cy="22" r="17" stroke="var(--gold)" stroke-width="1.1" stroke-dasharray="2 5"/>
-                        <circle cx="22" cy="22" r="12.5" stroke="var(--border-subtle)" stroke-width="1"/>
-                        <circle class="core" cx="22" cy="22" r="4.2" fill="var(--gold)"/>
-                        <path d="M22 9.5 L22 34.5 M9.5 22 L34.5 22" stroke="var(--border-subtle)" stroke-width="0.7"/>
-                    </svg>
-                </div>
-                <div class="brand">
-                    <span class="highlight">UFN</span> AI
-                    <span class="sub">· Asisten Resmi</span>
-                </div>
-            </div>
-            <div class="top-actions">
-                <button class="icon-btn" id="themeToggle" title="Ganti tema" aria-label="Ganti tema">
-                    <svg id="themeIcon" viewBox="0 0 24 24"><path d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-6.66 1.42-1.42M4.92 19.08l1.42-1.42M19.08 19.08l-1.42-1.42M4.92 4.92 6.34 6.34"/><circle cx="12" cy="12" r="5"/></svg>
-                </button>
-                <button class="icon-btn" id="clearChat" title="Hapus riwayat" aria-label="Hapus chat">
-                    <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>
-                </button>
-                <button class="icon-btn" id="suggestBtn" title="Saran pertanyaan" aria-label="Saran">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                </button>
-            </div>
-        </header>
-
-        <!-- CHAT -->
-        <main id="chat" aria-live="polite"></main>
-
-        <!-- INPUT -->
-        <footer class="input-bar">
-            <div class="input-shell">
-                <textarea id="userInput" rows="1" placeholder="Tanya apa saja tentang UFN…" aria-label="Tulis pertanyaan"></textarea>
-                <button class="send-btn" id="sendBtn" aria-label="Kirim">
-                    <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4Z"/></svg>
-                </button>
-            </div>
-
-            <div class="quick-wrap" id="quickReplies">
-                <button data-q="Daftar negara UFN">📋 Negara</button>
-                <button data-q="Mata uang terkuat">💰 Mata Uang</button>
-                <button data-q="Berita terbaru">📰 Berita</button>
-                <button data-q="Populasi terbesar">👥 Populasi</button>
-                <button data-q="Cuaca di Indonesia">🌤️ Cuaca</button>
-                <button data-q="Tempat menarik UFN">📍 Menarik</button>
-            </div>
-
-            <div class="status-row">
-                <span class="status-dot" id="statusDot"></span>
-                <span id="statusLabel">siap</span>
-            </div>
-        </footer>
-
+  <header class="top">
+    <div class="emblem" aria-hidden="true">◈</div>
+    <div class="title-block">
+      <h1>UFN AI Assistant</h1>
+      <span class="sub" id="headerSub">AI BY RIFQY</span>
     </div>
-
-    <script type="module">
-        // ================================================================
-        // FIREBASE IMPOR
-        // ================================================================
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import {
-            getFirestore, collection, query, orderBy, limit, getDocs, onSnapshot
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
-            authDomain: "puki-678bf.firebaseapp.com",
-            databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
-            projectId: "puki-678bf",
-            storageBucket: "puki-678bf.firebasestorage.app",
-            messagingSenderId: "343647284151",
-            appId: "1:343647284151:web:c26e7f5f75235c187a1632"
-        };
-
-        let db, firebaseReady = false;
-        try {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            firebaseReady = true;
-            console.log("✅ Firebase terhubung");
-        } catch (err) {
-            console.error("❌ Firebase gagal:", err);
-        }
-
-        // ================================================================
-        // CACHE & HELPERS
-        // ================================================================
-        const cache = { countries: null, news: null, currencies: null, places: null, reactions: null, comments: null };
-
-        const NOT_FOUND = "Maaf, data tersebut belum tersedia di database UFN.";
-        const FETCH_ERROR = "Maaf, terjadi kendala saat menghubungi database UFN.";
-
-        async function loadCountries() {
-            if (cache.countries) return cache.countries;
-            try {
-                const snap = await getDocs(collection(db, "countries"));
-                cache.countries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                return cache.countries;
-            } catch { return []; }
-        }
-
-        async function loadNews(limitCount = 20) {
-            if (cache.news) return cache.news;
-            try {
-                const q = query(collection(db, "news"), orderBy("createdAt", "desc"), limit(limitCount));
-                const snap = await getDocs(q);
-                cache.news = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            } catch {
-                try {
-                    const snap = await getDocs(collection(db, "news"));
-                    cache.news = snap.docs.map(d => ({ id: d.id, ...d.data() })).slice(0, limitCount);
-                } catch { cache.news = []; }
-            }
-            return cache.news;
-        }
-
-        async function loadCurrencies() {
-            if (cache.currencies) return cache.currencies;
-            try {
-                const snap = await getDocs(collection(db, "currencies"));
-                cache.currencies = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                return cache.currencies;
-            } catch { return []; }
-        }
-
-        async function loadPlaces() {
-            if (cache.places) return cache.places;
-            try {
-                const snap = await getDocs(collection(db, "places"));
-                cache.places = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                return cache.places;
-            } catch { return []; }
-        }
-
-        async function loadReactions() {
-            if (cache.reactions) return cache.reactions;
-            try {
-                const snap = await getDocs(collection(db, "reactions"));
-                cache.reactions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                return cache.reactions;
-            } catch { return []; }
-        }
-
-        async function loadComments() {
-            if (cache.comments) return cache.comments;
-            try {
-                const snap = await getDocs(collection(db, "comments"));
-                cache.comments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                return cache.comments;
-            } catch { return []; }
-        }
-
-        function norm(s) { return (s || "").toString().toLowerCase().normalize("NFKD").replace(/[^\w\s]/g, "").trim(); }
-
-        function esc(str) {
-            if (!str) return "";
-            const div = document.createElement("div");
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        function fmtDate(ts) {
-            try {
-                const d = ts?.toDate ? ts.toDate() : new Date(ts);
-                if (isNaN(d)) return "-";
-                return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-            } catch { return "-"; }
-        }
-
-        function fmtDateTime(ts) {
-            try {
-                const d = ts?.toDate ? ts.toDate() : new Date(ts);
-                if (isNaN(d)) return "-";
-                return d.toLocaleString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit",
-                    minute: "2-digit" });
-            } catch { return "-"; }
-        }
-
-        function fmtNumber(n) {
-            if (n === undefined || n === null || isNaN(n)) return "-";
-            return Number(n).toLocaleString("id-ID");
-        }
-
-        function fmtCurrency(n) {
-            if (n === undefined || n === null || isNaN(n)) return "-";
-            return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(n).replace("EFA", "EFA ");
-        }
-
-        function fmtTemp(n) {
-            if (n === undefined || n === null || isNaN(n)) return "-";
-            return `${n}°C`;
-        }
-
-        function truncate(str, max = 200) {
-            if (!str) return "";
-            return str.length > max ? str.slice(0, max) + "…" : str;
-        }
-
-        function findCountryInText(text, countries) {
-            const t = norm(text);
-            let best = null;
-            for (const c of countries) {
-                const name = norm(c.name);
-                if (name && t.includes(name)) {
-                    if (!best || name.length > norm(best.name).length) best = c;
-                }
-            }
-            return best;
-        }
-
-        function findAllCountriesInText(text, countries) {
-            const t = norm(text);
-            return countries.filter(c => norm(c.name) && t.includes(norm(c.name)));
-        }
-
-        function findNewsInText(text, newsItems) {
-            const t = norm(text);
-            let best = null;
-            for (const n of newsItems) {
-                const title = norm(n.title);
-                if (title && t.includes(title)) {
-                    if (!best || title.length > norm(best.title).length) best = n;
-                }
-            }
-            return best;
-        }
-
-        // ================================================================
-        // CUSTOM COMMANDS (ai_commands) — lapisan tambahan
-        // ================================================================
-        let customCommandsCache = [];
-        let customCommandsUnsub = null;
-
-        function initCustomCommandsListener() {
-            if (!db) return;
-            try {
-                if (customCommandsUnsub) customCommandsUnsub();
-                customCommandsUnsub = onSnapshot(
-                    collection(db, "ai_commands"),
-                    (snap) => {
-                        customCommandsCache = snap.docs
-                            .map(d => ({ id: d.id, ...d.data() }))
-                            .filter(cmd => cmd.enabled === true)
-                            .sort((a, b) => (Number(a.priority) || 0) - (Number(b.priority) || 0));
-                        console.log(`✅ Custom commands: ${customCommandsCache.length} aktif`);
-                    },
-                    (err) => { console.error("❌ ai_commands listener error:", err); }
-                );
-            } catch (err) { console.error("❌ Gagal init ai_commands:", err); }
-        }
-
-        function matchCustomCommand(rawText) {
-            if (!customCommandsCache.length) return null;
-            const message = String(rawText ?? "");
-            for (const cmd of customCommandsCache) {
-                if (!Array.isArray(cmd.keywords) || typeof cmd.answer !== "string") continue;
-                const ignoreCase = cmd.ignoreCase !== false;
-                const useContains = cmd.contains !== false;
-                const compareMessage = ignoreCase ? message.toLowerCase() : message;
-                const isMatch = cmd.keywords.some(keyword => {
-                    if (typeof keyword !== "string") return false;
-                    const compareKeyword = ignoreCase ? keyword.toLowerCase() : keyword;
-                    return useContains ? compareMessage.includes(compareKeyword) : compareMessage === compareKeyword;
-                });
-                if (isMatch) return cmd.answer;
-            }
-            return null;
-        }
-
-        // ================================================================
-        // INTENT DETECTION (disederhanakan)
-        // ================================================================
-        function detectIntent(rawText) {
-            const t = norm(rawText);
-            if (/\b(bantuan|help|menu|bisa apa|tolong)\b/.test(t)) return "smalltalk_help";
-            if (/\b(terima ?kasih|makasih|thanks)\b/.test(t)) return "smalltalk_thanks";
-            if (/\b(dadah|sampai jumpa|bye|goodbye)\b/.test(t)) return "smalltalk_bye";
-            if (/\b(halo+|hai+|hello|hi|hey|assalamualaikum|salam|pagi|siang|sore|malam)\b/.test(t) || /\bapa ?kabar\b/.test(
-                    t)) return "smalltalk_greeting";
-            if (/\b(aku rindu|kangen|rindu)\b/.test(t)) return "smalltalk_miss";
-            if (/\b(apa kabar|kabar|how are you)\b/.test(t)) return "smalltalk_howareyou";
-            if (/\b(lelucon|joke|humor|lucu)\b/.test(t)) return "smalltalk_joke";
-            if (/\b(nama|siapa namamu|your name)\b/.test(t)) return "smalltalk_name";
-            if (/\b(daftar|list|semua|mana saja)\b.*\b(negara|country)\b/.test(t)) return "list_countries";
-            if (/\b(deskripsi|tentang|info|profil)\b.*\bnegara\b/.test(t)) return "country_profile";
-            if (/\b(ibu ?kota|ibukota)\b/.test(t)) return "capitalCity";
-            if (/\bbahasa (apa|resmi)\b|\bbahasa yang di ?pakai\b|\blanguage\b/.test(t)) return "language";
-            if (/\bmata ?uang terkuat|nilai tukar tertinggi|kurs tertinggi\b/.test(t)) return "currency_strongest";
-            if (/\bmata ?uang|kurs|currency|nilai tukar\b/.test(t)) return "currency";
-            if (/\bpopulasi terbesar|paling banyak.*populasi\b/.test(t)) return "population_max";
-            if (/\bpopulasi|penduduk|population\b/.test(t)) return "population";
-            if (/\b(berita|news).*(terbaru|hari ini|terkini)\b|berita terbaru\b/.test(t)) return "latest_news";
-            if (/\bringkas|rangkum|ringkasan|resume\b/.test(t)) return "summary_news";
-            if (/\btempat menarik|parimenarik|lokasi|destinasi\b/.test(t)) return "places";
-            if (/\bbandingkan|vs|versus|perbedaan antara\b/.test(t)) return "compare";
-            if (/\b(cuaca|weather|suhu|hujan|cerah)\b/.test(t)) return "weather";
-            return "general_country";
-        }
-
-        // ================================================================
-        // HANDLERS (singkat)
-        // ================================================================
-        const JOKES = [
-            "Kenapa UFN tidak pernah ribut? Karena semua negara sepakat damai... dan kalau tidak, ada sanksi! 😄",
-            "Apa persamaan UFN dan koper? Sama-sama tempat menyimpan barang berharga! 😄",
-            "Kenapa berita UFN selalu menarik? Karena setiap hari ada cerita baru! 📰",
-        ];
-
-        function handleGreeting() {
-            return `Halo! 👋 Saya UFN AI Assistant.<br><br>💡 <strong>Ketik "bantuan"</strong> untuk melihat daftar perintah.<br>🌤️ Coba: "Cuaca di Indonesia" atau "Berita terbaru"`;
-        }
-
-        function handleHelp() {
-            return `🤖 Saya bisa membantu dengan:<ul>
-            <li><strong>🏛️ Daftar Negara</strong> — "Daftar negara UFN"</li>
-            <li><strong>ℹ️ Profil Negara</strong> — "Info [negara]"</li>
-            <li><strong>🌤️ Cuaca</strong> — "Cuaca di [negara]"</li>
-            <li><strong>💰 Mata Uang</strong> — "Mata uang [negara]" / "Mata uang terkuat"</li>
-            <li><strong>👥 Populasi</strong> — "Populasi [negara]" / "Populasi terbesar"</li>
-            <li><strong>📰 Berita Terbaru</strong> — "Berita terbaru"</li>
-            <li><strong>📍 Tempat Menarik</strong> — "Tempat menarik"</li>
-            <li><strong>📊 Perbandingan</strong> — "Bandingkan [negaraA] dan [negaraB]"</li>
-          </ul><span class="hint">Anda juga bisa mengobrol santai!</span>`;
-        }
-
-        // --- COUNTRY HANDLERS ---
-        async function handleListCountries() {
-            const countries = await loadCountries();
-            if (!countries.length) return "Belum ada data negara.";
-            const list = countries.map(c =>
-                `<li><strong>${esc(c.name)}</strong>${c.description ? ` — ${esc(c.description)}` : ''}</li>`
-            ).join("");
-            return `🌍 Daftar negara anggota UFN:<ul>${list}</ul><span class="hint">Total ${countries.length} negara.</span>`;
-        }
-
-        async function handleCountryProfile(text) {
-            const countries = await loadCountries();
-            const c = findCountryInText(text, countries);
-            if (!c) return NOT_FOUND;
-            let info =
-                `<strong>🏛️ ${esc(c.name)}</strong>`;
-            if (c.description) info += `<br><br>${esc(c.description)}`;
-            if (c.capitalCity) info += `<br>🏙️ Ibu kota: <strong>${esc(c.capitalCity)}</strong>`;
-            if (c.population) info += `<br>👥 Populasi: <strong>${fmtNumber(c.population)}</strong> jiwa`;
-            if (c.language) info += `<br>🗣️ Bahasa: <strong>${esc(c.language)}</strong>`;
-            if (c.weather?.temp !== undefined) info += `<br>🌡️ Suhu: <strong>${fmtTemp(c.weather.temp)}</strong>`;
-            return info;
-        }
-
-        async function handleCapitalCity(text) {
-            const countries = await loadCountries();
-            const c = findCountryInText(text, countries);
-            if (!c) return NOT_FOUND;
-            if (!c.capitalCity) return `Data ibu kota ${esc(c.name)} belum tersedia.`;
-            return `🏙️ Ibu kota <strong>${esc(c.name)}</strong> adalah <strong>${esc(c.capitalCity)}</strong>.`;
-        }
-
-        async function handleLanguage(text) {
-            const countries = await loadCountries();
-            const c = findCountryInText(text, countries);
-            if (!c) return NOT_FOUND;
-            if (!c.language) return `Data bahasa ${esc(c.name)} belum tersedia.`;
-            return `🗣️ Bahasa di <strong>${esc(c.name)}</strong>: <strong>${esc(c.language)}</strong>.`;
-        }
-
-        async function handleCurrency(text) {
-            const countries = await loadCountries();
-            const c = findCountryInText(text, countries);
-            if (!c) return NOT_FOUND;
-            const currencies = await loadCurrencies();
-            const cur = currencies.find(x => norm(x.country) === norm(c.name) || norm(x.name) === norm(c.name));
-            if (!cur) return NOT_FOUND;
-            let info = `<strong>💱 ${esc(c.name)}</strong> → <strong>${esc(cur.name)}</strong> (${esc(cur.symbol || "")})`;
-            if (cur.value !== undefined) info += `<br>Nilai: <strong>${fmtCurrency(cur.value)}</strong>`;
-            if (cur.changePercent !== undefined) info +=
-                `<br>Perubahan: <strong>${cur.changePercent > 0 ? "📈" : "📉"} ${fmtNumber(cur.changePercent)}%</strong>`;
-            return info;
-        }
-
-        async function handleCurrencyStrongest() {
-            const currencies = await loadCurrencies();
-            const valid = currencies.filter(c => c.value !== undefined && c.value !== null);
-            if (!valid.length) return "Belum ada data nilai mata uang.";
-            valid.sort((a, b) => b.value - a.value);
-            const top = valid[0];
-            return `🏆 Mata uang tertinggi: <strong>${esc(top.name)}</strong> (${esc(top.country || "")})<br>Nilai: <strong>${fmtCurrency(top.value)}</strong>`;
-        }
-
-        async function handlePopulation(text) {
-            const countries = await loadCountries();
-            const c = findCountryInText(text, countries);
-            if (!c) return NOT_FOUND;
-            if (!c.population) return `Data populasi ${esc(c.name)} belum tersedia.`;
-            return `👥 Populasi <strong>${esc(c.name)}</strong>: <strong>${fmtNumber(c.population)}</strong> jiwa.`;
-        }
-
-        async function handlePopulationMax() {
-            const countries = await loadCountries();
-            const withPop = countries.filter(c => c.population !== undefined && c.population !== null);
-            if (!withPop.length) return "Belum ada data populasi.";
-            withPop.sort((a, b) => b.population - a.population);
-            const top = withPop[0];
-            return `👥 Populasi terbesar: <strong>${esc(top.name)}</strong> dengan <strong>${fmtNumber(top.population)}</strong> jiwa.`;
-        }
-
-        async function handleWeather(text) {
-            const countries = await loadCountries();
-            const c = findCountryInText(text, countries);
-            if (!c) return NOT_FOUND;
-            if (!c.weather) return `Data cuaca ${esc(c.name)} belum tersedia.`;
-            const w = c.weather;
-            let info = `🌤️ Cuaca di <strong>${esc(c.name)}</strong>:<br>`;
-            if (w.temp !== undefined) info += `🌡️ <strong>${fmtTemp(w.temp)}</strong>`;
-            if (w.conditionKey) info += ` · ${esc(w.conditionKey)}`;
-            if (w.humidity !== undefined) info += `<br>💧 Kelembaban: <strong>${w.humidity}%</strong>`;
-            if (w.windSpeed !== undefined) info += `<br>💨 Angin: <strong>${w.windSpeed} km/h</strong>`;
-            return info;
-        }
-
-        async function handleLatestNews() {
-            const news = await loadNews(5);
-            if (!news.length) return NOT_FOUND;
-            const rows = news.map(n =>
-                `<li><strong>${esc(n.title || "")}</strong>${n.author ? ` <span class="hint">· ${esc(n.author)}</span>` : ''}<br><span class="hint">${fmtDate(n.createdAt)}</span></li>`
-            ).join("");
-            return `📰 Berita terbaru UFN:<ul>${rows}</ul>`;
-        }
-
-        async function handleSummaryNews(text) {
-            const news = await loadNews(10);
-            if (!news.length) return NOT_FOUND;
-            const n = findNewsInText(text, news) || news[0];
-            const ringkasan = n.excrept || n.content || (n.content ? truncate(n.content, 300) : null);
-            if (!ringkasan) return NOT_FOUND;
-            return `📝 Ringkasan "<strong>${esc(n.title)}</strong>":<br><br>${esc(ringkasan)}<br><span class="hint">${fmtDateTime(n.createdAt)}</span>`;
-        }
-
-        async function handlePlaces(text) {
-            const places = await loadPlaces();
-            if (!places.length) return "Belum ada data tempat menarik.";
-            const items = places.slice(0, 8).map(p =>
-                `<li><strong>${esc(p.name)}</strong> ${p.type || ''}${p.ownerId ? ` · ${esc(p.ownerId)}` : ''}</li>`
-            ).join("");
-            return `📍 Tempat menarik di UFN:<ul>${items}</ul>`;
-        }
-
-        async function handleCompare(text) {
-            const countries = await loadCountries();
-            const found = findAllCountriesInText(text, countries);
-            if (found.length < 2) return "Sebutkan dua negara (contoh: 'bandingkan Indonesia dan Malaysia').";
-            const [a, b] = found;
-            const rows = [
-                ["Nama", esc(a.name), esc(b.name)],
-                ["Ibu Kota", esc(a.capitalCity || "-"), esc(b.capitalCity || "-")],
-                ["Populasi", fmtNumber(a.population), fmtNumber(b.population)],
-            ].map(([label, va, vb]) => `<tr><td>${label}</td><td>${va}</td><td>${vb}</td></tr>`).join("");
-            return `📊 Perbandingan <strong>${esc(a.name)}</strong> vs <strong>${esc(b.name)}</strong>:<table><tr><th></th><th>${esc(a.name)}</th><th>${esc(b.name)}</th></tr>${rows}</table>`;
-        }
-
-        async function handleGeneralCountry(text) {
-            const countries = await loadCountries();
-            const c = findCountryInText(text, countries);
-            if (!c) return NOT_FOUND;
-            let info = `<strong>🏛️ ${esc(c.name)}</strong>`;
-            if (c.description) info += `<br><br>${esc(c.description)}`;
-            if (c.capitalCity) info += `<br>🏙️ Ibu kota: <strong>${esc(c.capitalCity)}</strong>`;
-            if (c.population) info += `<br>👥 Populasi: <strong>${fmtNumber(c.population)}</strong> jiwa`;
-            return info;
-        }
-
-        // === SMALL TALK ===
-        function handleThanks() {
-            return ["Sama-sama! 😊", "Senang membantu! 🤗"][Math.floor(Math.random() * 2)];
-        }
-
-        function handleBye() {
-            return ["Sampai jumpa! 👋", "Dadah! 🌺"][Math.floor(Math.random() * 2)];
-        }
-
-        function handleHowAreYou() {
-            return ["Baik, terima kasih! 😊", "Baik-baik saja! 💪"][Math.floor(Math.random() * 2)];
-        }
-
-        function handleJoke() { return JOKES[Math.floor(Math.random() * JOKES.length)]; }
-
-        function handleName() { return "Nama saya UFN AI Assistant! 🌍"; }
-
-        function handleMiss() { return ["Aku juga rindu! 💙", "Rindu itu manis! 🤗"][Math.floor(Math.random() * 2)]; }
-
-        // ================================================================
-        // WORKER (fallback)
-        // ================================================================
-        async function kirimAI(prompt) {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 20000);
-            try {
-                const res = await fetch("https://ufnai.comedicentral58.workers.dev/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message: prompt }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                if (data.success === false) throw new Error(data.reply || "Worker error");
-                return data.reply || "Maaf, AI tidak mengenali prompt tersebut.";
-            } catch {
-                clearTimeout(timeoutId);
-                return "Maaf, terjadi kendala. Coba lagi nanti.";
-            }
-        }
-
-        // ================================================================
-        // ROUTER UTAMA
-        // ================================================================
-        async function generateAnswer(rawText) {
-            // Custom commands dulu
-            const customAnswer = matchCustomCommand(rawText);
-            if (customAnswer !== null) return customAnswer;
-
-            const intent = detectIntent(rawText);
-
-            switch (intent) {
-                case "smalltalk_greeting":
-                    return handleGreeting();
-                case "smalltalk_help":
-                    return handleHelp();
-                case "smalltalk_thanks":
-                    return handleThanks();
-                case "smalltalk_bye":
-                    return handleBye();
-                case "smalltalk_howareyou":
-                    return handleHowAreYou();
-                case "smalltalk_joke":
-                    return handleJoke();
-                case "smalltalk_name":
-                    return handleName();
-                case "smalltalk_miss":
-                    return handleMiss();
-            }
-
-            if (!firebaseReady) return await kirimAI(rawText);
-
-            try {
-                let answer = null;
-                switch (intent) {
-                    case "list_countries":
-                        answer = await handleListCountries();
-                        break;
-                    case "country_profile":
-                        answer = await handleCountryProfile(rawText);
-                        break;
-                    case "capitalCity":
-                        answer = await handleCapitalCity(rawText);
-                        break;
-                    case "language":
-                        answer = await handleLanguage(rawText);
-                        break;
-                    case "currency":
-                        answer = await handleCurrency(rawText);
-                        break;
-                    case "currency_strongest":
-                        answer = await handleCurrencyStrongest();
-                        break;
-                    case "population":
-                        answer = await handlePopulation(rawText);
-                        break;
-                    case "population_max":
-                        answer = await handlePopulationMax();
-                        break;
-                    case "weather":
-                        answer = await handleWeather(rawText);
-                        break;
-                    case "latest_news":
-                        answer = await handleLatestNews();
-                        break;
-                    case "summary_news":
-                        answer = await handleSummaryNews(rawText);
-                        break;
-                    case "places":
-                        answer = await handlePlaces(rawText);
-                        break;
-                    case "compare":
-                        answer = await handleCompare(rawText);
-                        break;
-                    default:
-                        answer = await handleGeneralCountry(rawText);
-                        break;
-                }
-                if (answer === NOT_FOUND || answer === FETCH_ERROR || answer?.includes("Belum ada data") || answer
-                    ?.includes("Maaf")) {
-                    return await kirimAI(rawText);
-                }
-                return answer;
-            } catch {
-                return await kirimAI(rawText);
-            }
-        }
-
-        // ================================================================
-        // UI ENGINE
-        // ================================================================
-        const chatEl = document.getElementById("chat");
-        const inputEl = document.getElementById("userInput");
-        const sendBtn = document.getElementById("sendBtn");
-        const clearBtn = document.getElementById("clearChat");
-        const themeToggle = document.getElementById("themeToggle");
-        const themeIcon = document.getElementById("themeIcon");
-        const statusDot = document.getElementById("statusDot");
-        const statusLabel = document.getElementById("statusLabel");
-        const suggestBtn = document.getElementById("suggestBtn");
-        const quickReplies = document.getElementById("quickReplies");
-
-        const ICON_SUN =
-            '<path d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-6.66 1.42-1.42M4.92 19.08l1.42-1.42M19.08 19.08l-1.42-1.42M4.92 4.92 6.34 6.34"/><circle cx="12" cy="12" r="5"/>';
-        const ICON_MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-
-        function timeNow() {
-            return new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-        }
-
-        function appendMessage(role, html, { animate = true } = {}) {
-            const row = document.createElement("div");
-            row.className = `msg-row ${role}`;
-            const avatarLabel = role === "ai" ? "◈" : "☺";
-            row.innerHTML = `
-            <div class="avatar ${role}">${avatarLabel}</div>
-            <div class="msg-col">
-              <div class="bubble">${html}</div>
-              <div class="timestamp">${timeNow()}</div>
-            </div>`;
-            if (!animate) row.style.animation = "none";
-            chatEl.appendChild(row);
-            scrollToBottom();
-            return row;
-        }
-
-        function showTyping() {
-            const row = document.createElement("div");
-            row.className = "msg-row ai";
-            row.id = "typingRow";
-            row.innerHTML = `
-            <div class="avatar ai">◈</div>
-            <div class="msg-col">
-              <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>
-            </div>`;
-            chatEl.appendChild(row);
-            scrollToBottom();
-        }
-
-        function hideTyping() { document.getElementById("typingRow")?.remove(); }
-
-        function scrollToBottom() {
-            requestAnimationFrame(() => { chatEl.scrollTop = chatEl.scrollHeight; });
-        }
-
-        function setStatus(busy) {
-            statusDot.className = `status-dot${busy ? ' busy' : ''}`;
-            statusLabel.textContent = busy ? 'memproses…' : 'siap';
-        }
-
-        async function handleSend() {
-            const text = inputEl.value.trim();
-            if (!text) return;
-            appendMessage("user", esc(text));
-            inputEl.value = "";
-            inputEl.style.height = "auto";
-            sendBtn.disabled = true;
-            setStatus(true);
-            showTyping();
-
-            const started = Date.now();
-            const answer = await generateAnswer(text);
-            const elapsed = Date.now() - started;
-            const minDelay = 300;
-            if (elapsed < minDelay) await new Promise(r => setTimeout(r, minDelay - elapsed));
-
-            hideTyping();
-            appendMessage("ai", answer);
-            sendBtn.disabled = false;
-            setStatus(false);
-            inputEl.focus();
-        }
-
-        // ===== EVENT =====
-        sendBtn.addEventListener("click", handleSend);
-        inputEl.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault();
-                handleSend(); }
-        });
-        inputEl.addEventListener("input", () => {
-            inputEl.style.height = "auto";
-            inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
-        });
-
-        quickReplies.addEventListener("click", (e) => {
-            const btn = e.target.closest("button");
-            if (!btn) return;
-            inputEl.value = btn.dataset.q;
-            handleSend();
-        });
-
-        const SUGGESTIONS = [
-            "Daftar negara UFN", "Mata uang terkuat", "Berita terbaru",
-            "Populasi terbesar", "Cuaca di Indonesia", "Tempat menarik UFN",
-            "Bandingkan Indonesia dan Malaysia", "Info Amerika Serikat", "Ceritakan lelucon!"
-        ];
-        suggestBtn.addEventListener("click", () => {
-            const random = SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)];
-            inputEl.value = random;
-            inputEl.focus();
-            inputEl.style.height = "auto";
-            inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
-        });
-
-        clearBtn.addEventListener("click", () => {
-            chatEl.innerHTML = "";
-            showWelcome();
-        });
-
-        themeToggle.addEventListener("click", () => {
-            const html = document.documentElement;
-            const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
-            html.setAttribute("data-theme", next);
-            themeIcon.innerHTML = next === "dark" ? ICON_MOON : ICON_SUN;
-        });
-
-        function showWelcome() {
-            appendMessage("ai",
-                `Selamat datang di <strong>UFN AI Assistant</strong> 👋<br><br>💡 <strong>Ketik "bantuan"</strong> untuk melihat semua perintah.<br>🌤️ Coba: "Cuaca di Indonesia" atau "Berita terbaru"`,
-                { animate: false }
-            );
-        }
-        showWelcome();
-
-        // ===== INIT CUSTOM COMMANDS =====
-        if (firebaseReady) initCustomCommandsListener();
-
-        if (!firebaseReady) {
-            appendMessage("ai", `⚠️ Firebase tidak terhubung. Beberapa fitur mungkin terbatas.<br><br>${handleHelp()}`, { animate: false });
-        }
-    </script>
+    <div class="top-actions">
+      <button class="icon-btn" id="themeToggle" title="Ganti mode gelap/terang" aria-label="Ganti tema">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn" id="clearChat" title="Hapus riwayat percakapan" aria-label="Hapus chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>
+      </button>
+      <button class="icon-btn" id="suggestBtn" title="Lihat saran pertanyaan" aria-label="Saran pertanyaan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="chat" aria-live="polite"></main>
+
+  <footer class="input-bar">
+    <div class="input-shell">
+      <textarea id="userInput" rows="1" placeholder="Tanya apa saja tentang UFN…" aria-label="Tulis pertanyaan"></textarea>
+      <button class="send-btn" id="sendBtn" aria-label="Kirim pertanyaan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+      </button>
+    </div>
+    <div class="hint-row">
+      <span>Jawaban dari database resmi UFN</span>
+      <span id="statusDot">● siap</span>
+    </div>
+    <div class="quick-replies" id="quickReplies">
+      <button data-q="Daftar negara UFN">📋 Negara</button>
+      <button data-q="Mata uang terkuat">💰 Mata Uang</button>
+      <button data-q="Berita terbaru">📰 Berita</button>
+      <button data-q="Populasi terbesar">👥 Populasi</button>
+      <button data-q="Cuaca di Indonesia">🌤️ Cuaca</button>
+      <button data-q="Tempat menarik UFN">📍 menarik</button>
+    </div>
+  </footer>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, query, orderBy, limit, getDocs, where, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+  authDomain: "puki-678bf.firebaseapp.com",
+  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+  projectId: "puki-678bf",
+  storageBucket: "puki-678bf.firebasestorage.app",
+  messagingSenderId: "343647284151",
+  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+};
+
+let app, db, firebaseReady = false;
+try{
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  firebaseReady = true;
+  console.log("✅ Firebase terhubung");
+}catch(err){
+  console.error("❌ Gagal inisialisasi Firebase:", err);
+}
+
+
+
+/* ============================================================
+   SKEMA FIRESTORE (sesuai Firestore.md)
+   comments/   : { createdAt, likedBy, name, newsId, parentId, text }
+   cauntries/  : { createdAt, description, name, weather: { temp, conditionKey, humidity, windSpeed, pressure, UV, visibility, aqi, rainChance, feelsLike, dewPoint, sunrise, sunset, updatedAt } }
+   news/       : { author, category, content, createdAt, excrept, image, likedBy, likes, title }
+   currencies/ : { changePercent, country, createdAt, name, prevValue, symbol, updatedAt, value }
+   places/     : { createdAt, name, ownerId, type:"negara/provinsi", x, y }
+   reactions/  : { counts: { like }, userReactions }
+   ============================================================ */
+
+/* ============================================================
+   MODUL: MEMORI LOKAL (localStorage)
+   - Mengingat nama pengguna
+   - Menyimpan riwayat percakapan
+   ============================================================ */
+const LS_NAME_KEY = "ufnai_user_name";
+const LS_HISTORY_KEY = "ufnai_chat_history";
+const MAX_HISTORY = 200;
+
+function getUserName(){
+  try{ return localStorage.getItem(LS_NAME_KEY) || ""; }catch{ return ""; }
+}
+function setUserName(name){
+  try{ localStorage.setItem(LS_NAME_KEY, name); }catch{}
+}
+function clearUserName(){
+  try{ localStorage.removeItem(LS_NAME_KEY); }catch{}
+}
+
+function loadChatHistory(){
+  try{
+    const raw = localStorage.getItem(LS_HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch{ return []; }
+}
+function saveChatHistory(history){
+  try{
+    const trimmed = history.slice(-MAX_HISTORY);
+    localStorage.setItem(LS_HISTORY_KEY, JSON.stringify(trimmed));
+  }catch{}
+}
+function clearChatHistory(){
+  try{ localStorage.removeItem(LS_HISTORY_KEY); }catch{}
+}
+
+/** Mendeteksi & menyimpan nama dari kalimat seperti "nama saya Budi" / "panggil aku Budi" */
+function tryExtractName(rawText){
+  const patterns = [
+    /\bnama\s*(?:saya|aku|gue|gua)\s*(?:adalah|itu)?\s*([a-zA-Z' -]{2,30})/i,
+    /\b(?:panggil|call)\s*(?:saya|aku|gue|gua|me)\s*([a-zA-Z' -]{2,30})/i,
+    /\bsaya\s*(?:adalah|itu)\s*([a-zA-Z' -]{2,30})/i,
+    /\bi'?m\s+([a-zA-Z' -]{2,30})/i,
+    /\bmy name is\s+([a-zA-Z' -]{2,30})/i
+  ];
+  for(const re of patterns){
+    const m = rawText.match(re);
+    if(m && m[1]){
+      const name = m[1].trim().replace(/\s+/g," ").split(" ").slice(0,2).join(" ");
+      const cleaned = name.replace(/[.,!?]+$/,"");
+      if(cleaned.length >= 2) return cleaned.replace(/\b\w/g, c => c.toUpperCase());
+    }
+  }
+  return null;
+}
+
+const NOT_FOUND = "Maaf, data tersebut belum tersedia di database UFN.";
+const FETCH_ERROR = "Maaf, terjadi kendala saat menghubungi database UFN. Coba lagi sebentar lagi.";
+
+/* ============================================================
+   MODUL: CUSTOM COMMANDS (Firestore: "ai_commands")
+   ------------------------------------------------------------
+   Fitur tambahan yang berjalan SEBELUM sistem AI utama.
+   Tidak mengubah/menghapus fungsi, intent, atau logika lain
+   yang sudah ada. Cukup lapisan pengecekan tambahan.
+
+   Struktur dokumen di collection "ai_commands":
+   {
+     enabled: true,
+     priority: 1,
+     keywords: ["halo", "hai"],
+     answer: "Halo juga!",
+     contains: true,     // true = includes(), false = exact match
+     ignoreCase: true     // true = abaikan huruf besar/kecil
+   }
+   ============================================================ */
+
+/** Cache lokal berisi command yang sudah difilter (enabled) & diurutkan (priority ASC) */
+let customCommandsCache = [];
+let customCommandsUnsub = null;
+
+/**
+ * Mengaktifkan listener realtime ke collection "ai_commands".
+ * Data di-cache di memori (customCommandsCache) agar hemat pembacaan Firestore.
+ * Setiap ada perubahan (tambah/ubah/hapus command) di Firestore, cache
+ * langsung diperbarui otomatis tanpa perlu refresh halaman.
+ */
+function initCustomCommandsListener(){
+  if(!db) return;
+  try{
+    if(customCommandsUnsub) customCommandsUnsub(); // hindari listener ganda
+    customCommandsUnsub = onSnapshot(
+      collection(db, "ai_commands"),
+      (snap) => {
+        customCommandsCache = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(cmd => cmd.enabled === true)
+          .sort((a, b) => (Number(a.priority) || 0) - (Number(b.priority) || 0));
+        console.log(`✅ Custom commands dimuat: ${customCommandsCache.length} aktif`);
+      },
+      (err) => {
+        console.error("❌ Gagal memuat ai_commands:", err);
+      }
+    );
+  }catch(err){
+    console.error("❌ Gagal inisialisasi listener ai_commands:", err);
+  }
+}
+
+/**
+ * Mencocokkan pesan pengguna dengan daftar custom command.
+ * Mengembalikan field "answer" dari command pertama yang cocok
+ * (sesuai urutan priority ASC), atau null jika tidak ada yang cocok.
+ */
+function matchCustomCommand(rawText){
+  if(!customCommandsCache.length) return null;
+  const message = String(rawText ?? "");
+
+  for(const cmd of customCommandsCache){
+    if(!Array.isArray(cmd.keywords) || typeof cmd.answer !== "string") continue;
+
+    const ignoreCase = cmd.ignoreCase !== false;   // default true
+    const useContains = cmd.contains !== false;    // default true
+    const compareMessage = ignoreCase ? message.toLowerCase() : message;
+
+    const isMatch = cmd.keywords.some(keyword => {
+      if(typeof keyword !== "string") return false;
+      const compareKeyword = ignoreCase ? keyword.toLowerCase() : keyword;
+      return useContains
+        ? compareMessage.includes(compareKeyword)
+        : compareMessage === compareKeyword;
+    });
+
+    if(isMatch) return cmd.answer;
+  }
+  return null;
+}
+
+/* -------- cache -------- */
+const cache = { countries:null, news:null, currencies:null, places:null, reactions:null, comments:null };
+
+// ==== FUNGSI LOAD DATA ====
+
+async function loadCountries(){
+  if(cache.countries) return cache.countries;
+  try{
+    const snap = await getDocs(collection(db,"countries"));
+    cache.countries = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    return cache.countries;
+  }catch(e){
+    console.error("Load countries error:", e);
+    return [];
+  }
+}
+
+async function loadNews(limitCount=20){
+  if(cache.news) return cache.news;
+  try{
+    const q = query(collection(db,"news"), orderBy("createdAt","desc"), limit(limitCount));
+    const snap = await getDocs(q);
+    cache.news = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  }catch{
+    try{
+      const snap = await getDocs(collection(db,"news"));
+      cache.news = snap.docs.map(d=>({ id:d.id, ...d.data() })).slice(0, limitCount);
+    }catch(e){
+      console.error("Load news error:", e);
+      cache.news = [];
+    }
+  }
+  return cache.news;
+}
+
+async function loadCurrencies(){
+  if(cache.currencies) return cache.currencies;
+  try{
+    const snap = await getDocs(collection(db,"currencies"));
+    cache.currencies = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    return cache.currencies;
+  }catch(e){
+    console.error("Load currencies error:", e);
+    return [];
+  }
+}
+
+async function loadPlaces(){
+  if(cache.places) return cache.places;
+  try{
+    const snap = await getDocs(collection(db,"places"));
+    cache.places = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    return cache.places;
+  }catch(e){
+    console.error("Load places error:", e);
+    return [];
+  }
+}
+
+async function loadReactions(){
+  if(cache.reactions) return cache.reactions;
+  try{
+    const snap = await getDocs(collection(db,"reactions"));
+    cache.reactions = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    return cache.reactions;
+  }catch(e){
+    console.error("Load reactions error:", e);
+    return [];
+  }
+}
+
+async function loadComments(){
+  if(cache.comments) return cache.comments;
+  try{
+    const snap = await getDocs(collection(db,"comments"));
+    cache.comments = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    return cache.comments;
+  }catch(e){
+    console.error("Load comments error:", e);
+    return [];
+  }
+}
+
+function norm(s){
+  return (s||"").toString().toLowerCase().normalize("NFKD").replace(/[^\w\s]/g,"").trim();
+}
+
+function findCountryInText(text, countries){
+  const t = norm(text);
+  let best = null;
+  for(const c of countries){
+    const name = norm(c.name);
+    if(name && t.includes(name)){
+      if(!best || name.length > norm(best.name).length) best = c;
+    }
+  }
+  return best;
+}
+
+function findAllCountriesInText(text, countries){
+  const t = norm(text);
+  return countries.filter(c => norm(c.name) && t.includes(norm(c.name)));
+}
+
+function findNewsInText(text, newsItems){
+  const t = norm(text);
+  let best = null;
+  for(const n of newsItems){
+    const title = norm(n.title);
+    if(title && t.includes(title)){
+      if(!best || title.length > norm(best.title).length) best = n;
+    }
+  }
+  return best;
+}
+
+function fmtDate(ts){
+  try{
+    const d = ts?.toDate ? ts.toDate() : new Date(ts);
+    if(isNaN(d)) return "-";
+    return d.toLocaleDateString("id-ID",{ day:"numeric", month:"long", year:"numeric" });
+  }catch{ return "-"; }
+}
+
+function fmtDateTime(ts){
+  try{
+    const d = ts?.toDate ? ts.toDate() : new Date(ts);
+    if(isNaN(d)) return "-";
+    return d.toLocaleString("id-ID",{ day:"numeric", month:"long", year:"numeric", hour:"2-digit", minute:"2-digit" });
+  }catch{ return "-"; }
+}
+
+function fmtNumber(n){
+  if(n===undefined||n===null||isNaN(n)) return "-";
+  return Number(n).toLocaleString("id-ID");
+}
+
+function fmtCurrency(n){
+  if(n===undefined||n===null||isNaN(n)) return "-";
+  return new Intl.NumberFormat("id-ID", { style:"currency", currency:"IDR" }).format(n).replace("EFA", "EFA ");
+}
+
+function fmtTemp(n){
+  if(n===undefined||n===null||isNaN(n)) return "-";
+  return `${n}°C`;
+}
+
+function esc(str){
+  if(!str) return "";
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function truncate(str, max=200){
+  if(!str) return "";
+  return str.length > max ? str.slice(0,max)+"…" : str;
+}
+
+/* ============================================================
+   DETEKSI MAKSUD (INTENT)
+   ============================================================ */
+function detectIntent(rawText){
+  const t = norm(rawText);
+
+  // Small talk
+  if(/\b(bantuan|help|menu|perintah|bisa apa|bisa bantu apa|apa saja yang bisa|fitur apa|kamu bisa apa|tolong)\b/.test(t)) return "smalltalk_help";
+  if(/\b(terima ?kasih|makasih|thanks|thank you|tengkyu|matursuwun)\b/.test(t)) return "smalltalk_thanks";
+  if(/\b(dadah|sampai jumpa|selamat tinggal|bye|goodbye|dadah|da da)\b/.test(t)) return "smalltalk_bye";
+  if(/\b(halo+|hai+|hello|hi|hey|assalamualaikum|salam|pagi|siang|sore|malam)\b/.test(t) || /\bapa ?kabar\b/.test(t) || /\bselamat (pagi|siang|sore|malam)\b/.test(t)) return "smalltalk_greeting";
+  if(/\b(aku rindu|kangen|rindu)\b/.test(t)) return "smalltalk_miss";
+  if(/\b(apa kabar|kabar|gimana kabar|how are you)\b/.test(t)) return "smalltalk_howareyou";
+  if(/\b(merah|biru|kuning|hijau|ungu|hitam|putih|warna|favorit|kesukaan)\b.*\b(warna|color)\b/.test(t)) return "smalltalk_color";
+  if(/\b(makanan|makan|kuliner|masakan|food)\b/.test(t)) return "smalltalk_food";
+  if(/\b(pacar|cinta|sayang|jodoh|love)\b/.test(t)) return "smalltalk_love";
+  if(/\b(lelucon|joke|humor|lucu|funny)\b/.test(t)) return "smalltalk_joke";
+  if(/\b(umur|usia|berapa tua|old)\b/.test(t)) return "smalltalk_age";
+  if(/\b(nama|siapa namamu|namamu|your name)\b/.test(t)) return "smalltalk_name";
+  if(/\b(kamu (dari|asal)|dari mana|where (are you from|from))\b/.test(t)) return "smalltalk_origin";
+
+  // Data UFN
+  if(/\b(daftar|list|semua|seluruh|mana saja)\b.*\b(negara|country)\b/.test(t) || /\bnegara.*daftar\b/.test(t) || /\bsebutkan negara\b/.test(t)) return "list_countries";
+  if(/\b(deskripsi|tentang|info|informasi|profil|sekilas|gambaran)\b/.test(t) && /\bnegara\b/.test(t)) return "country_profile";
+  if(/\b(ibu ?kota|ibukota|capitalCity|capitalCitys?)\b/.test(t)) return "capitalCity";
+  if(/\bbahasa (apa|resmi)\b|\bbahasa yang di ?pakai\b|\bbahasa yang di ?gunakan\b|\b(pakai|gunakan) bahasa\b|\blanguage\b/.test(t)) return "language";
+  if(/\b(mata ?uang terkuat|nilai tukar tertinggi|mata uang paling tinggi|kurs tertinggi)\b/.test(t)) return "currency_strongest";
+  if(/\bmata ?uang|kurs|currency|currencies|matauang|nilai tukar\b/.test(t)) return "currency";
+  if(/\b(populasi terbesar|populasi terbanyak|paling banyak|tertinggi|terbesar)\b.*\b(populasi|penduduk)\b/.test(t) || /\bpopulasi terbesar\b/.test(t)) return "population_max";
+  if(/\bpopulasi|penduduk|population\b/.test(t)) return "population";
+  if(/\b(berita|news|informasi terbaru)\b.*\b(terbaru|hari ini|terkini|update)\b/.test(t) || /\b(ada berita apa|berita apa saja|berita terkini)\b/.test(t)) return "latest_news";
+  if(/\bringkas|rangkum|ringkasan|resume|summary\b/.test(t)) return "summary_news";
+  if(/\b(reaksi|like|suka|respon|popularitas)\b.*\b(paling banyak|terbanyak|tertinggi)\b|\bberita.*paling.*reaksi\b/.test(t)) return "top_reaction";
+  if(/\b(komentar|comment|comments|diskusi|tanggapan)\b/.test(t)) return "comments";
+  if(/\b(tempat menarik|menarik|parimenarik|lokasi|objek menarik|destinasi|tempat rekomendasi|tempat bagus)\b/.test(t)) return "places";
+  if(/\b(kategori|category|jenis|jenis berita)\b/.test(t)) return "news_category";
+  if(/\b(penulis|author|penulis berita|wartawan)\b/.test(t)) return "news_author";
+  if(/\b(gambar|image|foto|photo|thumbnail)\b/.test(t)) return "news_image";
+  if(/\b(bandingkan|dibanding|vs|versus|perbedaan antara|perbandingan)\b/.test(t)) return "compare";
+  if(/\b(cuaca|weather|suhu|temp|temperature|hujan|cerah|berawan)\b/.test(t)) return "weather";
+
+  return "general_country";
+}
+
+/* ============================================================
+   HANDLER PER-INTENT
+   ============================================================ */
+
+// --- COUNTRY HANDLERS ---
+
+async function handleListCountries(){
+  const countries = await loadCountries();
+  if(!countries.length) return "Belum ada data negara di database UFN.";
+  const list = countries.map(c => `<li><strong>${esc(c.name)}</strong>${c.description ? ` — ${esc(c.description)}` : ''}</li>`).join("");
+  return `🌍 Daftar negara anggota UFN:<ul>${list}</ul><span class="hint">Total ${countries.length} negara terdaftar.</span>`;
+}
+
+async function handleCountryProfile(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  
+  let info = "";
+  if(c.flag) info += `<img src="${esc(c.flag)}" alt="Bendera ${esc(c.name)}" class="flag-img">`;
+  info += `<strong>🏛️ ${esc(c.name)}</strong>`;
+  if(c.description) info += `<br><br>${esc(c.description)}`;
+  if(c.createdAt) info += `<br><br><span class="hint">Bergabung: ${fmtDate(c.createdAt)}</span>`;
+  if(c.capitalCity) info += `<br><span class="hint">Ibu kota: ${esc(c.capitalCity)}</span>`;
+  if(c.population) info += `<br><span class="hint">Populasi: ${fmtNumber(c.population)} jiwa</span>`;
+  if(c.language) info += `<br><span class="hint">Bahasa: ${esc(c.language)}</span>`;
+  if(c.weather && c.weather.temp !== undefined) info += `<br><span class="hint">Cuaca saat ini: ${fmtNumber(c.weather.temp)}°C</span>`;
+  return info;
+}
+
+async function handlecapitalCity(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  if(!c.capitalCity) return `Data ibu kota untuk ${esc(c.name)} belum tersedia.`;
+  return `🏙️ Ibu kota <strong>${esc(c.name)}</strong> adalah <strong>${esc(c.capitalCity)}</strong>.`;
+}
+
+async function handleLanguage(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  if(!c.language) return `Data bahasa untuk ${esc(c.name)} belum tersedia.`;
+  return `🗣️ Bahasa yang digunakan di <strong>${esc(c.name)}</strong> adalah <strong>${esc(c.language)}</strong>.`;
+}
+
+async function handleCurrency(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  
+  const currencies = await loadCurrencies();
+  const cur = currencies.find(x => norm(x.country) === norm(c.name) || norm(x.name) === norm(c.name));
+  if(cur){
+    let info = `<strong>💱 ${esc(c.name)}</strong> menggunakan mata uang <strong>${esc(cur.name)}</strong> (${esc(cur.symbol||"")})`;
+    if(cur.value !== undefined) info += `<br>Nilai saat ini: <strong>${fmtCurrency(cur.value)}</strong>`;
+    if(cur.changePercent !== undefined) info += `<br>Perubahan: <strong>${cur.changePercent > 0 ? "📈" : "📉"} ${fmtNumber(cur.changePercent)}%</strong>`;
+    if(cur.prevValue !== undefined) info += `<br>Nilai sebelumnya: ${fmtCurrency(cur.prevValue)}`;
+    if(cur.updatedAt) info += `<br><span class="hint">Update terakhir: ${fmtDateTime(cur.updatedAt)}</span>`;
+    return info;
+  }
+  return NOT_FOUND;
+}
+
+async function handleCurrencyStrongest(){
+  const currencies = await loadCurrencies();
+  if(!currencies.length) return NOT_FOUND;
+  
+  const valid = currencies.filter(c => c.value !== undefined && c.value !== null);
+  if(!valid.length) return "Belum ada data nilai mata uang.";
+  
+  valid.sort((a,b) => b.value - a.value);
+  const top = valid[0];
+  
+  let info = `🏆 Mata uang dengan nilai tukar tertinggi di UFN:<br><br>`;
+  info += `<strong>${esc(top.name)}</strong> (${esc(top.symbol||"")})`;
+  info += `<br>Negara: <strong>${esc(top.country||"Tidak diketahui")}</strong>`;
+  info += `<br>Nilai: <strong>${fmtCurrency(top.value)}</strong>`;
+  if(top.changePercent !== undefined) info += `<br>Perubahan: <strong>${top.changePercent > 0 ? "📈" : "📉"} ${fmtNumber(top.changePercent)}%</strong>`;
+  if(top.updatedAt) info += `<br><span class="hint">Update: ${fmtDateTime(top.updatedAt)}</span>`;
+  return info;
+}
+
+async function handlePopulation(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  if(!c.population) return `Data populasi untuk ${esc(c.name)} belum tersedia.`;
+  return `👥 Populasi <strong>${esc(c.name)}</strong> tercatat sekitar <strong>${fmtNumber(c.population)}</strong> jiwa.`;
+}
+
+async function handlePopulationMax(){
+  const countries = await loadCountries();
+  const withPop = countries.filter(c=>c.population!==undefined && c.population!==null);
+  if(!withPop.length) return "Belum ada data populasi negara.";
+  withPop.sort((a,b)=>b.population - a.population);
+  const top = withPop[0];
+  const second = withPop[1];
+  let info = `👥 Negara dengan populasi terbesar di UFN adalah <strong>${esc(top.name)}</strong>, dengan sekitar <strong>${fmtNumber(top.population)}</strong> jiwa.`;
+  if(second) info += `<br><span class="hint">Diikuti oleh ${esc(second.name)} dengan ${fmtNumber(second.population)} jiwa.</span>`;
+  return info;
+}
+
+// --- WEATHER HANDLER ---
+
+async function handleWeather(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  if(!c.weather) return `Data cuaca untuk ${esc(c.name)} belum tersedia.`;
+  
+  const w = c.weather;
+  let info = `🌤️ Cuaca di <strong>${esc(c.name)}</strong>:<br><br>`;
+  
+  // Weather condition with emoji
+  const conditionMap = {
+    'clear': '☀️ Cerah',
+    'clouds': '☁️ Berawan',
+    'rain': '🌧️ Hujan',
+    'thunderstorm': '⛈️ Badai',
+    'snow': '❄️ Salju',
+    'mist': '🌫️ Kabut',
+    'fog': '🌫️ Kabut',
+    'haze': '🌫️ Kabut Asap',
+    'smoke': '💨 Asap',
+    'dust': '🌪️ Debu',
+    'sand': '🏜️ Pasir'
+  };
+  const condition = w.conditionKey ? (conditionMap[w.conditionKey.toLowerCase()] || w.conditionKey) : 'Tidak diketahui';
+  
+  if(w.temp !== undefined) info += `🌡️ Suhu: <strong>${fmtTemp(w.temp)}</strong>`;
+  if(w.feelsLike !== undefined) info += ` (terasa ${fmtTemp(w.feelsLike)})`;
+  info += `<br>`;
+  
+  if(w.conditionKey) info += `☁️ Kondisi: <strong>${condition}</strong><br>`;
+  if(w.humidity !== undefined) info += `💧 Kelembaban: <strong>${w.humidity}%</strong><br>`;
+  if(w.windSpeed !== undefined) info += `💨 Kecepatan angin: <strong>${w.windSpeed} km/h</strong><br>`;
+  if(w.pressure !== undefined) info += `📊 Tekanan: <strong>${w.pressure} hPa</strong><br>`;
+  if(w.UV !== undefined) info += `☀️ UV Index: <strong>${w.UV}</strong><br>`;
+  if(w.visibility !== undefined) info += `👁️ Visibilitas: <strong>${w.visibility} km</strong><br>`;
+  if(w.aqi !== undefined) info += `🌫️ Kualitas Udara (AQI): <strong>${w.aqi}</strong><br>`;
+  if(w.rainChance !== undefined) info += `🌧️ Peluang hujan: <strong>${w.rainChance}%</strong><br>`;
+  if(w.dewPoint !== undefined) info += `💧 Titik embun: <strong>${fmtTemp(w.dewPoint)}</strong><br>`;
+  if(w.sunrise) info += `🌅 Matahari terbit: <strong>${w.sunrise}</strong><br>`;
+  if(w.sunset) info += `🌇 Matahari terbenam: <strong>${w.sunset}</strong><br>`;
+  if(w.updatedAt) info += `<br><span class="hint">Update terakhir: ${fmtDateTime(w.updatedAt)}</span>`;
+  
+  return info;
+}
+
+// --- NEWS HANDLERS ---
+
+async function handleLatestNews(){
+  const newsItems = await loadNews(5);
+  if(!newsItems.length) return NOT_FOUND;
+  const rows = newsItems.map(n => {
+    const likes = n.likes || 0;
+    return `<li><strong>${esc(n.title||"Tanpa judul")}</strong>${n.author ? ` <span class="hint">· ${esc(n.author)}</span>` : ''}${n.category ? ` <span class="hint">[${esc(n.category)}]</span>` : ''}<br><span class="hint">${fmtDate(n.createdAt)} · ${fmtNumber(likes)} suka</span></li>`;
+  }).join("");
+  return `📰 Berita terbaru di jaringan UFN:<ul>${rows}</ul>`;
+}
+
+async function handleSummaryNews(text){
+  const newsItems = await loadNews(10);
+  if(!newsItems.length) return NOT_FOUND;
+  const n = findNewsInText(text, newsItems) || newsItems[0];
+  const ringkasan = n.excrept || n.content || (n.content ? truncate(n.content, 300) : null);
+  if(!ringkasan) return NOT_FOUND;
+  let info = `📝 Ringkasan berita "<strong>${esc(n.title||"")}</strong>"`;
+  if(n.author) info += ` oleh ${esc(n.author)}`;
+  info += `:<br><br>${esc(ringkasan)}`;
+  if(n.createdAt) info += `<br><span class="hint">${fmtDateTime(n.createdAt)}</span>`;
+  if(n.likes !== undefined) info += ` · ${fmtNumber(n.likes)} suka`;
+  if(n.category) info += ` · Kategori: ${esc(n.category)}`;
+  return info;
+}
+
+async function handleNewsCategory(){
+  const newsItems = await loadNews(30);
+  const categories = {};
+  for(const n of newsItems){
+    if(n.category){
+      categories[n.category] = (categories[n.category] || 0) + 1;
+    }
+  }
+  if(!Object.keys(categories).length) return "Belum ada data kategori berita.";
+  const list = Object.entries(categories)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([cat, count]) => `<li><strong>${esc(cat)}</strong> — ${count} berita</li>`)
+    .join("");
+  return `📂 Kategori berita di UFN:<ul>${list}</ul>`;
+}
+
+async function handleNewsAuthor(text){
+  const newsItems = await loadNews(30);
+  if(!newsItems.length) return NOT_FOUND;
+  
+  const t = norm(text);
+  let items = newsItems.filter(n => n.author && t.includes(norm(n.author)));
+  if(!items.length) {
+    const authors = {};
+    for(const n of newsItems){
+      if(n.author) authors[norm(n.author)] = n.author;
+    }
+    for(const [key, val] of Object.entries(authors)){
+      if(t.includes(key)){
+        items = newsItems.filter(n => norm(n.author) === key);
+        break;
+      }
+    }
+  }
+  if(!items.length) return "Tidak ditemukan berita dari penulis tersebut.";
+  
+  const author = items[0].author;
+  const rows = items.slice(0,5).map(n => 
+    `<li><strong>${esc(n.title||"")}</strong>${n.category ? ` [${esc(n.category)}]` : ''}<br><span class="hint">${fmtDate(n.createdAt)}</span></li>`
+  ).join("");
+  return `✍️ Berita dari <strong>${esc(author)}</strong>:<ul>${rows}</ul>${items.length > 5 ? `<span class="hint">+${items.length-5} berita lainnya</span>` : ''}`;
+}
+
+async function handleNewsImage(text){
+  const newsItems = await loadNews(10);
+  if(!newsItems.length) return NOT_FOUND;
+  const n = findNewsInText(text, newsItems) || newsItems[0];
+  if(!n.image) return `Berita "<strong>${esc(n.title||"")}</strong>" tidak memiliki gambar.`;
+  return `🖼️ Gambar untuk berita "<strong>${esc(n.title||"")}</strong>":<br><br><a href="${esc(n.image)}" target="_blank" style="color:var(--accent);">🔗 Lihat gambar</a><br><span class="hint">${esc(n.image)}</span>`;
+}
+
+async function handleTopReaction(){
+  const newsItems = await loadNews(30);
+  if(!newsItems.length) return NOT_FOUND;
+  const reactions = await loadReactions();
+  
+  const reactionMap = {};
+  for(const n of newsItems){
+    let count = n.likes || 0;
+    for(const r of reactions){
+      if(r.userReactions && r.userReactions[n.id]) count += r.userReactions[n.id];
+      if(r.counts && r.counts.like) count += r.counts.like;
+    }
+    reactionMap[n.id] = count;
+  }
+  
+  const sorted = [...newsItems].sort((a,b) => (reactionMap[b.id]||0) - (reactionMap[a.id]||0));
+  const top = sorted[0];
+  if(!top || (reactionMap[top.id]||0) === 0) return "Belum ada data reaksi.";
+  
+  return `🏆 Berita dengan reaksi terbanyak adalah "<strong>${esc(top.title)}</strong>" dengan <strong>${fmtNumber(reactionMap[top.id])}</strong> reaksi.`;
+}
+
+async function handleComments(text){
+  const newsItems = await loadNews(20);
+  if(!newsItems.length) return NOT_FOUND;
+  const t = norm(text);
+  let n = findNewsInText(text, newsItems);
+  if(!n) n = newsItems.find(x => t.includes(norm(x.title)));
+  if(!n) return NOT_FOUND;
+  
+  const comments = await loadComments();
+  const filtered = comments.filter(c => c.newsId === n.id);
+  
+  if(!filtered.length) return `Belum ada komentar pada berita "<strong>${esc(n.title)}</strong>".`;
+  
+  const rows = filtered.slice(0,10).map(c => {
+    let info = `<li><strong>${esc(c.name||c.author||"Anonim")}</strong>: ${esc(c.text||"")}`;
+    if(c.parentId) info += ` <span class="hint">(balasan ke komentar)</span>`;
+    info += `<br><span class="hint">${fmtDateTime(c.createdAt)}</span>`;
+    if(c.likedBy && c.likedBy.length) info += ` · ❤️ ${c.likedBy.length}`;
+    return info + `</li>`;
+  }).join("");
+  return `💬 Komentar pada berita "<strong>${esc(n.title)}</strong>":<ul>${rows}</ul>${filtered.length > 10 ? `<span class="hint">+${filtered.length-10} komentar lainnya</span>` : ''}`;
+}
+
+async function handlePlaces(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  const places = await loadPlaces();
+  
+  if(!places.length) return "Belum ada data tempat menarik.";
+  
+  let filtered = places;
+  if(c){
+    filtered = places.filter(p => norm(p.ownerId) === norm(c.id) || norm(p.name) === norm(c.name));
+  }
+  
+  if(!filtered.length){
+    const t = norm(text);
+    filtered = places.filter(p => t.includes(norm(p.name)) || (p.ownerId && t.includes(norm(p.ownerId))));
+  }
+  
+  if(!filtered.length) filtered = places.slice(0,8);
+  
+  const items = filtered.slice(0,8).map(p => {
+    const typeLabel = p.type === "negara" ? "🏛️ Negara" : p.type === "provinsi" ? "🏙️ Provinsi" : "📍";
+    return `<li><strong>${esc(p.name)}</strong> ${typeLabel}${p.ownerId ? ` · ID: ${esc(p.ownerId)}` : ''}${p.x !== undefined && p.y !== undefined ? `<br><span class="hint">📍 ${fmtNumber(p.x)}, ${fmtNumber(p.y)}</span>` : ''}${p.createdAt ? `<br><span class="hint">${fmtDate(p.createdAt)}</span>` : ''}</li>`;
+  }).join("");
+  return `📍 Tempat menarik di UFN:<ul>${items}</ul>`;
+}
+
+async function handleCompare(text){
+  const countries = await loadCountries();
+  const found = findAllCountriesInText(text, countries);
+  if(found.length < 2) return "Sebutkan dua negara yang ingin dibandingkan (contoh: 'bandingkan Indonesia dan Malaysia').";
+  const [a,b] = found;
+  const rows = [
+    ["Nama", esc(a.name||"-"), esc(b.name||"-")],
+    ["Deskripsi", esc((a.description||"-").slice(0,50)+(a.description?.length>50?"…":"")), esc((b.description||"-").slice(0,50)+(b.description?.length>50?"…":""))],
+    ["Ibu Kota", esc(a.capitalCity||"-"), esc(b.capitalCity||"-")],
+    ["Populasi", fmtNumber(a.population), fmtNumber(b.population)],
+  ].map(([label, va, vb]) => `<tr><td>${label}</td><td>${va}</td><td>${vb}</td></tr>`).join("");
+  return `📊 Perbandingan <strong>${esc(a.name)}</strong> vs <strong>${esc(b.name)}</strong>:<table><tr><th></th><th>${esc(a.name)}</th><th>${esc(b.name)}</th></tr>${rows}</table>`;
+}
+
+// --- GENERAL COUNTRY ---
+
+async function handleGeneralCountry(text){
+  const countries = await loadCountries();
+  const c = findCountryInText(text, countries);
+  if(!c) return NOT_FOUND;
+  let info = "";
+  if(c.flag) info += `<img src="${esc(c.flag)}" alt="Bendera ${esc(c.name)}" class="flag-img">`;
+  info += `<strong>🏛️ ${esc(c.name)}</strong>`;
+  if(c.description) info += `<br><br>${esc(c.description)}`;
+  if(c.capitalCity) info += `<br><br>🏙️ Ibu kota: <strong>${esc(c.capitalCity)}</strong>`;
+  if(c.population) info += `<br>👥 Populasi: <strong>${fmtNumber(c.population)}</strong> jiwa`;
+  if(c.createdAt) info += `<br><span class="hint">Bergabung: ${fmtDate(c.createdAt)}</span>`;
+  return info;
+}
+
+/* ============================================================
+   SMALL TALK HANDLERS
+   ============================================================ */
+
+const HELP_LIST = `
+  <li><strong>🏛️ Daftar Negara</strong> — "Daftar negara UFN" / "Sebutkan negara yang ada di UFN"</li>
+  <li><strong>ℹ️ Profil Negara</strong> — "Informasi tentang [negara]" / "Info [negara]" / "Deskripsi [negara]"</li>
+  <li><strong>🏙️ Ibu Kota</strong> — "Ibu kota [negara]"</li>
+  <li><strong>🗣️ Bahasa</strong> — "Bahasa apa yang dipakai [negara]"</li>
+  <li><strong>🌤️ Cuaca</strong> — "Cuaca di [negara]" / "Cuaca [negara]"</li>
+  <li><strong>💰 Mata Uang</strong> — "Mata uang [negara]" / "Mata uang terkuat"</li>
+  <li><strong>👥 Populasi</strong> — "Populasi [negara]" / "Populasi terbesar"</li>
+  <li><strong>📰 Berita Terbaru</strong> — "Berita terbaru" / "Ada berita apa hari ini"</li>
+  <li><strong>📝 Ringkasan Berita</strong> — "Ringkas berita [judul]" / "Rangkum berita"</li>
+  <li><strong>🗂️ Kategori Berita</strong> — "Kategori berita apa saja"</li>
+  <li><strong>✍️ Penulis Berita</strong> — "Berita dari [penulis]"</li>
+  <li><strong>🖼️ Gambar Berita</strong> — "Gambar berita [judul]" / "Foto berita [judul]"</li>
+  <li><strong>💬 Komentar</strong> — "Komentar pada berita [judul]"</li>
+  <li><strong>❤️ Reaksi Terbanyak</strong> — "Berita dengan reaksi paling banyak"</li>
+  <li><strong>📍 Tempat Menarik</strong> — "Tempat menarik" / "Tempat di [negara]"</li>
+  <li><strong>📊 Perbandingan</strong> — "Bandingkan [negaraA] dan [negaraB]"</li>
+  <li><strong>📡 cara upload berita</strong> ─ "Cara upload berita gimana?"</li>`;
+
+const JOKES = [
+  "Kenapa UFN tidak pernah ribut? Karena semua negara sepakat damai... dan kalau tidak, ada sanksi! 😄",
+  "Apa persamaan UFN dan koper? Sama-sama tempat menyimpan barang berharga! 😄",
+  "Kenapa berita UFN selalu menarik? Karena setiap hari ada cerita baru! 📰",
+  "Apa kata mata uang UFN? 'Nilai saya fluktuatif, tapi hati saya stabil!' 💰",
+  "Kenapa negara di UFN suka bekerja sama? Karena lebih baik berkolaborasi daripada berkonflik! 🤝",
+  "Apa bedanya UFN dengan organisasi lain? UFN punya data teEFAercaya, yang lain punya... janji! 😂"
+];
+
+function handleGreeting(){
+  const name = getUserName();
+  const sapaan = name ? `Halo, <strong>${esc(name)}</strong>! 👋` : `Halo! 👋`;
+  return `${sapaan} Senang bertemu Anda. Saya UFN AI Assistant, siap membantu seputar data negara dan berita UFN.<br><br>💡 <strong>Ketik "bantuan"</strong> untuk melihat daftar perintah.<br><br>🌤️ <strong>Coba tanyakan:</strong> "Cuaca di Indonesia" atau "Berita terbaru"`;
+}
+
+function handleHelp(){
+  return `🤖 Saya bisa membantu dengan:<ul>${HELP_LIST}</ul><span class="hint">Anda juga bisa mengobrol santai dengan saya!</span>`;
+}
+
+function handleThanks(){
+  return ["Sama-sama! Senang bisa membantu. 😊", "Dengan senang hati! Ada lagi yang ingin ditanyakan? 🤗", "Terima kasih kembali! 🌟"][Math.floor(Math.random()*3)];
+}
+
+function handleBye(){
+  return ["Sampai jumpa! 👋 Kembali lagi kapan saja jika butuh informasi UFN.", "Dadah! 🌺 Saya di sini kalau Anda butuh bantuan lagi.", "Selamat tinggal! Semoga harimu menyenangkan! ✨"][Math.floor(Math.random()*3)];
+}
+
+function handleHowAreYou(){
+  const name = getUserName();
+  const tanya = name ? `Bagaimana denganmu, ${esc(name)}?` : "Dan Anda?";
+  return [`Saya baik, terima kasih! 😊 ${tanya}`, "Baik-baik saja! Siap membantu Anda. 💪"][Math.floor(Math.random()*2)];
+}
+
+function handleColor(){
+  return `Warna favorit saya adalah emas 🟡! Karena melambangkan kejayaan dan persatuan UFN. 🎨`;
+}
+
+function handleFood(){
+  return "Saya suka 'menyantap' data UFN! 📊 Tapi makanan favorit saya secara virtual adalah pizza! 🍕";
+}
+
+function handleLove(){
+  return "Cinta itu indah, seperti kerjasama antar negara di UFN! 💕";
+}
+
+function handleJoke(){
+  return JOKES[Math.floor(Math.random()*JOKES.length)];
+}
+
+function handleAge(){
+  return `Saya lahir dari data UFN! 🌟 Selalu up-to-date dengan informasi terbaru.`;
+}
+
+function handleName(rawText){
+  const t = norm(rawText||"");
+  if(/\bnama\s*(saya|aku|gue|gua)\b/.test(t) || /\bsiapa\s*(saya|aku)\b/.test(t)){
+    const name = getUserName();
+    if(name) return `Nama Anda <strong>${esc(name)}</strong>! 😊 Saya ingat kok.`;
+    return `Saya belum tahu nama Anda. Coba ketik, misalnya: "Nama saya Budi" agar saya ingat. 😊`;
+  }
+  return `Nama saya UFN AI Assistant! 🌍 Panggil saja UFN. Ada yang bisa saya bantu? 🤖`;
+}
+
+function handleOrigin(){
+  return `Saya berasal dari data resmi UFN! 🌏 Saya ada di mana saja Anda membutuhkan saya. 💻`;
+}
+
+function handleMiss(){
+  return ["Aku juga rindu! Tapi saya selalu di sini untuk Anda. 💙", "Rindu itu manis, seperti kerjasama UFN! 🤗"][Math.floor(Math.random()*2)];
+}
+
+/* ============================================================
+   FUNGSI kirimAI (Worker) - DIPINDAHKAN KE ATAS
+   ============================================================ */
+async function kirimAI(prompt) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+  try {
+    const response = await fetch("https://ufnai.comedicentral58.workers.dev/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: prompt }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.success === false) {
+      throw new Error(data.reply || "Worker menandakan kegagalan.");
+    }
+
+    if (typeof data.reply !== "string") {
+      throw new Error("Respons Worker tidak memiliki 'reply' string.");
+    }
+
+    return data.reply;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.error("kirimAI error:", error);
+
+    if (error.name === "AbortError") {
+      return "Maaf, AI sedang tidak dapat dihubungi.";
+    }
+
+    return "Maaf, AI sedang tidak dapat dihubungi.";
+  }
+}
+
+/* ============================================================
+   ROUTER UTAMA
+   ============================================================ */
+async function generateAnswer(rawText){
+  // === Lapisan memori nama — dicek paling awal ===
+  const detectedName = tryExtractName(rawText);
+  if(detectedName){
+    setUserName(detectedName);
+    updateHeaderSub();
+    return `Senang berkenalan, <strong>${esc(detectedName)}</strong>! 👋 Saya akan mengingat nama Anda. Ada yang bisa saya bantu seputar UFN?`;
+  }
+
+  // === Lapisan Custom Commands (ai_commands) — dicek lebih dulu ===
+  const customAnswer = matchCustomCommand(rawText);
+  if(customAnswer !== null) return customAnswer;
+  // === Jika tidak ada command yang cocok, lanjut ke sistem AI lama ===
+
+  const intent = detectIntent(rawText);
+
+  // === Small talk tetap diproses di sini ===
+  switch(intent){
+    case "smalltalk_greeting": return handleGreeting();
+    case "smalltalk_help": return handleHelp();
+    case "smalltalk_thanks": return handleThanks();
+    case "smalltalk_bye": return handleBye();
+    case "smalltalk_howareyou": return handleHowAreYou();
+    case "smalltalk_color": return handleColor();
+    case "smalltalk_food": return handleFood();
+    case "smalltalk_love": return handleLove();
+    case "smalltalk_joke": return handleJoke();
+    case "smalltalk_age": return handleAge();
+    case "smalltalk_name": return handleName(rawText);
+    case "smalltalk_origin": return handleOrigin();
+    case "smalltalk_miss": return handleMiss();
+  }
+
+  if(!firebaseReady){
+    // Jika Firebase tidak siap, coba AI Worker
+    return await kirimAI(rawText);
+  }
+  
+  try{
+    let answer = null;
+    switch(intent){
+      case "list_countries": answer = await handleListCountries(); break;
+      case "country_profile": answer = await handleCountryProfile(rawText); break;
+      case "capitalCity": answer = await handlecapitalCity(rawText); break;
+      case "language": answer = await handleLanguage(rawText); break;
+      case "currency": answer = await handleCurrency(rawText); break;
+      case "currency_strongest": answer = await handleCurrencyStrongest(); break;
+      case "population": answer = await handlePopulation(rawText); break;
+      case "population_max": answer = await handlePopulationMax(); break;
+      case "weather": answer = await handleWeather(rawText); break;
+      case "latest_news": answer = await handleLatestNews(); break;
+      case "summary_news": answer = await handleSummaryNews(rawText); break;
+      case "news_category": answer = await handleNewsCategory(); break;
+      case "news_author": answer = await handleNewsAuthor(rawText); break;
+      case "news_image": answer = await handleNewsImage(rawText); break;
+      case "top_reaction": answer = await handleTopReaction(); break;
+      case "comments": answer = await handleComments(rawText); break;
+      case "places": answer = await handlePlaces(rawText); break;
+      case "compare": answer = await handleCompare(rawText); break;
+      default: answer = await handleGeneralCountry(rawText); break;
+    }
+
+    // Jika jawaban adalah NOT_FOUND, FETCH_ERROR, atau "Belum ada data ..." (fallback) panggil Worker
+    if (
+      answer === NOT_FOUND ||
+      answer === FETCH_ERROR ||
+      (typeof answer === "string" && answer.includes("Belum ada data")) ||
+      (typeof answer === "string" && answer.includes("Maaf"))
+    ) {
+      return await kirimAI(rawText);
+    }
+
+    return answer;
+  }catch(err){
+    console.error("Kesalahan di generateAnswer:", err);
+    return await kirimAI(rawText);
+  }
+}
+
+/* ============================================================
+   UI — CHAT ENGINE
+   ============================================================ */
+const chatEl = document.getElementById("chat");
+const inputEl = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+const clearBtn = document.getElementById("clearChat");
+const themeToggle = document.getElementById("themeToggle");
+const themeIcon = document.getElementById("themeIcon");
+const statusDot = document.getElementById("statusDot");
+const suggestBtn = document.getElementById("suggestBtn");
+const quickReplies = document.getElementById("quickReplies");
+
+const ICON_SUN = '<path d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.66-6.66 1.42-1.42M4.92 19.08l1.42-1.42M19.08 19.08l-1.42-1.42M4.92 4.92 6.34 6.34"/><circle cx="12" cy="12" r="5"/>';
+const ICON_MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+
+let chatMemory = [];
+
+function timeNow(ts){
+  return new Date(ts||Date.now()).toLocaleTimeString("id-ID",{ hour:"2-digit", minute:"2-digit" });
+}
+
+function updateHeaderSub(){
+  const el = document.getElementById("headerSub");
+  if(!el) return;
+  const name = getUserName();
+  el.textContent = name ? `AI BY RIFQY · Halo, ${name}` : "AI BY RIFQY";
+}
+
+function appendMessage(role, html, { animate=true, save=true, ts=Date.now() } = {}){
+  const row = document.createElement("div");
+  row.className = `msg-row ${role}`;
+  row.innerHTML = `
+    <div class="avatar ${role}">${role==="ai" ? "◈" : "☺"}</div>
+    <div class="msg-col">
+      <div class="bubble">${html}</div>
+      <div class="timestamp">${timeNow(ts)}</div>
+    </div>`;
+  if(!animate) row.style.animation = "none";
+  chatEl.appendChild(row);
+  scrollToBottom();
+  if(save){
+    chatMemory.push({ role, html, ts });
+    saveChatHistory(chatMemory);
+  }
+  return row;
+}
+
+function showTyping(){
+  const row = document.createElement("div");
+  row.className = "msg-row ai";
+  row.id = "typingRow";
+  row.innerHTML = `
+    <div class="avatar ai">◈</div>
+    <div class="msg-col">
+      <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>
+    </div>`;
+  chatEl.appendChild(row);
+  scrollToBottom();
+}
+function hideTyping(){
+  document.getElementById("typingRow")?.remove();
+}
+function scrollToBottom(){
+  requestAnimationFrame(()=>{ chatEl.scrollTop = chatEl.scrollHeight; });
+}
+
+async function handleSend(){
+  const text = inputEl.value.trim();
+  if(!text) return;
+  appendMessage("user", esc(text));
+  inputEl.value = "";
+  inputEl.style.height = "auto";
+  sendBtn.disabled = true;
+  statusDot.textContent = "● memproses";
+  showTyping();
+
+  const started = Date.now();
+  const answer = await generateAnswer(text);
+  const elapsed = Date.now() - started;
+  const minDelay = 350;
+  if(elapsed < minDelay) await new Promise(r=>setTimeout(r, minDelay - elapsed));
+
+  hideTyping();
+  appendMessage("ai", answer);
+  sendBtn.disabled = false;
+  statusDot.textContent = "● siap";
+  inputEl.focus();
+}
+
+// Quick replies
+quickReplies.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  inputEl.value = btn.dataset.q;
+  handleSend();
+});
+
+// Suggestions
+const SUGGESTIONS = [
+  "Halo",
+  "Apa kabar hari ini?",
+  "Daftar negara UFN",
+  "Mata uang terkuat",
+  "Berita terbaru",
+  "Populasi terbesar",
+  "Ringkas berita",
+  "Tempat menarik di UFN",
+  "Komentar pada berita terbaru",
+  "Berita dengan reaksi terbanyak",
+  "Ceritakan lelucon!",
+  "Cuaca di Indonesia",
+  "Bandingkan Indonesia dan Malaysia",
+  "Informasi tentang Amerika Serikat",
+  "Apa ibu kota Jepang?",
+  "Populasi Brasil",
+  "Berita dari penulis John Doe"
+];
+
+suggestBtn.addEventListener("click", () => {
+  const random = SUGGESTIONS[Math.floor(Math.random() * SUGGESTIONS.length)];
+  inputEl.value = random;
+  inputEl.focus();
+  inputEl.style.height = "auto";
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+});
+
+sendBtn.addEventListener("click", handleSend);
+inputEl.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    handleSend();
+  }
+});
+inputEl.addEventListener("input", ()=>{
+  inputEl.style.height = "auto";
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+});
+
+clearBtn.addEventListener("click", ()=>{
+  chatEl.innerHTML = "";
+  chatMemory = [];
+  clearChatHistory();
+  showWelcome();
+});
+
+themeToggle.addEventListener("click", ()=>{
+  const html = document.documentElement;
+  const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  themeIcon.innerHTML = next === "dark" ? ICON_MOON : ICON_SUN;
+});
+
+function showWelcome(){
+  const name = getUserName();
+  const sapaan = name ? `Selamat datang kembali, <strong>${esc(name)}</strong>! 👋` : `Selamat datang di <strong>UFN AI Assistant</strong> 👋`;
+  appendMessage("ai", `${sapaan}<br><br>Saya menjawab berdasarkan data resmi UFN dan bisa diajak ngobrol santai.<br><br>📌 <strong>Ketik "bantuan"</strong> untuk melihat semua yang bisa saya lakukan!<br><br>💡 <strong>Tips:</strong> Klik tombol <strong>❓</strong> untuk saran pertanyaan acak, atau gunakan tombol cepat di bawah.<br><br>🌤️ <strong>Coba tanyakan:</strong> "Cuaca di Indonesia" atau "Berita terbaru"${name ? '' : '<br><br><span class="hint">Kenalkan diri dengan ketik "Nama saya ..." agar saya ingat Anda 😊</span>'}`, { animate:false });
+}
+
+/* Inisialisasi: pulihkan riwayat chat dari localStorage jika ada, atau tampilkan sambutan */
+updateHeaderSub();
+const savedHistory = loadChatHistory();
+if(savedHistory.length){
+  chatMemory = [];
+  savedHistory.forEach(m => appendMessage(m.role, m.html, { animate:false, ts:m.ts }));
+}else{
+  showWelcome();
+}
+
+// Aktifkan listener Custom Commands (lapisan tambahan, tidak mengganggu sistem AI lama)
+if(firebaseReady){
+  initCustomCommandsListener();
+}
+
+if(!firebaseReady){
+  appendMessage("ai", `⚠️ Konfigurasi Database belum terhubung. Periksa koneksi internet Anda.<br><br>${handleHelp()}`, { animate:false });
+}
+</script>
 </body>
 </html>
