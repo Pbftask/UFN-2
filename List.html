@@ -3,97 +3,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Daftar Negara Fiksi UFN</title>
+<title>UFN - Negara Fiksi</title>
 
-  <link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-
-<!--
-  =====================================================================
-  DAFTAR NEGARA FIKSI UFN
-  Aplikasi single-file: HTML + CSS + JavaScript (tanpa framework)
-  Backend: Firebase Firestore (realtime, via onSnapshot)
-  Desain: Material Design 3 - Dark Mode Premium
-  =====================================================================
--->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
 <style>
-
-
-  .bg{
-    position: fixed;
-    inset: 0;
-    background:#0F172A center/cover no-repeat;
-    z-index: -1;
-}
-
-.content{
-    position: relative;
-}
-  /* =====================================================================
-     1. RESET & VARIABEL DASAR (DESIGN TOKENS)
-     ===================================================================== */
   :root{
-    /* --- Warna dasar --- */
-    --color-bg:            #0F172A;   /* biru tua utama (background) */
-    --color-bg-elevated:   #0F172A;   /* sedikit lebih terang, untuk header */
-    --color-surface:       #1B2942;   /* permukaan card */
-    --color-surface-hi:    #0F172A;   /* permukaan card saat hover/terbuka */
-    --color-outline:       #0F172A;   /* garis tepi tipis */
-    --color-scrim:         rgba(6, 11, 25, 0.72); /* overlay modal */
-
-    /* --- Warna teks --- */
-    --color-text-primary:   #E7ECF7;
+    --color-bg: #0F172A;
+    --color-surface: #1B2942;
+    --color-surface-hi: #243456;
+    --color-outline: #2A3A5C;
+    --color-scrim: rgba(6, 11, 25, 0.8);
+    --color-text-primary: #E7ECF7;
     --color-text-secondary: #98A6C3;
-    --color-text-disabled:  #5C6C8C;
-
-    /* --- Warna aksen (emas premium, gaya MD3 "tertiary") --- */
-    --color-gold:        #F2B84B;
-    --color-gold-hi:      #FFCB66;
-    --color-gold-dim:     #B8873A;
-    --color-gold-on:      #241705;   /* teks di atas emas */
-
-    /* --- Warna status --- */
-    --color-danger:  #F2755A;
+    --color-text-disabled: #5C6C8C;
+    --color-gold: #F2B84B;
+    --color-gold-hi: #FFCB66;
+    --color-gold-dim: #B8873A;
+    --color-gold-on: #241705;
+    --color-danger: #F2755A;
     --color-success: #4ADE80;
-
-    /* --- Radius & bayangan (MD3-ish) --- */
-    --radius-card: 20px;
-    --radius-sheet: 28px;
+    --radius-card: 16px;
+    --radius-sheet: 24px;
     --radius-pill: 999px;
-    --shadow-1: 0 1px 2px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.24);
-    --shadow-2: 0 4px 8px rgba(0,0,0,0.28), 0 2px 4px rgba(0,0,0,0.22);
-    --shadow-3: 0 10px 24px rgba(0,0,0,0.38), 0 4px 8px rgba(0,0,0,0.24);
-    --shadow-gold: 0 8px 20px rgba(242, 184, 75, 0.35);
-
-    /* --- Kurva animasi (emphasized easing MD3) --- */
+    --shadow-1: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-2: 0 4px 12px rgba(0,0,0,0.4);
+    --shadow-3: 0 8px 24px rgba(0,0,0,0.5);
+    --shadow-gold: 0 8px 20px rgba(242, 184, 75, 0.3);
     --ease-standard: cubic-bezier(0.2, 0.0, 0, 1.0);
     --ease-emphasized: cubic-bezier(0.3, 0.0, 0.1, 1.0);
-    --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
-
-    /* --- Durasi --- */
-    --dur-fast: 220ms;
-    --dur-medium: 360ms;
-    --dur-slow: 480ms;
-
-    /* --- Tipografi --- */
-    --font-display: "Segoe UI", "Roboto", system-ui, -apple-system, sans-serif;
-    --font-body:    "Segoe UI", "Roboto", system-ui, -apple-system, sans-serif;
+    --dur-fast: 200ms;
+    --dur-medium: 300ms;
+    --dur-slow: 400ms;
+    --font-body: -apple-system, "Segoe UI", Roboto, sans-serif;
   }
 
-  *, *::before, *::after{
-    box-sizing: border-box;
-  }
-
-  html, body{
-    margin: 0;
-    padding: 0;
-    height: 110%;
-    background:#1B2942;
-  }
+  *{ box-sizing: border-box; margin: 0; padding: 0; }
+  html, body{ height: 100%; background: #0F172A; }
 
   body{
-    background: radial-gradient(circle at 15% -10%, #16213A 0%, var(--color-bg) 45%, #090E1C 100%);
+    background: radial-gradient(circle at 20% 0%, #16213A 0%, #0F172A 60%, #090E1C 100%);
     color: var(--color-text-primary);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
@@ -101,152 +50,162 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     overflow-x: hidden;
   }
 
-  /* Scrollbar halus (opsional, hanya kosmetik desktop) */
-  ::-webkit-scrollbar{ width: 10px; }
+  ::-webkit-scrollbar{ width: 6px; }
   ::-webkit-scrollbar-track{ background: transparent; }
-  ::-webkit-scrollbar-thumb{
-    background: var(--color-outline);
-    border-radius: var(--radius-pill);
-  }
-  ::-webkit-scrollbar-thumb:hover{ background: var(--color-gold-dim); }
+  ::-webkit-scrollbar-thumb{ background: var(--color-outline); border-radius: var(--radius-pill); }
 
-  button{
-    font-family: inherit;
-    cursor: pointer;
-    border: none;
-    background: none;
-    color: inherit;
-  }
+  button{ font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, textarea{ font-family: inherit; color: inherit; }
 
-  input{
-    font-family: inherit;
-    color: inherit;
-  }
-
-  /* Fokus keyboard tetap terlihat (aksesibilitas) */
-  button:focus-visible,
-  input:focus-visible,
-  [tabindex]:focus-visible{
+  button:focus-visible, input:focus-visible, textarea:focus-visible{
     outline: 2px solid var(--color-gold);
     outline-offset: 2px;
   }
 
-  /* Menghormati preferensi reduced motion pengguna */
-  @media (prefers-reduced-motion: reduce){
-    *, *::before, *::after{
-      animation-duration: 0.001ms !important;
-      transition-duration: 0.001ms !important;
-    }
-  }
-
-  /* =====================================================================
-     2. LAYOUT UTAMA
-     ===================================================================== */
   .app-shell{
-    max-width: 720px;
+    max-width: 820px;
     margin: 0 auto;
-    padding: 0 20px 140px;
+    padding: 0 16px 120px;
     position: relative;
   }
 
-  /* =====================================================================
-     3. HEADER
-     ===================================================================== */
+  /* ===== HEADER MINIMALIS ===== */
   .app-header{
-    padding-top: 36px;
-    padding-bottom: 20px;
+    padding: 16px 0 12px;
     position: sticky;
     top: 0;
     z-index: 20;
-    background: linear-gradient(180deg, var(--color-bg) 55%, rgba(15,23,42,0.0) 100%);
-    backdrop-filter: blur(6px);
+    background: linear-gradient(180deg, #0F172A 60%, rgba(15,23,42,0));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
-  .app-header__eyebrow{
-    display: inline-flex;
+  .header-row{
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    color: var(--color-gold);
-    text-transform: uppercase;
-    margin-bottom: 6px;
+    gap: 10px;
   }
 
-  .app-header__eyebrow::before{
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--color-gold);
-    box-shadow: 0 0 8px 2px rgba(242,184,75,0.6);
-  }
-
-  .app-header__title{
-    font-family: var(--font-display);
-    font-size: clamp(26px, 6vw, 34px);
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    margin: 0 0 18px;
-    line-height: 1.15;
-    background: linear-gradient(180deg, #F5F7FC 0%, #C8D2E8 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  /* --- Search bar --- */
-  .search-bar{
+  .header-left{
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
+  }
+
+  .header-icon{
+    width: 32px;
+    height: 32px;
+    background: var(--color-gold);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gold-on);
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .header-title{
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    background: linear-gradient(135deg, #F5F7FC, #C8D2E8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-right{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .online-badge{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-outline);
+  }
+  .online-dot{
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4ADE80;
+    display: inline-block;
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot{
+    0%,100%{ opacity: 1; transform: scale(1); }
+    50%{ opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .admin-btn{
+    padding: 5px 14px;
+    border-radius: var(--radius-pill);
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--color-outline);
+    transition: all 0.2s;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+  }
+  .admin-btn:hover{ border-color: var(--color-gold-dim); color: var(--color-gold); }
+  .admin-btn.is-admin{
+    background: var(--color-gold);
+    color: var(--color-gold-on);
+    border-color: var(--color-gold);
+  }
+  .admin-btn.is-admin:hover{ opacity: 0.85; }
+
+  /* ===== SEARCH BAR ===== */
+  .search-bar{
+    display: flex;
+    align-items: center;
+    gap: 8px;
     background: var(--color-surface);
     border: 1px solid var(--color-outline);
     border-radius: var(--radius-pill);
-    padding: 13px 18px;
-    transition: border-color var(--dur-medium) var(--ease-standard),
-                box-shadow var(--dur-medium) var(--ease-standard),
-                background-color var(--dur-medium) var(--ease-standard);
+    padding: 8px 14px;
+    margin-top: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-
   .search-bar:focus-within{
     border-color: var(--color-gold-dim);
-    background: var(--color-surface-hi);
-    box-shadow: 0 0 0 4px rgba(242, 184, 75, 0.12);
+    box-shadow: 0 0 0 3px rgba(242, 184, 75, 0.1);
   }
-
   .search-bar__icon{
     flex-shrink: 0;
-    width: 20px;
-    height: 20px;
     color: var(--color-text-secondary);
-    transition: color var(--dur-medium) var(--ease-standard),
-                transform var(--dur-medium) var(--ease-emphasized);
+    width: 16px;
+    height: 16px;
   }
-
-  .search-bar:focus-within .search-bar__icon{
-    color: var(--color-gold);
-    transform: scale(1.08) rotate(-6deg);
-  }
-
   .search-bar__input{
     flex: 1;
     background: transparent;
     border: none;
     outline: none;
-    font-size: 15px;
+    font-size: 14px;
     color: var(--color-text-primary);
+    min-width: 0;
   }
-
-  .search-bar__input::placeholder{
-    color: var(--color-text-disabled);
-  }
-
+  .search-bar__input::placeholder{ color: var(--color-text-disabled); }
   .search-bar__clear{
     flex-shrink: 0;
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -255,93 +214,75 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     opacity: 0;
     transform: scale(0.6);
     pointer-events: none;
-    transition: opacity var(--dur-fast) var(--ease-standard),
-                transform var(--dur-fast) var(--ease-emphasized),
-                background-color var(--dur-fast) var(--ease-standard);
+    transition: all 0.2s;
   }
+  .search-bar__clear.is-visible{ opacity: 1; transform: scale(1); pointer-events: auto; }
+  .search-bar__clear:hover{ background: rgba(255,255,255,0.06); }
 
-  .search-bar__clear.is-visible{
-    opacity: 1;
-    transform: scale(1);
-    pointer-events: auto;
-  }
-
-  .search-bar__clear:hover{
-    background: rgba(255,255,255,0.08);
-  }
-
-  /* =====================================================================
-     4. DAFTAR NEGARA (LIST + CARD)
-     ===================================================================== */
-  .country-list{
+  /* ===== TABS ===== */
+  .tabs{
     display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-top: 8px;
+    gap: 4px;
+    background: var(--color-surface);
+    border-radius: var(--radius-pill);
+    padding: 4px;
+    margin: 12px 0 10px;
+    border: 1px solid var(--color-outline);
   }
+  .tab{
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s;
+    color: var(--color-text-secondary);
+  }
+  .tab.active{
+    background: var(--color-gold);
+    color: var(--color-gold-on);
+  }
+  .tab:hover:not(.active){ background: rgba(255,255,255,0.04); }
+  .tab i{ margin-right: 4px; font-size: 12px; }
+
+  /* ===== COUNTRY LIST ===== */
+  .country-list{ display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+  .country-list.is-hidden{ display: none; }
 
   .country-card{
     background: var(--color-surface);
     border: 1px solid var(--color-outline);
     border-radius: var(--radius-card);
     overflow: hidden;
-    box-shadow: var(--shadow-1);
-    transition: box-shadow var(--dur-medium) var(--ease-standard),
-                border-color var(--dur-medium) var(--ease-standard),
-                transform var(--dur-fast) var(--ease-standard),
-                background-color var(--dur-medium) var(--ease-standard);
-    /* Animasi masuk saat card baru dirender */
-    animation: card-enter var(--dur-slow) var(--ease-decelerate) both;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    animation: card-enter 0.3s ease-out both;
   }
-
   @keyframes card-enter{
-    from{
-      opacity: 0;
-      transform: translateY(14px) scale(0.98);
-    }
-    to{
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
+    from{ opacity: 0; transform: translateY(10px); }
+    to{ opacity: 1; transform: translateY(0); }
   }
-
-  .country-card:hover{
+  .country-card:hover{ border-color: var(--color-gold-dim); }
+  .country-card.is-open{
     border-color: var(--color-gold-dim);
     box-shadow: var(--shadow-2);
-  }
-
-  .country-card:active{
-    transform: scale(0.995);
-  }
-
-  .country-card.is-open{
-    background: var(--color-surface-hi);
-    box-shadow: var(--shadow-3);
-    border-color: var(--color-gold-dim);
   }
 
   .country-card__head{
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 18px 20px;
+    gap: 10px;
+    padding: 12px 14px;
     text-align: left;
+    min-height: 52px;
   }
 
-  .country-card__head-main{
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-  }
-
-  .country-card__flag-thumb{
+  .country-card__flag{
     flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     overflow: hidden;
     background: rgba(255,255,255,0.05);
     border: 1px solid var(--color-outline);
@@ -349,24 +290,15 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     align-items: center;
     justify-content: center;
   }
-
-  .country-card__flag-thumb img{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .country-card__flag-thumb i{
-    color: var(--color-text-disabled);
-    font-size: 14px;
-  }
+  .country-card__flag img{ width: 100%; height: 100%; object-fit: cover; }
+  .country-card__flag i{ color: var(--color-text-disabled); font-size: 14px; }
 
   .country-card__name{
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--color-text-primary);
-    letter-spacing: -0.01em;
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -374,787 +306,691 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
 
   .country-card__chevron{
     flex-shrink: 0;
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(255,255,255,0.04);
-    transition: background-color var(--dur-medium) var(--ease-standard),
-                transform var(--dur-medium) var(--ease-emphasized);
+    transition: all 0.2s;
   }
-
   .country-card.is-open .country-card__chevron{
     background: var(--color-gold);
     transform: rotate(180deg);
   }
-
   .country-card__chevron svg{
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     color: var(--color-text-secondary);
-    transition: color var(--dur-medium) var(--ease-standard);
+    transition: color 0.2s;
   }
+  .country-card.is-open .country-card__chevron svg{ color: var(--color-gold-on); }
 
-  .country-card.is-open .country-card__chevron svg{
-    color: var(--color-gold-on);
-  }
-
-  /* --- Panel deskripsi (accordion) ---
-     Menggunakan grid-template-rows 0fr -> 1fr agar transisi height
-     benar-benar halus tanpa perlu mengukur scrollHeight lewat JS. */
   .country-card__body{
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows var(--dur-medium) var(--ease-emphasized);
+    transition: grid-template-rows 0.3s cubic-bezier(0.3, 0, 0.1, 1);
   }
+  .country-card.is-open .country-card__body{ grid-template-rows: 1fr; }
 
-  .country-card.is-open .country-card__body{
-    grid-template-rows: 1fr;
-  }
-
-  .country-card__body-inner{
-    overflow: hidden;
-    min-height: 0;
-  }
+  .country-card__body-inner{ overflow: hidden; min-height: 0; }
 
   .country-card__flag-large{
-    margin: 0 20px 16px;
-    border-radius: 14px;
+    margin: 0 14px 12px;
+    border-radius: 12px;
     overflow: hidden;
-    height: 140px;
+    height: 130px;
     background: rgba(255,255,255,0.04);
     border: 1px solid var(--color-outline);
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transform: translateY(-6px);
-    transition: opacity var(--dur-medium) var(--ease-standard) 40ms,
-                transform var(--dur-medium) var(--ease-standard) 40ms;
+    transform: translateY(-4px);
+    transition: all 0.25s ease 40ms;
   }
-
   .country-card.is-open .country-card__flag-large{
     opacity: 1;
     transform: translateY(0);
   }
-
-  .country-card__flag-large img{
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .country-card__flag-large.is-empty i{
-    font-size: 30px;
-    color: var(--color-text-disabled);
-  }
+  .country-card__flag-large img{ width: 100%; height: 100%; object-fit: cover; }
+  .country-card__flag-large.is-empty i{ font-size: 28px; color: var(--color-text-disabled); }
 
   .country-card__desc{
     margin: 0;
-    padding: 0 20px 20px;
+    padding: 0 14px 8px;
     color: var(--color-text-secondary);
-    font-size: 14.5px;
-    line-height: 1.65;
+    font-size: 13.5px;
+    line-height: 1.6;
     opacity: 0;
-    transform: translateY(-6px);
-    transition: opacity var(--dur-medium) var(--ease-standard) 60ms,
-                transform var(--dur-medium) var(--ease-standard) 60ms;
+    transform: translateY(-4px);
+    transition: all 0.25s ease 60ms;
   }
-
   .country-card.is-open .country-card__desc{
     opacity: 1;
     transform: translateY(0);
   }
 
-  .country-card__meta{
+  .country-card__detail{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+    padding: 0 14px 8px;
+    font-size: 12.5px;
+    color: var(--color-text-secondary);
+    opacity: 0;
+    transition: opacity 0.25s ease 80ms;
+  }
+  .country-card.is-open .country-card__detail{ opacity: 1; }
+  .country-card__detail .label{ color: var(--color-text-disabled); }
+  .country-card__detail .value{ color: var(--color-text-primary); }
+
+  .country-card__weather{
+    padding: 0 14px 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 16px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    opacity: 0;
+    transition: opacity 0.25s ease 100ms;
+  }
+  .country-card.is-open .country-card__weather{ opacity: 1; }
+  .country-card__weather .w-item{
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 0 20px 20px;
-    font-size: 12px;
+    padding: 2px 0;
+  }
+  .country-card__weather .w-item i{
+    width: 16px;
+    color: var(--color-text-disabled);
+    font-size: 13px;
+  }
+  .country-card__weather .w-item .w-label{
+    color: var(--color-text-disabled);
+    font-size: 11px;
+  }
+  .country-card__weather .w-item .w-value{
+    color: var(--color-text-primary);
+    font-weight: 500;
+    margin-left: auto;
+  }
+
+  .country-card__footer{
+    padding: 0 14px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
     color: var(--color-text-disabled);
     opacity: 0;
-    transition: opacity var(--dur-medium) var(--ease-standard) 100ms;
+    transition: opacity 0.25s ease 120ms;
   }
+  .country-card.is-open .country-card__footer{ opacity: 1; }
 
-  .country-card.is-open .country-card__meta{
-    opacity: 1;
+  .btn-delete{
+    background: rgba(242, 117, 90, 0.12);
+    color: var(--color-danger);
+    padding: 3px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 600;
+    transition: all 0.2s;
+    border: 1px solid transparent;
   }
+  .btn-delete:hover{ background: var(--color-danger); color: #fff; }
 
-  /* =====================================================================
-     5. SKELETON LOADING
-     ===================================================================== */
+  .pop-change{
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    display: inline-block;
+    margin-left: 4px;
+  }
+  .pop-change.up{ color: var(--color-success); background: rgba(74, 222, 128, 0.1); }
+  .pop-change.down{ color: var(--color-danger); background: rgba(242, 117, 90, 0.1); }
+
+  /* ===== SKELETON ===== */
+  .skeleton-wrap{ display: none; flex-direction: column; gap: 10px; }
+  .skeleton-wrap.is-visible{ display: flex; }
   .skeleton-card{
-    height: 62px;
+    height: 52px;
     border-radius: var(--radius-card);
-    background: linear-gradient(100deg,
-      var(--color-surface) 30%,
-      var(--color-surface-hi) 50%,
-      var(--color-surface) 70%);
+    background: linear-gradient(100deg, var(--color-surface) 30%, var(--color-surface-hi) 50%, var(--color-surface) 70%);
     background-size: 200% 100%;
     animation: skeleton-shimmer 1.4s ease-in-out infinite;
     border: 1px solid var(--color-outline);
   }
-
   @keyframes skeleton-shimmer{
     0%{ background-position: 160% 0; }
     100%{ background-position: -60% 0; }
   }
 
-  /* =====================================================================
-     6. EMPTY STATE
-     ===================================================================== */
+  /* ===== EMPTY STATE ===== */
   .empty-state{
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 72px 20px;
+    padding: 60px 20px;
     color: var(--color-text-secondary);
-    animation: fade-in var(--dur-slow) var(--ease-decelerate) both;
-  }
-
-  @keyframes fade-in{
-    from{ opacity: 0; transform: translateY(8px); }
-    to{ opacity: 1; transform: translateY(0); }
-  }
-
-  .empty-state__icon{
-    font-size: 46px;
-    margin-bottom: 14px;
-    filter: grayscale(0.2);
-  }
-
-  .empty-state__title{
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--color-text-primary);
-    margin: 0 0 4px;
-  }
-
-  .empty-state__subtitle{
-    font-size: 13.5px;
-    margin: 0;
-    color: var(--color-text-disabled);
-  }
-
-  /* Disembunyikan secara default; ditampilkan lewat JS lewat kelas .is-visible */
-  .empty-state,
-  .skeleton-wrap{
-    display: none;
+    text-align: center;
   }
   .empty-state.is-visible{ display: flex; }
-  .skeleton-wrap.is-visible{
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .country-list.is-hidden{ display: none; }
+  .empty-state__icon{ font-size: 40px; margin-bottom: 10px; opacity: 0.4; }
+  .empty-state__title{ font-size: 15px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 2px; }
+  .empty-state__subtitle{ font-size: 13px; color: var(--color-text-disabled); }
 
-  /* =====================================================================
-     7. FLOATING ACTION BUTTON (FAB)
-     ===================================================================== */
+  /* ===== LEADERBOARD ===== */
+  .leaderboard-wrap{ display: none; }
+  .leaderboard-wrap.is-visible{ display: block; }
+  .leaderboard-item{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--color-surface);
+    border-radius: 12px;
+    margin-bottom: 6px;
+    border: 1px solid var(--color-outline);
+  }
+  .leaderboard-item .rank{
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--color-gold);
+    width: 30px;
+    text-align: center;
+  }
+  .leaderboard-item .flag-small{
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.05);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .leaderboard-item .flag-small img{ width: 100%; height: 100%; object-fit: cover; }
+  .leaderboard-item .info{ flex: 1; min-width: 0; }
+  .leaderboard-item .info .name{ font-weight: 600; font-size: 14px; }
+  .leaderboard-item .info .pop{ font-size: 12px; color: var(--color-text-secondary); }
+  .leaderboard-item .capital{ font-size: 12px; color: var(--color-text-disabled); }
+
+  /* ===== FAB ===== */
   .fab{
     position: fixed;
-    right: 22px;
-    bottom: 28px;
-    width: 60px;
-    height: 60px;
+    right: 18px;
+    bottom: 24px;
+    width: 56px;
+    height: 56px;
     border-radius: var(--radius-pill);
-    background: linear-gradient(155deg, var(--color-gold-hi) 0%, var(--color-gold) 55%, var(--color-gold-dim) 100%);
+    background: linear-gradient(145deg, var(--color-gold-hi), var(--color-gold));
     color: var(--color-gold-on);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-gold), var(--shadow-3);
-    overflow: hidden;
+    box-shadow: var(--shadow-gold), var(--shadow-2);
     z-index: 30;
-    transition: transform var(--dur-medium) var(--ease-emphasized),
-                box-shadow var(--dur-medium) var(--ease-standard);
+    transition: transform 0.25s cubic-bezier(0.3, 0, 0.1, 1), box-shadow 0.2s;
   }
+  .fab:active{ transform: scale(0.92); }
+  .fab.is-hidden{ display: none; }
+  .fab__icon{ width: 24px; height: 24px; transition: transform 0.3s; }
+  .fab.is-modal-open .fab__icon{ transform: rotate(135deg); }
 
-  .fab:hover{
-    transform: translateY(-3px) scale(1.03);
-    box-shadow: 0 12px 26px rgba(242,184,75,0.45), var(--shadow-3);
-  }
-
-  .fab:active{
-    transform: translateY(-1px) scale(0.96);
-  }
-
-  .fab__icon{
-    width: 26px;
-    height: 26px;
-    position: relative;
-    z-index: 2;
-    transition: transform var(--dur-medium) var(--ease-emphasized);
-  }
-
-  .fab.is-modal-open .fab__icon{
-    transform: rotate(135deg);
-  }
-
-  /* Efek ripple material saat FAB ditekan */
   .fab__ripple{
     position: absolute;
     border-radius: 50%;
-    background: rgba(36, 23, 5, 0.35);
+    background: rgba(36, 23, 5, 0.3);
     transform: scale(0);
     pointer-events: none;
-    animation: ripple-anim 620ms var(--ease-standard);
+    animation: ripple-anim 0.6s ease;
   }
-
   @keyframes ripple-anim{
-    to{
-      transform: scale(3.6);
-      opacity: 0;
-    }
+    to{ transform: scale(4); opacity: 0; }
   }
 
-  /* =====================================================================
-     8. MODAL / POPUP TAMBAH NEGARA
-     ===================================================================== */
+  /* ===== MODAL ===== */
   .modal-scrim{
     position: fixed;
     inset: 0;
     background: var(--color-scrim);
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     display: flex;
     align-items: flex-end;
     justify-content: center;
     z-index: 50;
     opacity: 0;
     pointer-events: none;
-    transition: opacity var(--dur-medium) var(--ease-standard);
+    transition: opacity 0.25s ease;
   }
-
-  @media (min-width: 640px){
-    .modal-scrim{
-      align-items: center;
-    }
-  }
-
-  .modal-scrim.is-visible{
-    opacity: 1;
-    pointer-events: auto;
-  }
+  @media (min-width: 640px){ .modal-scrim{ align-items: center; } }
+  .modal-scrim.is-visible{ opacity: 1; pointer-events: auto; }
 
   .modal-sheet{
     width: 100%;
-    max-width: 460px;
-    background: var(--color-bg-elevated);
+    max-width: 500px;
+    max-height: 92vh;
+    overflow-y: auto;
+    background: var(--color-bg);
     border: 1px solid var(--color-outline);
     border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-    padding: 26px 24px calc(24px + env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -12px 40px rgba(0,0,0,0.5);
-    transform: translateY(28px) scale(0.98);
+    padding: 20px 18px calc(18px + env(safe-area-inset-bottom, 0));
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+    transform: translateY(20px) scale(0.98);
     opacity: 0;
-    transition: transform var(--dur-medium) var(--ease-emphasized),
-                opacity var(--dur-medium) var(--ease-standard);
+    transition: transform 0.3s cubic-bezier(0.3, 0, 0.1, 1), opacity 0.25s ease;
   }
-
   @media (min-width: 640px){
-    .modal-sheet{
-      border-radius: var(--radius-sheet);
-      transform: translateY(10px) scale(0.96);
-    }
+    .modal-sheet{ border-radius: var(--radius-sheet); transform: translateY(10px) scale(0.96); }
   }
-
   .modal-scrim.is-visible .modal-sheet{
     transform: translateY(0) scale(1);
     opacity: 1;
   }
 
   .modal-sheet__handle{
-    width: 40px;
+    width: 36px;
     height: 4px;
     border-radius: var(--radius-pill);
     background: var(--color-outline);
-    margin: 0 auto 18px;
+    margin: 0 auto 16px;
   }
+  @media (min-width: 640px){ .modal-sheet__handle{ display: none; } }
 
-  @media (min-width: 640px){
-    .modal-sheet__handle{ display: none; }
-  }
+  .modal-sheet__title{ font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+  .modal-sheet__subtitle{ font-size: 13px; color: var(--color-text-secondary); margin-bottom: 16px; }
 
-  .modal-sheet__title{
-    font-size: 20px;
-    font-weight: 800;
-    margin: 0 0 4px;
-    color: var(--color-text-primary);
-  }
-
-  .modal-sheet__subtitle{
-    font-size: 13.5px;
-    color: var(--color-text-secondary);
-    margin: 0 0 22px;
-  }
-
-  .field{
-    margin-bottom: 18px;
-  }
-
+  .field{ margin-bottom: 14px; }
   .field__label{
     display: block;
-    font-size: 12.5px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
     color: var(--color-text-secondary);
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
-
   .field__control{
     width: 100%;
     background: var(--color-surface);
     border: 1px solid var(--color-outline);
-    border-radius: 14px;
-    padding: 13px 16px;
-    font-size: 15px;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
     color: var(--color-text-primary);
     outline: none;
     resize: vertical;
-    transition: border-color var(--dur-medium) var(--ease-standard),
-                box-shadow var(--dur-medium) var(--ease-standard),
-                background-color var(--dur-medium) var(--ease-standard);
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-
-  .field__control::placeholder{
-    color: var(--color-text-disabled);
-  }
-
+  .field__control::placeholder{ color: var(--color-text-disabled); }
   .field__control:focus{
     border-color: var(--color-gold-dim);
-    background: var(--color-surface-hi);
-    box-shadow: 0 0 0 4px rgba(242, 184, 75, 0.12);
+    box-shadow: 0 0 0 3px rgba(242, 184, 75, 0.08);
   }
-
   .field__error{
-    font-size: 12px;
+    font-size: 11px;
     color: var(--color-danger);
-    margin-top: 6px;
-    min-height: 14px;
+    margin-top: 4px;
     opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity var(--dur-fast) var(--ease-standard),
-                transform var(--dur-fast) var(--ease-standard);
+    transform: translateY(-3px);
+    transition: all 0.2s;
   }
+  .field__error.is-visible{ opacity: 1; transform: translateY(0); }
 
-  .field__error.is-visible{
-    opacity: 1;
-    transform: translateY(0);
+  /* Upload area */
+  .upload-area{
+    background: var(--color-surface);
+    border: 2px dashed var(--color-outline);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .upload-area:hover{ border-color: var(--color-gold-dim); }
+  .upload-area.has-file{ border-color: var(--color-success); }
+  .upload-area input[type="file"]{
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .upload-area__icon{ font-size: 28px; color: var(--color-text-disabled); margin-bottom: 4px; }
+  .upload-area__text{ font-size: 13px; color: var(--color-text-secondary); }
+  .upload-area__text strong{ color: var(--color-gold); }
+  .upload-area__preview{
+    display: none;
+    margin-top: 8px;
+    position: relative;
+  }
+  .upload-area__preview img{
+    max-height: 80px;
+    border-radius: 8px;
+    border: 1px solid var(--color-outline);
+  }
+  .upload-area__preview .remove-btn{
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--color-danger);
+    color: #fff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .upload-area__loading{
+    display: none;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+  }
+  .upload-area__loading i{ animation: spin 0.8s linear infinite; }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  .field__control-flag{
+    display: none;
   }
 
   .modal-sheet__actions{
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 6px;
+    gap: 8px;
+    margin-top: 4px;
   }
 
   .btn{
-    padding: 12px 22px;
+    padding: 10px 20px;
     border-radius: var(--radius-pill);
-    font-size: 14.5px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    transition: transform var(--dur-fast) var(--ease-standard),
-                background-color var(--dur-medium) var(--ease-standard),
-                box-shadow var(--dur-medium) var(--ease-standard),
-                opacity var(--dur-fast) var(--ease-standard);
+    gap: 6px;
+    transition: all 0.2s;
   }
-
   .btn:active{ transform: scale(0.96); }
-
-  .btn--ghost{
-    background: transparent;
-    color: var(--color-text-secondary);
-  }
-
-  .btn--ghost:hover{
-    background: rgba(255,255,255,0.06);
-    color: var(--color-text-primary);
-  }
-
+  .btn--ghost{ background: transparent; color: var(--color-text-secondary); }
+  .btn--ghost:hover{ background: rgba(255,255,255,0.05); color: var(--color-text-primary); }
   .btn--primary{
-    background: linear-gradient(155deg, var(--color-gold-hi), var(--color-gold));
+    background: linear-gradient(145deg, var(--color-gold-hi), var(--color-gold));
     color: var(--color-gold-on);
     box-shadow: var(--shadow-gold);
   }
-
-  .btn--primary:hover{
-    box-shadow: 0 10px 24px rgba(242,184,75,0.45);
-  }
-
-  .btn--primary:disabled{
-    opacity: 0.55;
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none !important;
-  }
-
+  .btn--primary:disabled{ opacity: 0.5; box-shadow: none; cursor: not-allowed; transform: none !important; }
   .btn__spinner{
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    border: 2px solid rgba(36,23,5,0.35);
+    border: 2px solid rgba(36,23,5,0.3);
     border-top-color: var(--color-gold-on);
-    animation: spin 700ms linear infinite;
+    animation: spin 0.7s linear infinite;
     display: none;
   }
-
   .btn--primary.is-loading .btn__spinner{ display: inline-block; }
   .btn--primary.is-loading .btn__label{ opacity: 0.7; }
 
-  @keyframes spin{
-    to{ transform: rotate(360deg); }
-  }
-
-  /* =====================================================================
-     9. TOAST
-     ===================================================================== */
+  /* ===== TOAST ===== */
   .toast-stack{
     position: fixed;
     left: 50%;
-    bottom: 26px;
+    bottom: 90px;
     transform: translateX(-50%);
     z-index: 80;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
-    width: min(92%, 420px);
+    width: min(92%, 400px);
     pointer-events: none;
   }
-
   .toast{
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: #17253F;
+    gap: 8px;
+    background: #1A2844;
     border: 1px solid var(--color-outline);
     color: var(--color-text-primary);
-    padding: 13px 18px;
-    border-radius: 14px;
-    font-size: 14px;
-    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
     box-shadow: var(--shadow-3);
     opacity: 0;
-    transform: translateY(16px) scale(0.96);
-    transition: opacity var(--dur-medium) var(--ease-decelerate),
-                transform var(--dur-medium) var(--ease-decelerate);
+    transform: translateY(12px) scale(0.96);
+    transition: all 0.25s ease;
     width: 100%;
     justify-content: center;
+    pointer-events: auto;
   }
-
-  .toast.is-visible{
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-
+  .toast.is-visible{ opacity: 1; transform: translateY(0) scale(1); }
   .toast--success .toast__dot{ background: var(--color-success); }
   .toast--error .toast__dot{ background: var(--color-danger); }
-
   .toast__dot{
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
-    box-shadow: 0 0 8px 1px currentColor;
   }
 
-  /* =====================================================================
-     10. UTILITAS & RESPONSIVE
-     ===================================================================== */
-  .sr-only{
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    white-space: nowrap;
-    border: 0;
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px){
+    .app-shell{ padding: 0 12px 100px; }
+    .header-title{ font-size: 16px; }
+    .online-badge{ font-size: 10px; padding: 3px 8px; }
+    .admin-btn{ font-size: 11px; padding: 4px 10px; }
+    .tab{ font-size: 12px; padding: 6px 10px; }
+    .country-card__head{ padding: 10px 12px; min-height: 46px; }
+    .country-card__name{ font-size: 14px; }
+    .country-card__flag{ width: 28px; height: 28px; }
+    .country-card__flag-large{ height: 100px; margin: 0 10px 10px; }
+    .country-card__desc{ font-size: 13px; padding: 0 10px 6px; }
+    .country-card__detail{ font-size: 12px; padding: 0 10px 6px; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+    .country-card__weather{ font-size: 11px; padding: 0 10px 6px; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+    .country-card__footer{ padding: 0 10px 10px; font-size: 10px; flex-wrap: wrap; gap: 4px; }
+    .modal-sheet{ padding: 16px 14px; }
+    .fab{ width: 50px; height: 50px; right: 14px; bottom: 18px; }
+    .fab__icon{ width: 22px; height: 22px; }
+    .leaderboard-item{ padding: 8px 12px; gap: 8px; }
+    .leaderboard-item .rank{ font-size: 14px; width: 24px; }
   }
 
-  @media (max-width: 420px){
-    .app-shell{ padding: 0 14px 130px; }
-    .app-header{ padding-top: 24px; }
+  @media (max-width: 380px){
+    .header-title{ font-size: 14px; }
+    .online-badge span:not(.online-dot){ display: none; }
+    .tab i{ margin-right: 0; }
+    .tab span{ display: none; }
+    .country-card__weather{ grid-template-columns: 1fr; }
   }
 
-  @media (min-width: 900px){
-    .app-shell{ max-width: 820px; }
-    .app-header__title{ font-size: 38px; }
-  }
+  .login-modal .modal-sheet{ max-width: 380px; }
+  .login-modal .field__control{ text-align: center; letter-spacing: 4px; font-size: 18px; }
 
-  .header{
-    height:60px;
-    background:transparent;
-    color:white;
-    display:flex;
-    justify-content:flex-end;
-    align-items:center;
-    padding:0 15px;
-    position:relative;
-}
-
-.menu-btn{
-    font-size:28px;
-    cursor:pointer;
-    user-select:none;
-}
-
-.menu{
-    position:absolute;
-    top:55px;
-    right:10px;
-    background:#333;
-    border-radius:8px;
-    min-width:180px;
-    display:none;
-    overflow:hidden;
-    box-shadow:0 5px 15px rgba(0,0,0,.3);
-}
-
-.menu a{
-    display:block;
-    color:white;
-    text-decoration:none;
-    padding:12px 16px;
-}
-
-.menu a:hover{
-    background:transparent;
-}
-
-.lemari{
-  background:#111038;
-  border-radius:20px;
-  border:1px solid #ffb114;
-  display:flex;
-  flex-direction: row;
-  gap:10px;
-  margin-top:5px;
-}
-  
-.enve{
-  width:50px;
-  border-radius:20px;
-  border:1px solid #a4a900;
-  background:#1B2942;
-  padding:3px;
-  margin:2px;
-
-  display:flex;
-  justify-content:center; /* Tengah horizontal */
-  align-items:center;     /* Tengah vertikal */
-}
-
-.enve i{
-  font-size:22px;
-  line-height:1;
-}
-  
-.enve a{
-    color:white;
-    margin-left:px;
-    font-size:15px
-}
-
-.online-counter{
-  display: flex;
-  flex-direction: row;
-  margin-top:5px;
-}
-
-.jumlah{
-  margin-left:5px;
-  margin-right: 5px;
-}
-  
-.opin{
-  background:#00ff1d;
-  color:transparent;
-  border-radius:50%;
-  width: 10px;
-  height:10px;
-  margin-left:125px;
-  margin-top:2px;
-}
+  .sr-only{ position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 </style>
 </head>
 <body>
 
-  <!-- =====================================================================
-       STRUKTUR HALAMAN
-       ===================================================================== -->
+<div class="app-shell">
 
-  <div class="bg"></div>
-  <div class="app-shell">
-    
-
-    <!-- ================= HEADER ================= -->
-    <header class="app-header">
-      <span class="app-header__eyebrow">DATATABASE:Rifqy.//Luminux.com</span>
-      <h1 class="app-header__title">DAFTAR NEGARA FIKSI UFN</h1>
-
-      <div class="search-bar" id="searchBar">
-        <svg class="search-bar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="7"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input
-          id="searchInput"
-          class="search-bar__input"
-          type="text"
-          placeholder="Cari nama negara..."
-          autocomplete="off"
-          aria-label="Cari negara"
-        >
-        <button class="search-bar__clear" id="searchClear" type="button" aria-label="Hapus pencarian">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+  <!-- ===== HEADER MINIMALIS ===== -->
+  <header class="app-header">
+    <div class="header-row">
+      <div class="header-left">
+        <div class="header-icon">UFN</div>
+        <span class="header-title">Negara Fiksi</span>
       </div>
-      <div class="online-counter">
-   <div class="opin">.</div> <span id="onlineCount" class="jumlah">0</span> Online
+      <div class="header-right">
+        <span class="online-badge">
+          <span class="online-dot"></span>
+          <span id="onlineCount">0</span>
+        </span>
+        <button class="admin-btn" id="btnLoginAdmin"><i class="fas fa-shield-alt"></i></button>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <svg class="search-bar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input id="searchInput" class="search-bar__input" type="text" placeholder="Cari negara..." autocomplete="off">
+      <button class="search-bar__clear" id="searchClear" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== TABS ===== -->
+  <div class="tabs" id="tabContainer">
+    <button class="tab active" data-tab="list"><i class="fas fa-list"></i> <span>Daftar</span></button>
+    <button class="tab" data-tab="leaderboard"><i class="fas fa-trophy"></i> <span>Peringkat</span></button>
+  </div>
+
+  <!-- ===== MAIN ===== -->
+  <main>
+    <div class="skeleton-wrap" id="skeletonWrap">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state__icon">🌍</div>
+      <p class="empty-state__title">Belum ada negara</p>
+      <p class="empty-state__subtitle" id="emptySubtitle">Login admin untuk menambahkan</p>
+    </div>
+
+    <div class="country-list is-hidden" id="countryList"></div>
+
+    <div class="leaderboard-wrap" id="leaderboardWrap">
+      <div id="leaderboardList"></div>
+    </div>
+  </main>
 </div>
 
-    </header>
+<!-- ===== FAB ===== -->
+<button class="fab is-hidden" id="fabAdd" type="button">
+  <svg class="fab__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
 
-    <!-- ================= MAIN CONTENT ================= -->
-    <main>
+<!-- ===== MODAL TAMBAH ===== -->
+<div class="modal-scrim" id="modalScrim" role="dialog" aria-modal="true">
+  <div class="modal-sheet">
+    <div class="modal-sheet__handle"></div>
+    <h2 class="modal-sheet__title">Tambah Negara</h2>
+    <p class="modal-sheet__subtitle">Lengkapi data negara fiksi</p>
 
-      <!-- Skeleton loading, tampil saat data pertama kali diambil -->
-      <div class="skeleton-wrap" id="skeletonWrap">
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
+    <form id="addCountryForm" novalidate>
+      <div class="field">
+        <label class="field__label" for="inputName">Nama Negara *</label>
+        <input class="field__control" id="inputName" type="text" placeholder="Contoh: Zenthoria" maxlength="80">
+        <div class="field__error" id="errorName">Wajib diisi</div>
       </div>
 
-      <!-- Empty state, tampil bila koleksi Firestore kosong -->
-      <div class="empty-state" id="emptyState">
-        <div class="empty-state__icon">📁</div>
-        <p class="empty-state__title">Belum ada negara.</p>
-        <p class="empty-state__subtitle">Tekan tombol + untuk menambahkan negara pertama.</p>
+      <div class="field">
+        <label class="field__label" for="inputDesc">Deskripsi *</label>
+        <textarea class="field__control" id="inputDesc" rows="2" placeholder="Sejarah, budaya, ciri khas..." maxlength="1000"></textarea>
+        <div class="field__error" id="errorDesc">Wajib diisi</div>
       </div>
 
-      <!-- Daftar card negara -->
-      <div class="country-list is-hidden" id="countryList"></div>
+      <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="field__label" for="inputCapital">Ibukota *</label>
+          <input class="field__control" id="inputCapital" type="text" placeholder="Kota">
+          <div class="field__error" id="errorCapital">Wajib</div>
+        </div>
+        <div>
+          <label class="field__label" for="inputLanguage">Bahasa *</label>
+          <input class="field__control" id="inputLanguage" type="text" placeholder="Bahasa resmi">
+          <div class="field__error" id="errorLanguage">Wajib</div>
+        </div>
+      </div>
 
-    </main>
+      <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label class="field__label" for="inputPopulation">Populasi Awal *</label>
+          <input class="field__control" id="inputPopulation" type="number" placeholder="Jumlah awal" value="1000000">
+          <div class="field__error" id="errorPopulation">Angka > 0</div>
+        </div>
+        <div>
+          <label class="field__label" for="inputArea">Luas (km²) *</label>
+          <input class="field__control" id="inputArea" type="number" step="0.1" placeholder="Luas wilayah">
+          <div class="field__error" id="errorArea">Angka > 0</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field__label">Bendera</label>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="flagFile" accept="image/*">
+          <div class="upload-area__icon"><i class="fas fa-cloud-upload-alt"></i></div>
+          <div class="upload-area__text">Klik atau taruh gambar <strong>Upload</strong></div>
+          <div class="upload-area__loading" id="uploadLoading"><i class="fas fa-spinner"></i> Mengupload...</div>
+          <div class="upload-area__preview" id="uploadPreview">
+            <img id="previewImg" src="" alt="Preview">
+            <button type="button" class="remove-btn" id="removeFlag"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+        <input class="field__control field__control-flag" id="inputFlagUrl" type="text" placeholder="URL bendera (otomatis)">
+        <div class="field__error" id="errorFlag">URL tidak valid</div>
+      </div>
+
+      <div class="modal-sheet__actions">
+        <button type="button" class="btn btn--ghost" id="btnCancel">Batal</button>
+        <button type="submit" class="btn btn--primary" id="btnSave">
+          <span class="btn__spinner"></span>
+          <span class="btn__label">Simpan</span>
+        </button>
+      </div>
+    </form>
   </div>
+</div>
 
-  <!-- ================= FLOATING ACTION BUTTON ================= -->
-  <button class="fab" id="fabAdd" type="button" aria-label="Tambah negara baru" aria-haspopup="dialog">
-    <svg class="fab__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
-  </button>
-
-
-  <!-- ================= MODAL TAMBAH NEGARA ================= -->
-  <div class="modal-scrim" id="modalScrim" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-sheet">
-      <div class="modal-sheet__handle"></div>
-      <h2 class="modal-sheet__title" id="modalTitle">Tambah Negara</h2>
-      <p class="modal-sheet__subtitle">Lengkapi data negara fiksi baru untuk UFN.</p>
-
-      <form id="addCountryForm" novalidate>
-        <div class="field">
-          <label class="field__label" for="inputName">Nama Negara</label>
-          <input
-            class="field__control"
-            id="inputName"
-            name="name"
-            type="text"
-            placeholder="Contoh: Republik Zenthoria"
-            maxlength="80"
-            autocomplete="off"
-          >
-          <div class="field__error" id="errorName">Nama negara wajib diisi.</div>
-        </div>
-
-        <div class="field">
-          <label class="field__label" for="inputDesc">Deskripsi</label>
-          <textarea
-            class="field__control"
-            id="inputDesc"
-            name="description"
-            rows="4"
-            placeholder="Ceritakan sejarah, budaya, atau ciri khas negara ini..."
-            maxlength="1000"
-          ></textarea>
-          <div class="field__error" id="errorDesc">Deskripsi wajib diisi.</div>
-        </div>
-
-        <div class="modal-sheet__actions">
-          <button type="button" class="btn btn--ghost" id="btnCancel">Batal</button>
-          <button type="submit" class="btn btn--primary" id="btnSave">
-            <span class="btn__spinner"></span>
-            <span class="btn__label">Simpan</span>
-          </button>
-        </div>
-      </form>
-    </div>
+<!-- ===== MODAL LOGIN ===== -->
+<div class="modal-scrim login-modal" id="loginModalScrim">
+  <div class="modal-sheet">
+    <div class="modal-sheet__handle"></div>
+    <h2 class="modal-sheet__title">Admin</h2>
+    <p class="modal-sheet__subtitle">Masukkan kode akses</p>
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label class="field__label" for="inputAdminPass">Kode Admin</label>
+        <input class="field__control" id="inputAdminPass" type="password" placeholder="• • • • • •" maxlength="20">
+        <div class="field__error" id="errorLogin">Kode salah</div>
+      </div>
+      <div class="modal-sheet__actions">
+        <button type="button" class="btn btn--ghost" id="btnLoginCancel">Batal</button>
+        <button type="submit" class="btn btn--primary" id="btnLoginSubmit">Login</button>
+      </div>
+    </form>
   </div>
+</div>
 
-  <!-- ================= TOAST CONTAINER ================= -->
-  <div class="toast-stack" id="toastStack"></div>
+<!-- ===== TOAST ===== -->
+<div class="toast-stack" id="toastStack"></div>
 
-  <!-- =====================================================================
-       FIREBASE SDK (CDN, versi modular terbaru)
-       ===================================================================== -->
-  <script type="module">
-
-function toggleMenu(){
-    const menu = document.getElementById("menu");
-    menu.style.display = menu.style.display === "block" ? "none" : "block";
-}
-
-document.addEventListener("click", function(e){
-    const menu = document.getElementById("menu");
-    const btn = document.querySelector(".menu-btn");
-
-    if(!menu.contains(e.target) && !btn.contains(e.target)){
-        menu.style.display = "none";
-    }
-});
-    
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      addDoc,
-      onSnapshot,
-      query,
-      orderBy,
-      serverTimestamp,
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-    getDatabase,
-    ref,
-    set,
-    onValue,
-    onDisconnect
+  getFirestore, collection, addDoc, onSnapshot, query, orderBy,
+  serverTimestamp, doc, deleteDoc, updateDoc, getDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getDatabase, ref, set, onValue, onDisconnect, get
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    /* =====================================================================
-       1. KONFIGURASI FIREBASE
-       Ganti nilai-nilai di bawah ini dengan konfigurasi project
-       Firebase Anda sendiri (Firebase Console > Project Settings).
-       ===================================================================== */
 const firebaseConfig = {
   apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
   authDomain: "puki-678bf.firebaseapp.com",
@@ -1165,423 +1001,623 @@ const firebaseConfig = {
   appId: "1:343647284151:web:c26e7f5f75235c187a1632"
 };
 
-    // Inisialisasi Firebase & Firestore
 const app = initializeApp(firebaseConfig);
-
 const firestore = getFirestore(app);
 const realtimeDb = getDatabase(app);
 
 const userId = crypto.randomUUID();
-
-const userRef = ref(realtimeDb, "online/" + userId);
-
-set(userRef, true);
-
-onDisconnect(userRef).remove();
-
-onValue(ref(realtimeDb, "online"), (snapshot) => {
-    const data = snapshot.val() || {};
-    document.getElementById("onlineCount").textContent =
-        Object.keys(data).length;
+set(ref(realtimeDb, "online/" + userId), true);
+onDisconnect(ref(realtimeDb, "online/" + userId)).remove();
+onValue(ref(realtimeDb, "online"), snap => {
+  document.getElementById("onlineCount").textContent = Object.keys(snap.val() || {}).length;
 });
+
 const countriesRef = collection(firestore, "countries");
-    /* =====================================================================
-       2. STATE APLIKASI (MODUL STATE)
-       ===================================================================== */
-    const AppState = {
-      allCountries: [],   // seluruh data dari Firestore (belum difilter)
-      searchTerm: "",     // kata kunci pencarian saat ini
-      openCardId: null,   // id card yang sedang terbuka (accordion)
-      isFirstLoad: true,  // untuk mengontrol tampilan skeleton
+
+// ===== CONSTANTS =====
+const ADMIN_PASSWORD = "Sw53huVP";
+const IMGBB_API_KEY = "4b5b5ba36295e875f1c44a632408c8c7"; // Ganti dengan API Key Anda
+
+// ===== STATE =====
+const State = {
+  allCountries: [],
+  searchTerm: "",
+  openCardId: null,
+  isFirstLoad: true,
+  isAdmin: localStorage.getItem("ufn_admin") === "true",
+  currentTab: "list",
+  flagFile: null,
+};
+
+// ===== DOM REFS =====
+const $ = id => document.getElementById(id);
+const DOM = {
+  countryList: $("countryList"),
+  skeletonWrap: $("skeletonWrap"),
+  emptyState: $("emptyState"),
+  emptySubtitle: $("emptySubtitle"),
+  leaderboardWrap: $("leaderboardWrap"),
+  leaderboardList: $("leaderboardList"),
+  searchInput: $("searchInput"),
+  searchClear: $("searchClear"),
+  fabAdd: $("fabAdd"),
+  modalScrim: $("modalScrim"),
+  addForm: $("addCountryForm"),
+  inputName: $("inputName"),
+  inputDesc: $("inputDesc"),
+  inputCapital: $("inputCapital"),
+  inputLanguage: $("inputLanguage"),
+  inputPopulation: $("inputPopulation"),
+  inputArea: $("inputArea"),
+  inputFlagUrl: $("inputFlagUrl"),
+  flagFile: $("flagFile"),
+  uploadArea: $("uploadArea"),
+  uploadLoading: $("uploadLoading"),
+  uploadPreview: $("uploadPreview"),
+  previewImg: $("previewImg"),
+  removeFlag: $("removeFlag"),
+  errorName: $("errorName"),
+  errorDesc: $("errorDesc"),
+  errorCapital: $("errorCapital"),
+  errorLanguage: $("errorLanguage"),
+  errorPopulation: $("errorPopulation"),
+  errorArea: $("errorArea"),
+  errorFlag: $("errorFlag"),
+  btnCancel: $("btnCancel"),
+  btnSave: $("btnSave"),
+  toastStack: $("toastStack"),
+  btnLoginAdmin: $("btnLoginAdmin"),
+  loginModalScrim: $("loginModalScrim"),
+  loginForm: $("loginForm"),
+  inputAdminPass: $("inputAdminPass"),
+  errorLogin: $("errorLogin"),
+  btnLoginCancel: $("btnLoginCancel"),
+  btnLoginSubmit: $("btnLoginSubmit"),
+  tabs: document.querySelectorAll(".tab"),
+};
+
+// ===== UTILITY =====
+function escapeHtml(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+function formatNumber(n){ if(n===undefined||n===null) return "-"; return new Intl.NumberFormat("id-ID").format(n); }
+function formatDate(ts){ if(!ts?.toDate) return ""; return new Intl.DateTimeFormat("id-ID",{day:"numeric",month:"short",year:"numeric"}).format(ts.toDate()); }
+function debounce(fn,d=150){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),d); }; }
+function random(min,max){ return Math.random() * (max - min) + min; }
+
+// ===== TOAST =====
+const Toast = {
+  show(msg,type="success",dur=2500){
+    const el=document.createElement("div");
+    el.className=`toast toast--${type}`;
+    el.innerHTML=`<span class="toast__dot"></span><span>${escapeHtml(msg)}</span>`;
+    DOM.toastStack.appendChild(el);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("is-visible")));
+    setTimeout(()=>{ el.classList.remove("is-visible"); el.addEventListener("transitionend",()=>el.remove(),{once:true}); },dur);
+  }
+};
+
+// ===== IMGBB UPLOAD =====
+async function uploadToImgbb(file) {
+  if (IMGBB_API_KEY === "YOUR_IMGBB_API_KEY") {
+    throw new Error("API Key ImgBB belum diisi! Dapatkan di https://api.imgbb.com/");
+  }
+  
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("key", IMGBB_API_KEY);
+  
+  try {
+    const res = await fetch("https://api.imgbb.com/1/upload", { 
+      method: "POST", 
+      body: formData 
+    });
+    const data = await res.json();
+    
+    if (!data.success) {
+      console.error("ImgBB error:", data.error);
+      throw new Error(data.error?.message || "Upload gagal");
+    }
+    return data.data.url;
+  } catch (error) {
+    console.error("Upload error:", error);
+    throw error;
+  }
+}
+
+// ===== POPULASI OTOMATIS =====
+async function updatePopulation() {
+  console.log("🔄 Memperbarui populasi...");
+  const now = new Date();
+  const hour = now.getHours();
+  
+  const lastUpdateRef = doc(firestore, "system", "populationLastUpdate");
+  try {
+    const snap = await getDoc(lastUpdateRef);
+    const lastHour = snap.exists() ? snap.data().hour : -1;
+    if (lastHour === hour) {
+      console.log("⏳ Populasi sudah diupdate jam ini");
+      return;
+    }
+  } catch (e) { console.warn("Gagal cek last update:", e); }
+
+  const snapshot = await getDoc(countriesRef);
+  const countries = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  
+  let updated = 0;
+  for (const country of countries) {
+    const currentPop = country.population || 1000000;
+    const changePercent = random(2, 5);
+    const direction = Math.random() > 0.5 ? 1 : -1;
+    const change = currentPop * (changePercent / 100) * direction;
+    const newPop = Math.max(100, Math.round(currentPop + change));
+    
+    const changeHistory = country.populationHistory || [];
+    changeHistory.push({
+      from: currentPop,
+      to: newPop,
+      percent: changePercent * direction,
+      time: new Date().toISOString()
+    });
+    if (changeHistory.length > 50) changeHistory.shift();
+    
+    await updateDoc(doc(firestore, "countries", country.id), {
+      population: newPop,
+      lastPopulationUpdate: serverTimestamp(),
+      populationHistory: changeHistory.slice(-10)
+    });
+    updated++;
+  }
+  
+  await setDoc(lastUpdateRef, { hour, updatedAt: serverTimestamp() }, { merge: true });
+  if (updated > 0) {
+    Toast.show(`Populasi ${updated} negara diperbarui!`, "success", 2000);
+  }
+  console.log(`✅ Populasi ${updated} negara diupdate`);
+}
+
+setInterval(updatePopulation, 60 * 60 * 1000);
+setTimeout(updatePopulation, 5000);
+
+// ===== ADMIN =====
+function updateAdminUI() {
+  const btn = DOM.btnLoginAdmin;
+  if (State.isAdmin) {
+    btn.className = "admin-btn is-admin";
+    btn.innerHTML = `<i class="fas fa-crown"></i> Admin`;
+    DOM.fabAdd.classList.remove("is-hidden");
+    DOM.emptySubtitle.textContent = "Tekan + untuk menambahkan";
+    btn.onclick = () => {
+      if (confirm("Logout admin?")) {
+        State.isAdmin = false;
+        localStorage.removeItem("ufn_admin");
+        updateAdminUI();
+        Toast.show("Logout berhasil", "success");
+      }
     };
+  } else {
+    btn.className = "admin-btn";
+    btn.innerHTML = `<i class="fas fa-shield-alt"></i>`;
+    DOM.fabAdd.classList.add("is-hidden");
+    DOM.emptySubtitle.textContent = "Login admin untuk menambahkan";
+    btn.onclick = () => DOM.loginModalScrim.classList.add("is-visible");
+  }
+  attachDeleteEvents();
+}
 
-    /* =====================================================================
-       3. REFERENSI ELEMEN DOM
-       ===================================================================== */
-    const DOM = {
-      countryList:   document.getElementById("countryList"),
-      skeletonWrap:  document.getElementById("skeletonWrap"),
-      emptyState:    document.getElementById("emptyState"),
-      searchInput:   document.getElementById("searchInput"),
-      searchClear:   document.getElementById("searchClear"),
-      fabAdd:        document.getElementById("fabAdd"),
-      modalScrim:    document.getElementById("modalScrim"),
-      addForm:       document.getElementById("addCountryForm"),
-      inputName:     document.getElementById("inputName"),
-      inputDesc:     document.getElementById("inputDesc"),
-      errorName:     document.getElementById("errorName"),
-      errorDesc:     document.getElementById("errorDesc"),
-      btnCancel:     document.getElementById("btnCancel"),
-      btnSave:       document.getElementById("btnSave"),
-      toastStack:    document.getElementById("toastStack"),
-    };
+// ===== RENDER =====
+function renderList() {
+  const term = State.searchTerm.trim().toLowerCase();
+  const filtered = term ? State.allCountries.filter(c => c.name?.toLowerCase().includes(term)) : State.allCountries;
 
-    /* =====================================================================
-       4. UTILITAS UMUM
-       ===================================================================== */
+  const hasData = State.allCountries.length > 0;
+  DOM.skeletonWrap.classList.toggle("is-visible", State.isFirstLoad);
+  DOM.emptyState.classList.toggle("is-visible", !State.isFirstLoad && !hasData);
+  DOM.countryList.classList.toggle("is-hidden", State.isFirstLoad || !hasData);
 
-    /** Mencegah XSS sederhana saat menyisipkan teks user ke dalam HTML. */
-    function escapeHtml(str){
-      const div = document.createElement("div");
-      div.textContent = str ?? "";
-      return div.innerHTML;
+  if (!State.isFirstLoad && hasData && filtered.length === 0) {
+    DOM.emptyState.classList.add("is-visible");
+    DOM.emptyState.querySelector(".empty-state__title").textContent = "Tidak ditemukan";
+    DOM.emptyState.querySelector(".empty-state__subtitle").textContent = `"${State.searchTerm}" tidak ada`;
+    DOM.countryList.classList.add("is-hidden");
+  }
+
+  DOM.countryList.innerHTML = filtered.map(c => {
+    const isOpen = State.openCardId === c.id;
+    const hasFlag = c.flag && c.flag.trim();
+    const flagUrl = hasFlag ? escapeHtml(c.flag) : "";
+    const flagThumb = hasFlag ? `<img src="${flagUrl}" alt="" loading="lazy">` : `<i class="fas fa-flag"></i>`;
+    const flagLarge = hasFlag ? `<img src="${flagUrl}" alt="" loading="lazy">` : `<i class="fas fa-flag" style="font-size:32px;color:var(--color-text-disabled);"></i>`;
+
+    const w = c.weather || {};
+    const deleteBtn = State.isAdmin ? `<button class="btn-delete" data-id="${c.id}" data-name="${escapeHtml(c.name)}"><i class="fas fa-trash"></i></button>` : '';
+    
+    let popChange = '';
+    const history = c.populationHistory || [];
+    if (history.length > 0) {
+      const last = history[history.length - 1];
+      const pct = last.percent || 0;
+      if (pct > 0) popChange = `<span class="pop-change up">▲ ${pct.toFixed(1)}%</span>`;
+      else if (pct < 0) popChange = `<span class="pop-change down">▼ ${Math.abs(pct).toFixed(1)}%</span>`;
     }
 
-    /** Debounce generik untuk input pencarian real-time. */
-    function debounce(fn, delay = 180){
-      let timerId;
-      return (...args) => {
-        clearTimeout(timerId);
-        timerId = setTimeout(() => fn(...args), delay);
-      };
-    }
+    // Weather items mapping
+    const weatherItems = [
+      { icon: 'fa-thermometer-half', label: 'Suhu', value: w.temp ?? '-', unit: '°C' },
+      { icon: 'fa-cloud', label: 'Kondisi', value: w.conditionKey ?? '-' },
+      { icon: 'fa-temperature-high', label: 'Terasa', value: w.feelsLike ?? '-', unit: '°C' },
+      { icon: 'fa-tint', label: 'Kelembaban', value: w.humidity ?? '-', unit: '%' },
+      { icon: 'fa-wind', label: 'Angin', value: w.windSpeed ?? '-', unit: 'km/h' },
+      { icon: 'fa-compress-alt', label: 'Tekanan', value: w.pressure ?? '-', unit: 'hPa' },
+      { icon: 'fa-sun', label: 'UV Index', value: w.UV ?? '-' },
+      { icon: 'fa-eye', label: 'Visibilitas', value: w.visibility ?? '-', unit: 'km' },
+      { icon: 'fa-water', label: 'Titik Embun', value: w.dewPoint ?? '-', unit: '°C' },
+      { icon: 'fa-cloud-rain', label: 'Peluang Hujan', value: w.rainChance ?? '-', unit: '%' },
+      { icon: 'fa-smog', label: 'Kualitas Udara', value: w.aqi ?? '-' },
+      { icon: 'fa-sunrise', label: 'Matahari Terbit', value: w.sunrise ?? '-' },
+      { icon: 'fa-sunset', label: 'Matahari Terbenam', value: w.sunset ?? '-' },
+    ];
 
-    /** Format Firestore Timestamp -> teks tanggal singkat berbahasa Indonesia. */
-    function formatDate(timestamp){
-      if (!timestamp || typeof timestamp.toDate !== "function") return "";
-      const date = timestamp.toDate();
-      return new Intl.DateTimeFormat("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }).format(date);
-    }
+    const weatherHTML = weatherItems.map(item => `
+      <div class="w-item">
+        <i class="fas ${item.icon}"></i>
+        <span class="w-label">${item.label}</span>
+        <span class="w-value">${item.value}${item.unit || ''}</span>
+      </div>
+    `).join('');
 
-    /* =====================================================================
-       5. MODUL TOAST
-       ===================================================================== */
-    const Toast = {
-      show(message, type = "success", duration = 2800){
-        const el = document.createElement("div");
-        el.className = `toast toast--${type}`;
-        el.setAttribute("role", "status");
-        el.innerHTML = `<span class="toast__dot"></span><span>${escapeHtml(message)}</span>`;
-        DOM.toastStack.appendChild(el);
-
-        // Trigger transisi masuk pada frame berikutnya
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => el.classList.add("is-visible"));
-        });
-
-        setTimeout(() => {
-          el.classList.remove("is-visible");
-          el.addEventListener("transitionend", () => el.remove(), { once: true });
-        }, duration);
-      },
-    };
-
-    /* =====================================================================
-       6. MODUL RENDER DAFTAR NEGARA
-       ===================================================================== */
-    const CountryRenderer = {
-
-      /** Menentukan tampilan mana yang aktif: skeleton / empty / list. */
-      updateViewState(filteredList){
-        const hasAnyData = AppState.allCountries.length > 0;
-
-        DOM.skeletonWrap.classList.toggle("is-visible", AppState.isFirstLoad);
-        DOM.emptyState.classList.toggle("is-visible", !AppState.isFirstLoad && !hasAnyData);
-        DOM.countryList.classList.toggle("is-hidden", AppState.isFirstLoad || !hasAnyData);
-
-        // Pesan berbeda ketika hasil pencarian kosong tapi data ada
-        if (!AppState.isFirstLoad && hasAnyData && filteredList.length === 0){
-          DOM.emptyState.classList.add("is-visible");
-          DOM.emptyState.querySelector(".empty-state__title").textContent =
-            "Negara tidak ditemukan.";
-          DOM.emptyState.querySelector(".empty-state__subtitle").textContent =
-            `Tidak ada hasil untuk "${AppState.searchTerm}".`;
-          DOM.countryList.classList.add("is-hidden");
-        } else if (!AppState.isFirstLoad && hasAnyData) {
-          DOM.emptyState.querySelector(".empty-state__title").textContent =
-            "Belum ada negara.";
-          DOM.emptyState.querySelector(".empty-state__subtitle").textContent =
-            "Tekan tombol + untuk menambahkan negara pertama.";
-        }
-      },
-
-      /** Membuat markup HTML untuk satu card negara. */
-      buildCardMarkup(country){
-        const isOpen = AppState.openCardId === country.id;
-        const hasFlag = typeof country.flag === "string" && country.flag.trim().length > 0;
-        const flagUrl = hasFlag ? escapeHtml(country.flag) : "";
-        const flagThumbMarkup = hasFlag
-          ? `<img src="${flagUrl}" alt="Bendera ${escapeHtml(country.name)}" loading="lazy">`
-          : `<i class="fa-solid fa-flag"></i>`;
-        const flagLargeMarkup = hasFlag
-          ? `<div class="country-card__flag-large"><img src="${flagUrl}" alt="Bendera ${escapeHtml(country.name)}" loading="lazy"></div>`
-          : `<div class="country-card__flag-large is-empty"><i class="fa-solid fa-flag"></i></div>`;
-        return `
-          <article class="country-card ${isOpen ? "is-open" : ""}" data-id="${country.id}">
-            <button class="country-card__head" type="button" aria-expanded="${isOpen}">
-              <span class="country-card__head-main">
-                <span class="country-card__flag-thumb">${flagThumbMarkup}</span>
-                <span class="country-card__name">${escapeHtml(country.name)}</span>
-              </span>
-              <span class="country-card__chevron">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </span>
-            </button>
-            <div class="country-card__body">
-              <div class="country-card__body-inner">
-                ${flagLargeMarkup}
-                <p class="country-card__desc">${escapeHtml(country.description)}</p>
-                <div class="country-card__meta">🗓️ Ditambahkan ${formatDate(country.createdAt)}</div>
-              </div>
+    return `
+      <article class="country-card ${isOpen?"is-open":""}" data-id="${c.id}">
+        <button class="country-card__head" type="button">
+          <span class="country-card__flag">${flagThumb}</span>
+          <span class="country-card__name">${escapeHtml(c.name)}</span>
+          <span class="country-card__chevron">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </button>
+        <div class="country-card__body">
+          <div class="country-card__body-inner">
+            <div class="country-card__flag-large ${!hasFlag?"is-empty":""}">${flagLarge}</div>
+            <p class="country-card__desc">${escapeHtml(c.description)}</p>
+            <div class="country-card__detail">
+              <span><span class="label">Ibukota</span><br><span class="value">${escapeHtml(c.capitalCity||'-')}</span></span>
+              <span><span class="label">Bahasa</span><br><span class="value">${escapeHtml(c.language||'-')}</span></span>
+              <span><span class="label">Populasi</span><br><span class="value">${formatNumber(c.population)} ${popChange}</span></span>
+              <span><span class="label">Luas</span><br><span class="value">${formatNumber(c.area)} km²</span></span>
             </div>
-          </article>
-        `;
-      },
+            <div class="country-card__weather">
+              ${weatherHTML}
+            </div>
+            <div class="country-card__footer">
+              <span>🗓️ ${formatDate(c.createdAt)}</span>
+              ${deleteBtn}
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
 
-      /** Merender seluruh daftar (dipanggil ulang setiap ada perubahan data / pencarian). */
-      render(){
-        const term = AppState.searchTerm.trim().toLowerCase();
-        const filtered = term
-          ? AppState.allCountries.filter(c => c.name.toLowerCase().includes(term))
-          : AppState.allCountries;
+  attachDeleteEvents();
+  syncAccordion();
+}
 
-        this.updateViewState(filtered);
-
-        DOM.countryList.innerHTML = filtered.map(this.buildCardMarkup).join("");
-      },
-    };
-
-    /* =====================================================================
-       7. MODUL ACCORDION (BUKA / TUTUP CARD)
-       ===================================================================== */
-    const Accordion = {
-      init(){
-        // Event delegation: satu listener untuk semua card, termasuk yang baru dirender
-        DOM.countryList.addEventListener("click", (event) => {
-          const head = event.target.closest(".country-card__head");
-          if (!head) return;
-
-          const card = head.closest(".country-card");
-          const id = card?.dataset.id;
-          if (!id) return;
-
-          this.toggle(id);
-        });
-      },
-
-      toggle(id){
-        AppState.openCardId = AppState.openCardId === id ? null : id;
-        this.syncDOM();
-      },
-
-      /** Menyinkronkan kelas .is-open tanpa perlu render ulang seluruh list,
-       *  supaya animasi accordion tetap mulus. */
-      syncDOM(){
-        const cards = DOM.countryList.querySelectorAll(".country-card");
-        cards.forEach((card) => {
-          const isOpen = card.dataset.id === AppState.openCardId;
-          card.classList.toggle("is-open", isOpen);
-          const head = card.querySelector(".country-card__head");
-          if (head) head.setAttribute("aria-expanded", String(isOpen));
-        });
-      },
-    };
-
-    /* =====================================================================
-       8. MODUL PENCARIAN REAL-TIME
-       ===================================================================== */
-    const Search = {
-      init(){
-        const handleInput = debounce((value) => {
-          AppState.searchTerm = value;
-          CountryRenderer.render();
-        }, 150);
-
-        DOM.searchInput.addEventListener("input", (event) => {
-          const value = event.target.value;
-          DOM.searchClear.classList.toggle("is-visible", value.length > 0);
-          handleInput(value);
-        });
-
-        DOM.searchClear.addEventListener("click", () => {
-          DOM.searchInput.value = "";
-          DOM.searchClear.classList.remove("is-visible");
-          AppState.searchTerm = "";
-          CountryRenderer.render();
-          DOM.searchInput.focus();
-        });
-      },
-    };
-
-    /* =====================================================================
-       9. MODUL MODAL TAMBAH NEGARA
-       ===================================================================== */
-    const AddCountryModal = {
-      init(){
-        DOM.fabAdd.addEventListener("click", (event) => {
-          this.spawnRipple(event);
-          this.open();
-        });
-        DOM.btnCancel.addEventListener("click", () => this.close());
-        DOM.modalScrim.addEventListener("click", (event) => {
-          if (event.target === DOM.modalScrim) this.close();
-        });
-        document.addEventListener("keydown", (event) => {
-          if (event.key === "Escape" && DOM.modalScrim.classList.contains("is-visible")){
-            this.close();
-          }
-        });
-        DOM.addForm.addEventListener("submit", (event) => this.handleSubmit(event));
-
-        // Menghapus pesan error saat user mulai mengetik ulang
-        DOM.inputName.addEventListener("input", () => this.clearFieldError("name"));
-        DOM.inputDesc.addEventListener("input", () => this.clearFieldError("description"));
-      },
-
-      /** Efek ripple material di dalam FAB saat ditekan. */
-      spawnRipple(event){
-        const fab = DOM.fabAdd;
-        const rect = fab.getBoundingClientRect();
-        const ripple = document.createElement("span");
-        const size = Math.max(rect.width, rect.height);
-
-        ripple.className = "fab__ripple";
-        ripple.style.width = ripple.style.height = `${size}px`;
-        ripple.style.left = `${(event.clientX ?? rect.left + rect.width / 2) - rect.left - size / 2}px`;
-        ripple.style.top = `${(event.clientY ?? rect.top + rect.height / 2) - rect.top - size / 2}px`;
-
-        fab.appendChild(ripple);
-        ripple.addEventListener("animationend", () => ripple.remove(), { once: true });
-      },
-
-      open(){
-        DOM.modalScrim.classList.add("is-visible");
-        DOM.fabAdd.classList.add("is-modal-open");
-        document.body.style.overflow = "hidden";
-        setTimeout(() => DOM.inputName.focus(), 260);
-      },
-
-      close(){
-        DOM.modalScrim.classList.remove("is-visible");
-        DOM.fabAdd.classList.remove("is-modal-open");
-        document.body.style.overflow = "";
-        this.resetForm();
-      },
-
-      resetForm(){
-        DOM.addForm.reset();
-        this.clearFieldError("name");
-        this.clearFieldError("description");
-      },
-
-      clearFieldError(field){
-        const errorEl = field === "name" ? DOM.errorName : DOM.errorDesc;
-        const inputEl = field === "name" ? DOM.inputName : DOM.inputDesc;
-        errorEl.classList.remove("is-visible");
-        inputEl.style.borderColor = "";
-      },
-
-      showFieldError(field, message){
-        const errorEl = field === "name" ? DOM.errorName : DOM.errorDesc;
-        const inputEl = field === "name" ? DOM.inputName : DOM.inputDesc;
-        errorEl.textContent = message;
-        errorEl.classList.add("is-visible");
-        inputEl.style.borderColor = "var(--color-danger)";
-      },
-
-      /** Validasi sederhana sebelum data dikirim ke Firestore. */
-      validate(name, description){
-        let isValid = true;
-
-        if (!name.trim()){
-          this.showFieldError("name", "Nama negara wajib diisi.");
-          isValid = false;
-        } else if (name.trim().length < 2){
-          this.showFieldError("name", "Nama negara terlalu pendek.");
-          isValid = false;
-        }
-
-        if (!description.trim()){
-          this.showFieldError("description", "Deskripsi wajib diisi.");
-          isValid = false;
-        } else if (description.trim().length < 5){
-          this.showFieldError("description", "Deskripsi terlalu pendek.");
-          isValid = false;
-        }
-
-        return isValid;
-      },
-
-      setSaving(isSaving){
-        DOM.btnSave.disabled = isSaving;
-        DOM.btnSave.classList.toggle("is-loading", isSaving);
-      },
-
-      async handleSubmit(event){
-        event.preventDefault();
-
-        const name = DOM.inputName.value;
-        const description = DOM.inputDesc.value;
-
-        if (!this.validate(name, description)) return;
-
-        this.setSaving(true);
-        try {
-          await addDoc(countriesRef, {
-            name: name.trim(),
-            description: description.trim(),
-            createdAt: serverTimestamp(),
-          });
-
-          // onSnapshot akan otomatis merender card baru, jadi di sini
-          // kita cukup menutup modal & menampilkan toast sukses.
-          this.close();
-          Toast.show("Negara berhasil ditambahkan", "success");
-        } catch (error) {
-          console.error("Gagal menambahkan negara:", error);
-          Toast.show("Gagal menambahkan negara. Coba lagi.", "error");
-        } finally {
-          this.setSaving(false);
-        }
-      },
-    };
-
-    /* =====================================================================
-       10. MODUL SINKRONISASI FIRESTORE (REALTIME)
-       ===================================================================== */
-    const FirestoreSync = {
-      start(){
-        const q = query(countriesRef, orderBy("createdAt", "desc"));
-
-        onSnapshot(
-          q,
-          (snapshot) => {
-            AppState.allCountries = snapshot.docs.map((docSnap) => ({
-              id: docSnap.id,
-              ...docSnap.data(),
-            }));
-            AppState.isFirstLoad = false;
-            CountryRenderer.render();
-            Accordion.syncDOM();
-          },
-          (error) => {
-            console.error("Gagal memuat data dari Firestore:", error);
-            AppState.isFirstLoad = false;
-            CountryRenderer.render();
-            Toast.show("Gagal memuat data negara.", "error");
-          }
-        );
-      },
-    };
-
-    /* =====================================================================
-       11. INISIALISASI APLIKASI
-       ===================================================================== */
-    function initApp(){
-      Search.init();
-      Accordion.init();
-      AddCountryModal.init();
-      CountryRenderer.render(); // render awal (skeleton state)
-      FirestoreSync.start();
+function renderLeaderboard() {
+  const sorted = [...State.allCountries].filter(c => c.population > 0).sort((a,b) => (b.population||0) - (a.population||0));
+  if (!sorted.length) {
+    DOM.leaderboardList.innerHTML = `<div class="empty-state is-visible" style="display:flex;"><p class="empty-state__title">Belum ada data populasi</p></div>`;
+    return;
+  }
+  DOM.leaderboardList.innerHTML = sorted.map((c,i) => {
+    const hasFlag = c.flag && c.flag.trim();
+    let popChange = '';
+    const history = c.populationHistory || [];
+    if (history.length > 0) {
+      const last = history[history.length - 1];
+      const pct = last.percent || 0;
+      if (pct > 0) popChange = `<span class="pop-change up">▲ ${pct.toFixed(1)}%</span>`;
+      else if (pct < 0) popChange = `<span class="pop-change down">▼ ${Math.abs(pct).toFixed(1)}%</span>`;
     }
+    return `
+      <div class="leaderboard-item">
+        <div class="rank">#${i+1}</div>
+        <div class="flag-small">${hasFlag ? `<img src="${escapeHtml(c.flag)}" alt="">` : `<i class="fas fa-flag" style="color:var(--color-text-disabled);"></i>`}</div>
+        <div class="info">
+          <div class="name">${escapeHtml(c.name)}</div>
+          <div class="pop">👥 ${formatNumber(c.population)} ${popChange}</div>
+        </div>
+        <div class="capital">${escapeHtml(c.capitalCity||'-')}</div>
+      </div>
+    `;
+  }).join("");
+}
 
-    document.addEventListener("DOMContentLoaded", initApp);
-  </script>
+function switchTab(tab) {
+  State.currentTab = tab;
+  DOM.tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === tab));
+  if (tab === "list") {
+    DOM.countryList.classList.remove("is-hidden");
+    DOM.leaderboardWrap.classList.remove("is-visible");
+    DOM.emptyState.style.display = State.allCountries.length === 0 && !State.isFirstLoad ? "flex" : "none";
+    renderList();
+  } else {
+    DOM.countryList.classList.add("is-hidden");
+    DOM.emptyState.style.display = "none";
+    DOM.leaderboardWrap.classList.add("is-visible");
+    renderLeaderboard();
+  }
+}
+
+// ===== ACCORDION =====
+function syncAccordion() {
+  document.querySelectorAll(".country-card").forEach(card => {
+    const isOpen = card.dataset.id === State.openCardId;
+    card.classList.toggle("is-open", isOpen);
+    card.querySelector(".country-card__head")?.setAttribute("aria-expanded", String(isOpen));
+  });
+}
+
+function toggleCard(id) {
+  State.openCardId = State.openCardId === id ? null : id;
+  syncAccordion();
+}
+
+// ===== DELETE =====
+function attachDeleteEvents() {
+  document.querySelectorAll(".btn-delete").forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id, name = btn.dataset.name;
+      if (!id || !confirm(`Hapus "${name}"?`)) return;
+      try {
+        await deleteDoc(doc(firestore, "countries", id));
+        Toast.show(`"${name}" dihapus`, "success");
+      } catch { Toast.show("Gagal hapus", "error"); }
+    };
+  });
+}
+
+// ===== SEARCH =====
+const handleSearch = debounce((val) => {
+  State.searchTerm = val;
+  if (State.currentTab === "list") renderList();
+});
+DOM.searchInput.addEventListener("input", (e) => {
+  const v = e.target.value;
+  DOM.searchClear.classList.toggle("is-visible", v.length > 0);
+  handleSearch(v);
+});
+DOM.searchClear.addEventListener("click", () => {
+  DOM.searchInput.value = "";
+  DOM.searchClear.classList.remove("is-visible");
+  State.searchTerm = "";
+  if (State.currentTab === "list") renderList();
+  DOM.searchInput.focus();
+});
+
+// ===== MODAL TAMBAH =====
+function resetForm() {
+  DOM.addForm.reset();
+  DOM.inputFlagUrl.value = "";
+  DOM.uploadPreview.style.display = "none";
+  DOM.uploadArea.classList.remove("has-file");
+  DOM.flagFile.value = "";
+  DOM.inputPopulation.value = "1000000";
+  ["name","desc","capital","language","population","area","flag"].forEach(f => {
+    const el = {name:DOM.errorName, desc:DOM.errorDesc, capital:DOM.errorCapital, language:DOM.errorLanguage, population:DOM.errorPopulation, area:DOM.errorArea, flag:DOM.errorFlag}[f];
+    if (el) el.classList.remove("is-visible");
+  });
+}
+
+function showError(field, msg) {
+  const map = {name:DOM.errorName, desc:DOM.errorDesc, capital:DOM.errorCapital, language:DOM.errorLanguage, population:DOM.errorPopulation, area:DOM.errorArea, flag:DOM.errorFlag};
+  if (map[field]) { map[field].textContent = msg; map[field].classList.add("is-visible"); }
+}
+
+function clearError(field) {
+  const map = {name:DOM.errorName, desc:DOM.errorDesc, capital:DOM.errorCapital, language:DOM.errorLanguage, population:DOM.errorPopulation, area:DOM.errorArea, flag:DOM.errorFlag};
+  if (map[field]) map[field].classList.remove("is-visible");
+}
+
+DOM.flagFile.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { Toast.show("Pilih file gambar", "error"); return; }
+  if (file.size > 10 * 1024 * 1024) { Toast.show("Maksimal 10MB", "error"); return; }
+
+  DOM.uploadLoading.style.display = "block";
+  DOM.uploadArea.classList.add("has-file");
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    DOM.previewImg.src = ev.target.result;
+    DOM.uploadPreview.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+
+  try {
+    const url = await uploadToImgbb(file);
+    DOM.inputFlagUrl.value = url;
+    DOM.uploadLoading.style.display = "none";
+    Toast.show("Bendera terupload!", "success");
+  } catch (err) {
+    DOM.uploadLoading.style.display = "none";
+    Toast.show("Gagal upload: " + err.message, "error");
+    DOM.inputFlagUrl.value = "";
+    DOM.uploadPreview.style.display = "none";
+    DOM.uploadArea.classList.remove("has-file");
+    DOM.flagFile.value = "";
+  }
+});
+
+DOM.removeFlag.addEventListener("click", (e) => {
+  e.stopPropagation();
+  DOM.flagFile.value = "";
+  DOM.inputFlagUrl.value = "";
+  DOM.uploadPreview.style.display = "none";
+  DOM.uploadArea.classList.remove("has-file");
+});
+
+DOM.uploadArea.addEventListener("dragover", (e) => { e.preventDefault(); DOM.uploadArea.style.borderColor = "var(--color-gold)"; });
+DOM.uploadArea.addEventListener("dragleave", () => { DOM.uploadArea.style.borderColor = ""; });
+DOM.uploadArea.addEventListener("drop", (e) => {
+  e.preventDefault();
+  DOM.uploadArea.style.borderColor = "";
+  if (e.dataTransfer.files.length) DOM.flagFile.files = e.dataTransfer.files;
+  DOM.flagFile.dispatchEvent(new Event("change"));
+});
+
+function openModal() {
+  if (!State.isAdmin) { Toast.show("Login admin dulu", "error"); return; }
+  DOM.modalScrim.classList.add("is-visible");
+  DOM.fabAdd.classList.add("is-modal-open");
+  document.body.style.overflow = "hidden";
+  resetForm();
+  setTimeout(() => DOM.inputName.focus(), 200);
+}
+
+function closeModal() {
+  DOM.modalScrim.classList.remove("is-visible");
+  DOM.fabAdd.classList.remove("is-modal-open");
+  document.body.style.overflow = "";
+  resetForm();
+}
+
+DOM.fabAdd.addEventListener("click", (e) => {
+  const ripple = document.createElement("span");
+  ripple.className = "fab__ripple";
+  const rect = DOM.fabAdd.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.width = ripple.style.height = size + "px";
+  ripple.style.left = (e.clientX - rect.left - size/2) + "px";
+  ripple.style.top = (e.clientY - rect.top - size/2) + "px";
+  DOM.fabAdd.appendChild(ripple);
+  ripple.addEventListener("animationend", () => ripple.remove(), { once: true });
+  openModal();
+});
+
+DOM.btnCancel.addEventListener("click", closeModal);
+DOM.modalScrim.addEventListener("click", (e) => { if (e.target === DOM.modalScrim) closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && DOM.modalScrim.classList.contains("is-visible")) closeModal(); });
+
+DOM.addForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!State.isAdmin) { Toast.show("Login admin", "error"); return; }
+
+  const name = DOM.inputName.value.trim();
+  const desc = DOM.inputDesc.value.trim();
+  const capital = DOM.inputCapital.value.trim();
+  const language = DOM.inputLanguage.value.trim();
+  const population = parseInt(DOM.inputPopulation.value.trim()) || 1000000;
+  const area = parseFloat(DOM.inputArea.value.trim());
+  const flag = DOM.inputFlagUrl.value.trim();
+
+  let valid = true;
+  if (!name) { showError("name", "Wajib diisi"); valid = false; } else clearError("name");
+  if (!desc) { showError("desc", "Wajib diisi"); valid = false; } else clearError("desc");
+  if (!capital) { showError("capital", "Wajib diisi"); valid = false; } else clearError("capital");
+  if (!language) { showError("language", "Wajib diisi"); valid = false; } else clearError("language");
+  if (isNaN(population) || population < 1) { showError("population", "Angka > 0"); valid = false; } else clearError("population");
+  if (isNaN(area) || area < 1) { showError("area", "Angka > 0"); valid = false; } else clearError("area");
+  if (flag && !flag.startsWith("http")) { showError("flag", "URL tidak valid"); valid = false; } else clearError("flag");
+  if (!valid) return;
+
+  DOM.btnSave.disabled = true;
+  DOM.btnSave.classList.add("is-loading");
+
+  try {
+    await addDoc(countriesRef, {
+      name, description: desc, capitalCity: capital, language,
+      population: population,
+      area, flag: flag || "",
+      createdAt: serverTimestamp(),
+      lastPopulationUpdate: serverTimestamp(),
+      populationHistory: [{ from: population, to: population, percent: 0, time: new Date().toISOString() }]
+    });
+    Toast.show("Negara ditambahkan!", "success");
+    closeModal();
+  } catch (err) {
+    Toast.show("Gagal menambah: " + err.message, "error");
+    console.error(err);
+  } finally {
+    DOM.btnSave.disabled = false;
+    DOM.btnSave.classList.remove("is-loading");
+  }
+});
+
+// ===== LOGIN =====
+DOM.btnLoginAdmin.addEventListener("click", () => {
+  if (State.isAdmin) {
+    if (confirm("Logout admin?")) {
+      State.isAdmin = false;
+      localStorage.removeItem("ufn_admin");
+      updateAdminUI();
+      Toast.show("Logout", "success");
+    }
+  } else {
+    DOM.loginModalScrim.classList.add("is-visible");
+  }
+});
+
+DOM.btnLoginCancel.addEventListener("click", () => DOM.loginModalScrim.classList.remove("is-visible"));
+DOM.loginModalScrim.addEventListener("click", (e) => { if (e.target === DOM.loginModalScrim) DOM.loginModalScrim.classList.remove("is-visible"); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && DOM.loginModalScrim.classList.contains("is-visible")) DOM.loginModalScrim.classList.remove("is-visible"); });
+
+DOM.loginForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const pass = DOM.inputAdminPass.value;
+  if (pass === ADMIN_PASSWORD) {
+    State.isAdmin = true;
+    localStorage.setItem("ufn_admin", "true");
+    updateAdminUI();
+    Toast.show("Login berhasil!", "success");
+    DOM.loginModalScrim.classList.remove("is-visible");
+    DOM.inputAdminPass.value = "";
+    DOM.errorLogin.classList.remove("is-visible");
+  } else {
+    DOM.errorLogin.classList.add("is-visible");
+    DOM.errorLogin.textContent = "Kode salah. Coba lagi.";
+  }
+});
+
+// ===== TABS =====
+DOM.tabs.forEach(tab => {
+  tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+});
+
+// ===== FIRESTORE SYNC =====
+function startSync() {
+  const q = query(countriesRef, orderBy("createdAt", "desc"));
+  onSnapshot(q, (snap) => {
+    State.allCountries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    State.isFirstLoad = false;
+    if (State.currentTab === "list") renderList();
+    else renderLeaderboard();
+    updateAdminUI();
+  }, (err) => {
+    State.isFirstLoad = false;
+    Toast.show("Gagal muat data: " + err.message, "error");
+    console.error(err);
+  });
+}
+
+// ===== CLICK OUTSIDE ACCORDION =====
+DOM.countryList.addEventListener("click", (e) => {
+  const head = e.target.closest(".country-card__head");
+  if (head) {
+    const card = head.closest(".country-card");
+    if (card) toggleCard(card.dataset.id);
+  }
+});
+
+// ===== INIT =====
+updateAdminUI();
+renderList();
+startSync();
+
+// Peringatan API Key
+if (IMGBB_API_KEY === "YOUR_IMGBB_API_KEY") {
+  console.warn("⚠️ Ganti IMGBB_API_KEY dengan API key Anda dari https://api.imgbb.com/");
+  Toast.show("Ganti IMGBB_API_KEY di kode!", "error", 5000);
+}
+</script>
 </body>
 </html>
