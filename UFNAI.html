@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>UFN AI Assistant</title>
-<meta name="description" content="Asisten AI resmi Union of Federated Nations (UFN) — informasi negara, berita, mata uang, dan tempat berdasarkan data resmi.">
+<meta name="description" content="Asisten AI resmi Union of Federated Nations (UFN) — informasi negara, berita, mata uang, tempat, dan Penghitung akun mlbb MLBB.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -26,6 +26,7 @@ html[data-theme="dark"]{
   --line: #2a313d;
   --bubble-ai: #232a36;
   --bubble-user: #8e4700;
+  --form-bg: #1a2029;
 }
 html[data-theme="light"]{
   --bg: #f6f5f2;
@@ -34,8 +35,9 @@ html[data-theme="light"]{
   --ink: #22262d;
   --ink-dim: #6a6f78;
   --line: #e2ded4;
-  --bubble-ai: #bdbdbd;
+  --bubble-ai: #e8e3d8;
   --bubble-user: #ff9402;
+  --form-bg: #f0ede6;
 }
 
 *{box-sizing:border-box;}
@@ -137,6 +139,99 @@ main#chat::-webkit-scrollbar-thumb{ background:var(--line); border-radius:6px; }
 .bubble .hint{ color:var(--ink-dim); font-size:12.5px; }
 .bubble .error{ color:var(--danger); }
 .bubble .flag-img{ display:block; width:100%; max-width:260px; aspect-ratio:16/9; object-fit:cover; border-radius:var(--radius-sm); margin-bottom:8px; border:1px solid var(--line); }
+.bubble .mlbb-result{ 
+  background:var(--surface); 
+  border-radius:var(--radius-sm); 
+  padding:12px 14px; 
+  margin-top:8px;
+  border-left:3px solid var(--accent);
+}
+.bubble .mlbb-result .total{ font-size:22px; font-weight:700; color:var(--accent); }
+.bubble .mlbb-result .detail{ font-size:13px; color:var(--ink-dim); margin-top:4px; }
+.bubble .mlbb-result .strikethrough{ text-decoration:line-through; color:var(--ink-dim); font-size:14px; }
+
+.bubble .learn-btn {
+  display:inline-block;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  padding:4px 14px;
+  border-radius:12px;
+  font-size:12px;
+  cursor:pointer;
+  font-weight:600;
+  margin-top:6px;
+  font-family:'Inter',sans-serif;
+}
+.bubble .learn-btn:hover{ filter:brightness(1.1); }
+.bubble .learn-btn:active{ transform:scale(.95); }
+
+/* ===== FORM MLBB ===== */
+.mlbb-form {
+  background:var(--form-bg);
+  border-radius:var(--radius-md);
+  padding:16px 14px;
+  border:1px solid var(--line);
+  margin-top:4px;
+}
+.mlbb-form .form-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px 12px;
+}
+.mlbb-form .form-group {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.mlbb-form .form-group.full {
+  grid-column:1/-1;
+}
+.mlbb-form label {
+  font-size:11px;
+  font-weight:600;
+  color:var(--ink-dim);
+  text-transform:uppercase;
+  letter-spacing:.3px;
+}
+.mlbb-form input, .mlbb-form select {
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius-sm);
+  padding:6px 8px;
+  font-size:13px;
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  width:100%;
+}
+.mlbb-form input:focus, .mlbb-form select:focus {
+  outline:none;
+  border-color:var(--accent);
+}
+.mlbb-form input[type="number"] {
+  -moz-appearance:textfield;
+}
+.mlbb-form input[type="number"]::-webkit-inner-spin-button,
+.mlbb-form input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance:none;
+  margin:0;
+}
+.mlbb-form .btn-hitung {
+  grid-column:1/-1;
+  background:var(--accent);
+  border:none;
+  padding:10px;
+  border-radius:var(--radius-sm);
+  color:#fff;
+  font-weight:700;
+  font-size:14px;
+  cursor:pointer;
+  font-family:'Inter',sans-serif;
+  margin-top:4px;
+}
+.mlbb-form .btn-hitung:hover { filter:brightness(1.08); }
+.mlbb-form .btn-hitung:active { transform:scale(.97); }
+.mlbb-form .btn-hitung:disabled { opacity:.5; cursor:not-allowed; }
 
 .timestamp{
   font-size:10.5px;
@@ -202,6 +297,9 @@ textarea#userInput::placeholder{ color:var(--ink-dim); }
 }
 .quick-replies button:hover{ border-color:var(--accent); }
 
+@media (max-width:480px){
+  .mlbb-form .form-grid { grid-template-columns:1fr; }
+}
 @media (min-width:640px){
   .app{ border-left:1px solid var(--line); border-right:1px solid var(--line); }
   .msg-col{ max-width:72%; }
@@ -237,20 +335,20 @@ textarea#userInput::placeholder{ color:var(--ink-dim); }
 
   <footer class="input-bar">
     <div class="input-shell">
-      <textarea id="userInput" rows="1" placeholder="Tanya apa saja tentang UFN…" aria-label="Tulis pertanyaan"></textarea>
+      <textarea id="userInput" rows="1" placeholder="Tanya apa saja tentang UFN atau ketik 'MLBB' untuk form Penghitung akun mlbb…" aria-label="Tulis pertanyaan"></textarea>
       <button class="send-btn" id="sendBtn" aria-label="Kirim pertanyaan">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
       </button>
     </div>
     <div class="hint-row">
-      <span>Jawaban dari database resmi UFN</span>
+      <span>Jawaban dari database resmi UFN &amp; Penghitung akun mlbb MLBB</span>
       <span id="statusDot">● siap</span>
     </div>
     <div class="quick-replies" id="quickReplies">
       <button data-q="Daftar negara UFN">📋 Negara</button>
       <button data-q="Mata uang terkuat">💰 Mata Uang</button>
       <button data-q="Berita terbaru">📰 Berita</button>
-      <button data-q="Populasi terbesar">👥 Populasi</button>
+      <button data-q="MLBB">Hitung akun mlbb</button>
       <button data-q="Cuaca di Indonesia">🌤️ Cuaca</button>
       <button data-q="Tempat menarik UFN">📍 menarik</button>
     </div>
@@ -261,7 +359,7 @@ textarea#userInput::placeholder{ color:var(--ink-dim); }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, query, orderBy, limit, getDocs, where, onSnapshot
+  getFirestore, collection, query, orderBy, limit, getDocs, where, onSnapshot, addDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -284,25 +382,13 @@ try{
   console.error("❌ Gagal inisialisasi Firebase:", err);
 }
 
-
-
-/* ============================================================
-   SKEMA FIRESTORE (sesuai Firestore.md)
-   comments/   : { createdAt, likedBy, name, newsId, parentId, text }
-   cauntries/  : { createdAt, description, name, weather: { temp, conditionKey, humidity, windSpeed, pressure, UV, visibility, aqi, rainChance, feelsLike, dewPoint, sunrise, sunset, updatedAt } }
-   news/       : { author, category, content, createdAt, excrept, image, likedBy, likes, title }
-   currencies/ : { changePercent, country, createdAt, name, prevValue, symbol, updatedAt, value }
-   places/     : { createdAt, name, ownerId, type:"negara/provinsi", x, y }
-   reactions/  : { counts: { like }, userReactions }
-   ============================================================ */
-
 /* ============================================================
    MODUL: MEMORI LOKAL (localStorage)
-   - Mengingat nama pengguna
-   - Menyimpan riwayat percakapan
    ============================================================ */
 const LS_NAME_KEY = "ufnai_user_name";
 const LS_HISTORY_KEY = "ufnai_chat_history";
+const LS_LEARN_KEY = "ufnai_learn_question";
+const LS_LEARN_ANSWER_KEY = "ufnai_learn_answer"; // menyimpan jawaban sementara
 const MAX_HISTORY = 200;
 
 function getUserName(){
@@ -310,9 +396,6 @@ function getUserName(){
 }
 function setUserName(name){
   try{ localStorage.setItem(LS_NAME_KEY, name); }catch{}
-}
-function clearUserName(){
-  try{ localStorage.removeItem(LS_NAME_KEY); }catch{}
 }
 
 function loadChatHistory(){
@@ -331,7 +414,26 @@ function clearChatHistory(){
   try{ localStorage.removeItem(LS_HISTORY_KEY); }catch{}
 }
 
-/** Mendeteksi & menyimpan nama dari kalimat seperti "nama saya Budi" / "panggil aku Budi" */
+function getLearnQuestion(){
+  try{ return localStorage.getItem(LS_LEARN_KEY) || ""; }catch{ return ""; }
+}
+function setLearnQuestion(q){
+  try{ localStorage.setItem(LS_LEARN_KEY, q); }catch{}
+}
+function clearLearnQuestion(){
+  try{ localStorage.removeItem(LS_LEARN_KEY); }catch{}
+}
+
+function getLearnAnswer(){
+  try{ return localStorage.getItem(LS_LEARN_ANSWER_KEY) || ""; }catch{ return ""; }
+}
+function setLearnAnswer(a){
+  try{ localStorage.setItem(LS_LEARN_ANSWER_KEY, a); }catch{}
+}
+function clearLearnAnswer(){
+  try{ localStorage.removeItem(LS_LEARN_ANSWER_KEY); }catch{}
+}
+
 function tryExtractName(rawText){
   const patterns = [
     /\bnama\s*(?:saya|aku|gue|gua)\s*(?:adalah|itu)?\s*([a-zA-Z' -]{2,30})/i,
@@ -356,43 +458,21 @@ const FETCH_ERROR = "Maaf, terjadi kendala saat menghubungi database UFN. Coba l
 
 /* ============================================================
    MODUL: CUSTOM COMMANDS (Firestore: "ai_commands")
-   ------------------------------------------------------------
-   Fitur tambahan yang berjalan SEBELUM sistem AI utama.
-   Tidak mengubah/menghapus fungsi, intent, atau logika lain
-   yang sudah ada. Cukup lapisan pengecekan tambahan.
-
-   Struktur dokumen di collection "ai_commands":
-   {
-     enabled: true,
-     priority: 1,
-     keywords: ["halo", "hai"],
-     answer: "Halo juga!",
-     contains: true,     // true = includes(), false = exact match
-     ignoreCase: true     // true = abaikan huruf besar/kecil
-   }
    ============================================================ */
-
-/** Cache lokal berisi command yang sudah difilter (enabled) & diurutkan (priority ASC) */
 let customCommandsCache = [];
 let customCommandsUnsub = null;
 
-/**
- * Mengaktifkan listener realtime ke collection "ai_commands".
- * Data di-cache di memori (customCommandsCache) agar hemat pembacaan Firestore.
- * Setiap ada perubahan (tambah/ubah/hapus command) di Firestore, cache
- * langsung diperbarui otomatis tanpa perlu refresh halaman.
- */
 function initCustomCommandsListener(){
   if(!db) return;
   try{
-    if(customCommandsUnsub) customCommandsUnsub(); // hindari listener ganda
+    if(customCommandsUnsub) customCommandsUnsub();
     customCommandsUnsub = onSnapshot(
       collection(db, "ai_commands"),
       (snap) => {
         customCommandsCache = snap.docs
           .map(d => ({ id: d.id, ...d.data() }))
           .filter(cmd => cmd.enabled === true)
-          .sort((a, b) => (Number(a.priority) || 0) - (Number(b.priority) || 0));
+          .sort((a,b) => (Number(a.priority) || 0) - (Number(b.priority) || 0));
         console.log(`✅ Custom commands dimuat: ${customCommandsCache.length} aktif`);
       },
       (err) => {
@@ -404,11 +484,6 @@ function initCustomCommandsListener(){
   }
 }
 
-/**
- * Mencocokkan pesan pengguna dengan daftar custom command.
- * Mengembalikan field "answer" dari command pertama yang cocok
- * (sesuai urutan priority ASC), atau null jika tidak ada yang cocok.
- */
 function matchCustomCommand(rawText){
   if(!customCommandsCache.length) return null;
   const message = String(rawText ?? "");
@@ -416,8 +491,8 @@ function matchCustomCommand(rawText){
   for(const cmd of customCommandsCache){
     if(!Array.isArray(cmd.keywords) || typeof cmd.answer !== "string") continue;
 
-    const ignoreCase = cmd.ignoreCase !== false;   // default true
-    const useContains = cmd.contains !== false;    // default true
+    const ignoreCase = cmd.ignoreCase !== false;
+    const useContains = cmd.contains !== false;
     const compareMessage = ignoreCase ? message.toLowerCase() : message;
 
     const isMatch = cmd.keywords.some(keyword => {
@@ -431,6 +506,48 @@ function matchCustomCommand(rawText){
     if(isMatch) return cmd.answer;
   }
   return null;
+}
+
+// === FUNGSI UNTUK MENYIMPAN COMMAND BARU KE FIRESTORE ===
+async function saveCommandToFirestore(keywords, answer) {
+  if(!db || !firebaseReady) {
+    console.error("Firebase tidak siap");
+    return false;
+  }
+  
+  try {
+    const keywordArray = Array.isArray(keywords) ? keywords : [keywords];
+    const validKeywords = keywordArray
+      .map(k => String(k).trim())
+      .filter(k => k.length > 0);
+    
+    if(validKeywords.length === 0) {
+      console.error("Tidak ada keyword valid");
+      return false;
+    }
+    
+    if(!answer || answer.trim().length === 0) {
+      console.error("Answer tidak boleh kosong");
+      return false;
+    }
+    
+    const newCommand = {
+      answer: answer.trim(),
+      contains: true,
+      enabled: true,
+      ignoreCase: true,
+      keywords: validKeywords,
+      priority: 1,
+      createdAt: serverTimestamp()
+    };
+    
+    const docRef = await addDoc(collection(db, "ai_commands"), newCommand);
+    console.log(`✅ Command berhasil disimpan dengan ID: ${docRef.id}`, newCommand);
+    return true;
+  } catch(error) {
+    console.error("❌ Gagal menyimpan command:", error);
+    return false;
+  }
 }
 
 /* -------- cache -------- */
@@ -593,10 +710,155 @@ function truncate(str, max=200){
 }
 
 /* ============================================================
+   MODUL: Penghitung akun mlbb MLBB
+   ============================================================ */
+
+const RANK_OPTIONS = [
+  { value: 0, label: 'Warrior' },
+  { value: 0, label: 'Elite' },
+  { value: 0, label: 'Master' },
+  { value: 0, label: 'Grandmaster' },
+  { value: 0, label: 'Epic' },
+  { value: 1000, label: 'Legend' },
+  { value: 2000, label: 'Mythic' },
+  { value: 3000, label: 'Mythic Honor' },
+  { value: 4000, label: 'Mythic Glory' },
+  { value: 5000, label: 'Mythic Immortal' }
+];
+
+function hitungMLBBFromForm(data){
+  const { rankValue, level, winrate, legend, legendLimited, grand, exquisite, efek } = data;
+
+  const levelPrice = (level || 0) * 500;
+  const winratePrice = Math.floor((winrate || 0) / 10) * 500;
+  const legendPrice = legend * 2000000;
+  const legendLimitedPrice = legendLimited * 3000000;
+  const grandPrice = grand * 700000;
+  const exquisitePrice = exquisite * 250000;
+  const efekPrice = efek * 155000;
+
+  const total = rankValue + levelPrice + winratePrice + legendPrice + legendLimitedPrice + grandPrice + exquisitePrice + efekPrice;
+  
+  const diskon = total * 0.9;
+  const totalAkhir = total - diskon;
+
+  return {
+    rank: rankValue,
+    level: levelPrice,
+    winrate: winratePrice,
+    legend: legendPrice,
+    legendLimited: legendLimitedPrice,
+    grand: grandPrice,
+    exquisite: exquisitePrice,
+    efek: efekPrice,
+    total,
+    diskon,
+    totalAkhir,
+    detail: { legend, legendLimited, grand, exquisite, efek, level, winrate }
+  };
+}
+
+function formatMLBBResult(result, accountName){
+  const fmt = (n) => n.toLocaleString('id-ID');
+  
+  return `
+<div class="mlbb-result">
+  <div style="font-weight:600;font-size:16px;margin-bottom:6px;">🎮 Penghitung akun mlbb Harga Akun MLBB</div>
+  <div style="font-size:13px;color:var(--ink-dim);margin-bottom:8px;">Nickname: <strong style="color:var(--ink);">${esc(accountName || '-')}</strong></div>
+  <table style="width:100%;font-size:13px;border-collapse:collapse;">
+    <tr><td style="padding:2px 4px;">Rank</td><td style="padding:2px 4px;text-align:right;">Rp ${fmt(result.rank)}</td></tr>
+    <tr><td style="padding:2px 4px;">Level (${result.detail.level||0})</td><td style="padding:2px 4px;text-align:right;">Rp ${fmt(result.level)}</td></tr>
+    <tr><td style="padding:2px 4px;">Winrate (${result.detail.winrate||0}%)</td><td style="padding:2px 4px;text-align:right;">Rp ${fmt(result.winrate)}</td></tr>
+    <tr><td style="padding:2px 4px;">Legend (${result.detail.legend||0})</td><td style="padding:2px 4px;text-align:right;">Rp ${fmt(result.legend)}</td></tr>
+    <tr><td style="padding:2px 4px;">Legend Limited (${result.detail.legendLimited||0})</td><td style="padding:2px 4px;text-align:right;">Rp ${fmt(result.legendLimited)}</td></tr>
+    <tr><td style="padding:2px 4px;">Grand/Collab (${result.detail.grand||0})</td><td style="padding:2px 4px;text-align:right;">Rp ${fmt(result.grand)}</td></tr>
+    <tr><td style="padding:2px 4px;">Exquisite (${result.detail.exquisite||0})</td><td style="padding:2px 4px;text-align:right;">Rp ${fmt(result.exquisite)}</td></tr>
+    <tr><td style="padding:2px 4px;">Efek Limited (${result.detail.efek||0})</td><td style="padding:2px 4px;text-align:right;">Rp ${fmt(result.efek)}</td></tr>
+    <tr style="border-top:2px solid var(--accent);">
+      <td style="padding:6px 4px 2px;font-weight:700;font-size:18px;">Total Akhir</td>
+      <td style="padding:6px 4px 2px;text-align:right;font-weight:700;font-size:22px;color:var(--accent);">Rp ${fmt(result.totalAkhir)}</td>
+    </tr>
+  </table>
+  <div style="font-size:11px;color:var(--ink-dim);margin-top:6px;">⚠️ Ini hanya prediksi, tidak 100% akurat</div>
+</div>
+  `;
+}
+
+/* ============================================================
+   FORM MLBB — HTML BUILDER
+   ============================================================ */
+function buildMLBBFormHTML(initialData = {}) {
+  const rankOptions = RANK_OPTIONS.map(r => 
+    `<option value="${r.value}" ${initialData.rankValue === r.value ? 'selected' : ''}>${r.label}</option>`
+  ).join('');
+
+  return `
+<div class="mlbb-form">
+  <div style="font-weight:600;font-size:14px;margin-bottom:10px;">🎮 Form Penghitung akun mlbb MLBB</div>
+  <div class="form-grid">
+    <div class="form-group full">
+      <label>Nama Akun (optional)</label>
+      <input type="text" id="mlbbNama" placeholder="Contoh: Player123" value="${esc(initialData.accountName || '')}">
+    </div>
+    <div class="form-group">
+      <label>Rank Tertinggi</label>
+      <select id="mlbbRank">${rankOptions}</select>
+    </div>
+    <div class="form-group">
+      <label>Level Saat Ini</label>
+      <input type="number" id="mlbbLevel" placeholder="Contoh: 50" value="${initialData.level || ''}">
+    </div>
+    <div class="form-group">
+      <label>Winrate (%)</label>
+      <input type="number" id="mlbbWinrate" placeholder="Contoh: 60" value="${initialData.winrate || ''}">
+    </div>
+    <div class="form-group">
+      <label>Jumlah Skin Legend Biasa</label>
+      <input type="number" id="mlbbLegend" placeholder="0" value="${initialData.legend || ''}">
+    </div>
+    <div class="form-group">
+      <label>Jumlah Skin Legend Limited</label>
+      <input type="number" id="mlbbLegendLimited" placeholder="0" value="${initialData.legendLimited || ''}">
+    </div>
+    <div class="form-group">
+      <label>Skin Grand / Collab</label>
+      <input type="number" id="mlbbGrand" placeholder="0" value="${initialData.grand || ''}">
+    </div>
+    <div class="form-group">
+      <label>Skin Exquisite / Collector</label>
+      <input type="number" id="mlbbExquisite" placeholder="0" value="${initialData.exquisite || ''}">
+    </div>
+    <div class="form-group">
+      <label>Efek Limited</label>
+      <input type="number" id="mlbbEfek" placeholder="0" value="${initialData.efek || ''}">
+    </div>
+    <button class="btn-hitung" id="mlbbHitung">💰 Hitung Harga</button>
+  </div>
+  <div style="font-size:10px;color:var(--ink-dim);margin-top:8px;text-align:center;">
+    ⚠️ Ini hanya prediksi, tidak 100% akurat
+  </div>
+</div>
+  `;
+}
+
+/* ============================================================
    DETEKSI MAKSUD (INTENT)
    ============================================================ */
 function detectIntent(rawText){
   const t = norm(rawText);
+
+  // MLBB intent
+  if(/^(mlbb|mobile legend|mobile legends|hitung mlbb|Penghitung akun mlbb mlbb|form mlbb)$/i.test(rawText.trim())) {
+    return "mlbb_form";
+  }
+  if(/mlbb|mobile legend|mobile legends/.test(t)) return "mlbb_form";
+
+  // Cek apakah ini jawaban untuk belajar (mode belajar)
+  const learnQuestion = getLearnQuestion();
+  if(learnQuestion && rawText.length > 3 && rawText.length < 500) {
+    // User sedang menjawab pertanyaan belajar
+    return "learn_answer";
+  }
 
   // Small talk
   if(/\b(bantuan|help|menu|perintah|bisa apa|bisa bantu apa|apa saja yang bisa|fitur apa|kamu bisa apa|tolong)\b/.test(t)) return "smalltalk_help";
@@ -640,8 +902,6 @@ function detectIntent(rawText){
    HANDLER PER-INTENT
    ============================================================ */
 
-// --- COUNTRY HANDLERS ---
-
 async function handleListCountries(){
   const countries = await loadCountries();
   if(!countries.length) return "Belum ada data negara di database UFN.";
@@ -653,7 +913,6 @@ async function handleCountryProfile(text){
   const countries = await loadCountries();
   const c = findCountryInText(text, countries);
   if(!c) return NOT_FOUND;
-  
   let info = "";
   if(c.flag) info += `<img src="${esc(c.flag)}" alt="Bendera ${esc(c.name)}" class="flag-img">`;
   info += `<strong>🏛️ ${esc(c.name)}</strong>`;
@@ -686,7 +945,6 @@ async function handleCurrency(text){
   const countries = await loadCountries();
   const c = findCountryInText(text, countries);
   if(!c) return NOT_FOUND;
-  
   const currencies = await loadCurrencies();
   const cur = currencies.find(x => norm(x.country) === norm(c.name) || norm(x.name) === norm(c.name));
   if(cur){
@@ -703,13 +961,10 @@ async function handleCurrency(text){
 async function handleCurrencyStrongest(){
   const currencies = await loadCurrencies();
   if(!currencies.length) return NOT_FOUND;
-  
   const valid = currencies.filter(c => c.value !== undefined && c.value !== null);
   if(!valid.length) return "Belum ada data nilai mata uang.";
-  
   valid.sort((a,b) => b.value - a.value);
   const top = valid[0];
-  
   let info = `🏆 Mata uang dengan nilai tukar tertinggi di UFN:<br><br>`;
   info += `<strong>${esc(top.name)}</strong> (${esc(top.symbol||"")})`;
   info += `<br>Negara: <strong>${esc(top.country||"Tidak diketahui")}</strong>`;
@@ -739,37 +994,23 @@ async function handlePopulationMax(){
   return info;
 }
 
-// --- WEATHER HANDLER ---
-
 async function handleWeather(text){
   const countries = await loadCountries();
   const c = findCountryInText(text, countries);
   if(!c) return NOT_FOUND;
   if(!c.weather) return `Data cuaca untuk ${esc(c.name)} belum tersedia.`;
-  
   const w = c.weather;
   let info = `🌤️ Cuaca di <strong>${esc(c.name)}</strong>:<br><br>`;
-  
-  // Weather condition with emoji
   const conditionMap = {
-    'clear': '☀️ Cerah',
-    'clouds': '☁️ Berawan',
-    'rain': '🌧️ Hujan',
-    'thunderstorm': '⛈️ Badai',
-    'snow': '❄️ Salju',
-    'mist': '🌫️ Kabut',
-    'fog': '🌫️ Kabut',
-    'haze': '🌫️ Kabut Asap',
-    'smoke': '💨 Asap',
-    'dust': '🌪️ Debu',
-    'sand': '🏜️ Pasir'
+    'clear': '☀️ Cerah', 'clouds': '☁️ Berawan', 'rain': '🌧️ Hujan',
+    'thunderstorm': '⛈️ Badai', 'snow': '❄️ Salju', 'mist': '🌫️ Kabut',
+    'fog': '🌫️ Kabut', 'haze': '🌫️ Kabut Asap', 'smoke': '💨 Asap',
+    'dust': '🌪️ Debu', 'sand': '🏜️ Pasir'
   };
   const condition = w.conditionKey ? (conditionMap[w.conditionKey.toLowerCase()] || w.conditionKey) : 'Tidak diketahui';
-  
   if(w.temp !== undefined) info += `🌡️ Suhu: <strong>${fmtTemp(w.temp)}</strong>`;
   if(w.feelsLike !== undefined) info += ` (terasa ${fmtTemp(w.feelsLike)})`;
   info += `<br>`;
-  
   if(w.conditionKey) info += `☁️ Kondisi: <strong>${condition}</strong><br>`;
   if(w.humidity !== undefined) info += `💧 Kelembaban: <strong>${w.humidity}%</strong><br>`;
   if(w.windSpeed !== undefined) info += `💨 Kecepatan angin: <strong>${w.windSpeed} km/h</strong><br>`;
@@ -782,11 +1023,8 @@ async function handleWeather(text){
   if(w.sunrise) info += `🌅 Matahari terbit: <strong>${w.sunrise}</strong><br>`;
   if(w.sunset) info += `🌇 Matahari terbenam: <strong>${w.sunset}</strong><br>`;
   if(w.updatedAt) info += `<br><span class="hint">Update terakhir: ${fmtDateTime(w.updatedAt)}</span>`;
-  
   return info;
 }
-
-// --- NEWS HANDLERS ---
 
 async function handleLatestNews(){
   const newsItems = await loadNews(5);
@@ -832,7 +1070,6 @@ async function handleNewsCategory(){
 async function handleNewsAuthor(text){
   const newsItems = await loadNews(30);
   if(!newsItems.length) return NOT_FOUND;
-  
   const t = norm(text);
   let items = newsItems.filter(n => n.author && t.includes(norm(n.author)));
   if(!items.length) {
@@ -848,7 +1085,6 @@ async function handleNewsAuthor(text){
     }
   }
   if(!items.length) return "Tidak ditemukan berita dari penulis tersebut.";
-  
   const author = items[0].author;
   const rows = items.slice(0,5).map(n => 
     `<li><strong>${esc(n.title||"")}</strong>${n.category ? ` [${esc(n.category)}]` : ''}<br><span class="hint">${fmtDate(n.createdAt)}</span></li>`
@@ -868,7 +1104,6 @@ async function handleTopReaction(){
   const newsItems = await loadNews(30);
   if(!newsItems.length) return NOT_FOUND;
   const reactions = await loadReactions();
-  
   const reactionMap = {};
   for(const n of newsItems){
     let count = n.likes || 0;
@@ -878,11 +1113,9 @@ async function handleTopReaction(){
     }
     reactionMap[n.id] = count;
   }
-  
   const sorted = [...newsItems].sort((a,b) => (reactionMap[b.id]||0) - (reactionMap[a.id]||0));
   const top = sorted[0];
   if(!top || (reactionMap[top.id]||0) === 0) return "Belum ada data reaksi.";
-  
   return `🏆 Berita dengan reaksi terbanyak adalah "<strong>${esc(top.title)}</strong>" dengan <strong>${fmtNumber(reactionMap[top.id])}</strong> reaksi.`;
 }
 
@@ -893,12 +1126,9 @@ async function handleComments(text){
   let n = findNewsInText(text, newsItems);
   if(!n) n = newsItems.find(x => t.includes(norm(x.title)));
   if(!n) return NOT_FOUND;
-  
   const comments = await loadComments();
   const filtered = comments.filter(c => c.newsId === n.id);
-  
   if(!filtered.length) return `Belum ada komentar pada berita "<strong>${esc(n.title)}</strong>".`;
-  
   const rows = filtered.slice(0,10).map(c => {
     let info = `<li><strong>${esc(c.name||c.author||"Anonim")}</strong>: ${esc(c.text||"")}`;
     if(c.parentId) info += ` <span class="hint">(balasan ke komentar)</span>`;
@@ -913,21 +1143,16 @@ async function handlePlaces(text){
   const countries = await loadCountries();
   const c = findCountryInText(text, countries);
   const places = await loadPlaces();
-  
   if(!places.length) return "Belum ada data tempat menarik.";
-  
   let filtered = places;
   if(c){
     filtered = places.filter(p => norm(p.ownerId) === norm(c.id) || norm(p.name) === norm(c.name));
   }
-  
   if(!filtered.length){
     const t = norm(text);
     filtered = places.filter(p => t.includes(norm(p.name)) || (p.ownerId && t.includes(norm(p.ownerId))));
   }
-  
   if(!filtered.length) filtered = places.slice(0,8);
-  
   const items = filtered.slice(0,8).map(p => {
     const typeLabel = p.type === "negara" ? "🏛️ Negara" : p.type === "provinsi" ? "🏙️ Provinsi" : "📍";
     return `<li><strong>${esc(p.name)}</strong> ${typeLabel}${p.ownerId ? ` · ID: ${esc(p.ownerId)}` : ''}${p.x !== undefined && p.y !== undefined ? `<br><span class="hint">📍 ${fmtNumber(p.x)}, ${fmtNumber(p.y)}</span>` : ''}${p.createdAt ? `<br><span class="hint">${fmtDate(p.createdAt)}</span>` : ''}</li>`;
@@ -949,8 +1174,6 @@ async function handleCompare(text){
   return `📊 Perbandingan <strong>${esc(a.name)}</strong> vs <strong>${esc(b.name)}</strong>:<table><tr><th></th><th>${esc(a.name)}</th><th>${esc(b.name)}</th></tr>${rows}</table>`;
 }
 
-// --- GENERAL COUNTRY ---
-
 async function handleGeneralCountry(text){
   const countries = await loadCountries();
   const c = findCountryInText(text, countries);
@@ -966,10 +1189,111 @@ async function handleGeneralCountry(text){
 }
 
 /* ============================================================
+   FUNGSI BELAJAR (LEARN) — DENGAN KONFIRMASI
+   ============================================================ */
+
+// Fungsi untuk memulai mode belajar
+function startLearning(question) {
+  setLearnQuestion(question);
+  clearLearnAnswer();
+  return `Saya belum tahu jawaban dari "<strong>${esc(question)}</strong>" 😅<br><br>Bisa ajari saya? <strong>Ketik jawabannya</strong> sekarang!<br><br><span class="hint">Contoh: "Tokyo adalah ibukota Jepang"</span><br><br>📌 <span class="hint">Setelah mengetik jawaban, saya akan meminta konfirmasi sebelum menyimpan.</span>`;
+}
+
+// Fungsi untuk memproses jawaban belajar dengan konfirmasi
+async function processLearnAnswer(rawText) {
+  const question = getLearnQuestion();
+  if(!question) {
+    clearLearnQuestion();
+    clearLearnAnswer();
+    return "Hmm, saya tidak sedang belajar apa-apa. Ada yang bisa saya bantu?";
+  }
+  
+  // Simpan jawaban sementara
+  setLearnAnswer(rawText.trim());
+  
+  // Tampilkan preview jawaban dan minta konfirmasi
+  const answerPreview = esc(rawText.trim());
+  
+  return `
+    <div>
+      <p>📝 <strong>Saya akan belajar dari ini:</strong></p>
+      <div style="background:var(--surface);padding:10px;border-radius:var(--radius-sm);margin:8px 0;border-left:3px solid var(--accent);">
+        <div style="font-size:12px;color:var(--ink-dim);">Pertanyaan:</div>
+        <div style="font-weight:600;">${esc(question)}</div>
+        <div style="font-size:12px;color:var(--ink-dim);margin-top:6px;">Jawaban:</div>
+        <div>${answerPreview}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+        <button class="learn-btn" id="learnConfirmBtn" style="background:var(--accent);">✅ Ya, Simpan</button>
+        <button class="learn-btn" id="learnCancelBtn" style="background:var(--danger);">❌ Batal</button>
+        <button class="learn-btn" id="learnEditBtn" style="background:var(--ink-dim);">✏️ Ubah Jawaban</button>
+      </div>
+      <div style="font-size:11px;color:var(--ink-dim);margin-top:8px;">
+        💡 Pilih <strong>"Ya, Simpan"</strong> untuk menyimpan, <strong>"Batal"</strong> untuk membatalkan pembelajaran, atau <strong>"Ubah Jawaban"</strong> untuk memperbaiki jawaban.
+      </div>
+    </div>
+  `;
+}
+
+// Fungsi untuk menyimpan hasil belajar setelah konfirmasi
+async function confirmLearnAndSave() {
+  const question = getLearnQuestion();
+  const answer = getLearnAnswer();
+  
+  if(!question || !answer) {
+    clearLearnQuestion();
+    clearLearnAnswer();
+    return "❌ Tidak ada data pembelajaran yang ditemukan.";
+  }
+  
+  // Ekstrak keyword dari pertanyaan
+  const keywords = [];
+  const questionWords = question.toLowerCase().split(' ');
+  
+  for(const word of questionWords) {
+    if(word.length >= 3 && !['apa','siapa','mana','yang','dan','atau','untuk','dari','dengan','pada','ke','di','itu','ini','itu','tersebut','adalah','bagaimana','kenapa','mengapa','kapan','dimana','berapa'].includes(word)) {
+      keywords.push(word);
+    }
+  }
+  
+  if(keywords.length < 2) {
+    keywords.push(question);
+  }
+  
+  const success = await saveCommandToFirestore(keywords, answer);
+  
+  clearLearnQuestion();
+  clearLearnAnswer();
+  
+  if(success) {
+    return `✅ <strong>Saya sudah belajar!</strong><br><br>📌 Pertanyaan: "${esc(question)}"<br>💬 Jawaban: "${esc(answer)}"<br><br>🧠 <span class="hint">Sekarang jika ada yang tanya seperti itu, saya akan langsung menjawab!</span>`;
+  } else {
+    return `❌ Maaf, saya gagal menyimpan pelajaran. Pastikan koneksi internet Anda stabil.<br><br>📌 <span class="hint">Jawaban "${esc(answer)}" untuk pertanyaan "${esc(question)}" <strong>tidak tersimpan</strong>.</span>`;
+  }
+}
+
+// Fungsi untuk membatalkan pembelajaran
+function cancelLearn() {
+  const question = getLearnQuestion();
+  clearLearnQuestion();
+  clearLearnAnswer();
+  return `❌ Pembelajaran dibatalkan untuk pertanyaan "${esc(question)}".<br><br>📌 <span class="hint">Jangan ragu untuk bertanya lagi! Saya akan belajar lain kali 😊</span>`;
+}
+
+// Fungsi untuk mengedit jawaban (kembali ke mode input)
+function editLearnAnswer() {
+  const question = getLearnQuestion();
+  const currentAnswer = getLearnAnswer();
+  clearLearnAnswer();
+  return `✏️ <strong>Ubah jawaban untuk:</strong> "${esc(question)}"<br><br>Ketik jawaban baru yang lebih tepat, atau ketik <strong>"batal"</strong> untuk membatalkan pembelajaran.<br><br>📌 <span class="hint">Jawaban sebelumnya: "${esc(currentAnswer || '')}"</span>`;
+}
+
+/* ============================================================
    SMALL TALK HANDLERS
    ============================================================ */
 
 const HELP_LIST = `
+  <li><strong>🎮 MLBB Calculator</strong> — Ketik "MLBB" untuk membuka form Penghitung akun mlbb</li>
   <li><strong>🏛️ Daftar Negara</strong> — "Daftar negara UFN" / "Sebutkan negara yang ada di UFN"</li>
   <li><strong>ℹ️ Profil Negara</strong> — "Informasi tentang [negara]" / "Info [negara]" / "Deskripsi [negara]"</li>
   <li><strong>🏙️ Ibu Kota</strong> — "Ibu kota [negara]"</li>
@@ -986,7 +1310,7 @@ const HELP_LIST = `
   <li><strong>❤️ Reaksi Terbanyak</strong> — "Berita dengan reaksi paling banyak"</li>
   <li><strong>📍 Tempat Menarik</strong> — "Tempat menarik" / "Tempat di [negara]"</li>
   <li><strong>📊 Perbandingan</strong> — "Bandingkan [negaraA] dan [negaraB]"</li>
-  <li><strong>📡 cara upload berita</strong> ─ "Cara upload berita gimana?"</li>`;
+  <li><strong>🧠 Belajar</strong> — Jika saya tidak tahu, saya akan bertanya dan <strong>meminta konfirmasi</strong> sebelum menyimpan jawaban!</li>`;
 
 const JOKES = [
   "Kenapa UFN tidak pernah ribut? Karena semua negara sepakat damai... dan kalau tidak, ada sanksi! 😄",
@@ -994,17 +1318,19 @@ const JOKES = [
   "Kenapa berita UFN selalu menarik? Karena setiap hari ada cerita baru! 📰",
   "Apa kata mata uang UFN? 'Nilai saya fluktuatif, tapi hati saya stabil!' 💰",
   "Kenapa negara di UFN suka bekerja sama? Karena lebih baik berkolaborasi daripada berkonflik! 🤝",
-  "Apa bedanya UFN dengan organisasi lain? UFN punya data teEFAercaya, yang lain punya... janji! 😂"
+  "Apa bedanya UFN dengan organisasi lain? UFN punya data terpercaya, yang lain punya... janji! 😂",
+  "Kenapa akun MLBB mahal? Karena skin Legend tidak murah! 💸",
+  "Apa bedanya Legend biasa dan Legend Limited? Harganya beda 1 juta! 😄"
 ];
 
 function handleGreeting(){
   const name = getUserName();
   const sapaan = name ? `Halo, <strong>${esc(name)}</strong>! 👋` : `Halo! 👋`;
-  return `${sapaan} Senang bertemu Anda. Saya UFN AI Assistant, siap membantu seputar data negara dan berita UFN.<br><br>💡 <strong>Ketik "bantuan"</strong> untuk melihat daftar perintah.<br><br>🌤️ <strong>Coba tanyakan:</strong> "Cuaca di Indonesia" atau "Berita terbaru"`;
+  return `${sapaan} Senang bertemu Anda. Saya UFN AI Assistant!<br><br>🧠 <strong>Saya bisa belajar!</strong> Jika saya tidak tahu jawabannya, saya akan bertanya dan <strong>meminta konfirmasi</strong> sebelum menyimpan.<br><br>💡 <strong>Ketik "bantuan"</strong> untuk melihat daftar perintah.<br><br>🎮 <strong>Coba ketik "MLBB"</strong> untuk membuka form Penghitung akun mlbb!`;
 }
 
 function handleHelp(){
-  return `🤖 Saya bisa membantu dengan:<ul>${HELP_LIST}</ul><span class="hint">Anda juga bisa mengobrol santai dengan saya!</span>`;
+  return `🤖 Saya bisa membantu dengan:<ul>${HELP_LIST}</ul><span class="hint">🧠 Saya juga bisa belajar! Jika saya tidak tahu, saya akan bertanya dan meminta konfirmasi sebelum menyimpan.</span>`;
 }
 
 function handleThanks(){
@@ -1060,7 +1386,7 @@ function handleMiss(){
 }
 
 /* ============================================================
-   FUNGSI kirimAI (Worker) - DIPINDAHKAN KE ATAS
+   FUNGSI kirimAI (Worker) - sebagai fallback
    ============================================================ */
 async function kirimAI(prompt) {
   const controller = new AbortController();
@@ -1109,22 +1435,43 @@ async function kirimAI(prompt) {
    ROUTER UTAMA
    ============================================================ */
 async function generateAnswer(rawText){
-  // === Lapisan memori nama — dicek paling awal ===
+  // === Lapisan memori nama ===
   const detectedName = tryExtractName(rawText);
   if(detectedName){
     setUserName(detectedName);
     updateHeaderSub();
-    return `Senang berkenalan, <strong>${esc(detectedName)}</strong>! 👋 Saya akan mengingat nama Anda. Ada yang bisa saya bantu seputar UFN?`;
+    return `Senang berkenalan, <strong>${esc(detectedName)}</strong>! 👋 Saya akan mengingat nama Anda. Ada yang bisa saya bantu seputar UFN atau MLBB?`;
   }
 
-  // === Lapisan Custom Commands (ai_commands) — dicek lebih dulu ===
+  // === Cek apakah ini jawaban untuk mode belajar ===
+  const learnQuestion = getLearnQuestion();
+  if(learnQuestion && rawText.length > 3 && rawText.length < 500) {
+    // Cek apakah user membatalkan atau mengedit
+    const lowerText = rawText.toLowerCase().trim();
+    if(lowerText === 'batal') {
+      clearLearnQuestion();
+      clearLearnAnswer();
+      return `❌ Pembelajaran dibatalkan. Ada yang bisa saya bantu lainnya? 😊`;
+    }
+    if(lowerText === 'simpan' && getLearnAnswer()) {
+      return await confirmLearnAndSave();
+    }
+    // User sedang menjawab pertanyaan belajar
+    return await processLearnAnswer(rawText);
+  }
+
+  // === Custom Commands ===
   const customAnswer = matchCustomCommand(rawText);
   if(customAnswer !== null) return customAnswer;
-  // === Jika tidak ada command yang cocok, lanjut ke sistem AI lama ===
 
   const intent = detectIntent(rawText);
 
-  // === Small talk tetap diproses di sini ===
+  // === MLBB FORM INTENT ===
+  if(intent === "mlbb_form"){
+    return buildMLBBFormHTML();
+  }
+
+  // === Small talk ===
   switch(intent){
     case "smalltalk_greeting": return handleGreeting();
     case "smalltalk_help": return handleHelp();
@@ -1143,7 +1490,12 @@ async function generateAnswer(rawText){
 
   if(!firebaseReady){
     // Jika Firebase tidak siap, coba AI Worker
-    return await kirimAI(rawText);
+    const workerAnswer = await kirimAI(rawText);
+    // Jika worker jawab dengan "Maaf" atau "Mohon maaf", mulai mode belajar
+    if(workerAnswer.includes("Maaf") || workerAnswer.includes("Mohon maaf") || workerAnswer.includes("tidak tahu")) {
+      return startLearning(rawText);
+    }
+    return workerAnswer;
   }
   
   try{
@@ -1170,20 +1522,23 @@ async function generateAnswer(rawText){
       default: answer = await handleGeneralCountry(rawText); break;
     }
 
-    // Jika jawaban adalah NOT_FOUND, FETCH_ERROR, atau "Belum ada data ..." (fallback) panggil Worker
+    // Jika jawaban adalah NOT_FOUND atau FETCH_ERROR atau "Belum ada data"
     if (
       answer === NOT_FOUND ||
       answer === FETCH_ERROR ||
       (typeof answer === "string" && answer.includes("Belum ada data")) ||
-      (typeof answer === "string" && answer.includes("Maaf"))
+      (typeof answer === "string" && answer.includes("Maaf")) ||
+      (typeof answer === "string" && answer.includes("belum tersedia"))
     ) {
-      return await kirimAI(rawText);
+      // Mulai mode belajar
+      return startLearning(rawText);
     }
 
     return answer;
   }catch(err){
     console.error("Kesalahan di generateAnswer:", err);
-    return await kirimAI(rawText);
+    // Mulai mode belajar jika error
+    return startLearning(rawText);
   }
 }
 
@@ -1232,6 +1587,12 @@ function appendMessage(role, html, { animate=true, save=true, ts=Date.now() } = 
     chatMemory.push({ role, html, ts });
     saveChatHistory(chatMemory);
   }
+  
+  // Attach event untuk tombol belajar setelah render
+  if(role === 'ai') {
+    setTimeout(() => attachLearnEvents(), 100);
+  }
+  
   return row;
 }
 
@@ -1254,9 +1615,167 @@ function scrollToBottom(){
   requestAnimationFrame(()=>{ chatEl.scrollTop = chatEl.scrollHeight; });
 }
 
+// === ATTACH EVENT UNTUK TOMBEL BELAJAR ===
+function attachLearnEvents() {
+  // Tombol Konfirmasi Simpan
+  const confirmBtn = document.getElementById('learnConfirmBtn');
+  if(confirmBtn) {
+    confirmBtn.addEventListener('click', async function() {
+      const answer = await confirmLearnAndSave();
+      // Cari bubble terakhir AI dan ganti isinya
+      const lastAiBubble = document.querySelector('.msg-row.ai:last-child .bubble');
+      if(lastAiBubble) {
+        lastAiBubble.innerHTML = answer;
+      }
+    });
+  }
+  
+  // Tombol Batal
+  const cancelBtn = document.getElementById('learnCancelBtn');
+  if(cancelBtn) {
+    cancelBtn.addEventListener('click', function() {
+      const result = cancelLearn();
+      const lastAiBubble = document.querySelector('.msg-row.ai:last-child .bubble');
+      if(lastAiBubble) {
+        lastAiBubble.innerHTML = result;
+      }
+    });
+  }
+  
+  // Tombol Edit
+  const editBtn = document.getElementById('learnEditBtn');
+  if(editBtn) {
+    editBtn.addEventListener('click', function() {
+      const result = editLearnAnswer();
+      const lastAiBubble = document.querySelector('.msg-row.ai:last-child .bubble');
+      if(lastAiBubble) {
+        lastAiBubble.innerHTML = result;
+        // Set fokus ke input
+        inputEl.focus();
+        // Info untuk user
+        statusDot.textContent = "● menunggu jawaban baru...";
+      }
+    });
+  }
+}
+
+// === ATTACH EVENT UNTUK FORM MLBB ===
+function attachMLBBFormEvents() {
+  const btnHitung = document.getElementById('mlbbHitung');
+  if(!btnHitung) return;
+
+  btnHitung.addEventListener('click', function() {
+    const nama = document.getElementById('mlbbNama')?.value || '-';
+    const rankSelect = document.getElementById('mlbbRank');
+    const rankValue = rankSelect ? parseInt(rankSelect.value) || 0 : 0;
+    const level = parseInt(document.getElementById('mlbbLevel')?.value) || 0;
+    const winrate = parseInt(document.getElementById('mlbbWinrate')?.value) || 0;
+    const legend = parseInt(document.getElementById('mlbbLegend')?.value) || 0;
+    const legendLimited = parseInt(document.getElementById('mlbbLegendLimited')?.value) || 0;
+    const grand = parseInt(document.getElementById('mlbbGrand')?.value) || 0;
+    const exquisite = parseInt(document.getElementById('mlbbExquisite')?.value) || 0;
+    const efek = parseInt(document.getElementById('mlbbEfek')?.value) || 0;
+
+    const result = hitungMLBBFromForm({
+      rankValue, level, winrate, legend, legendLimited, grand, exquisite, efek
+    });
+
+    const resultHTML = formatMLBBResult(result, nama);
+    
+    const bubble = btnHitung.closest('.bubble');
+    if(bubble) {
+      const formContainer = bubble.querySelector('.mlbb-form');
+      if(formContainer) {
+        formContainer.innerHTML = resultHTML;
+      } else {
+        bubble.innerHTML = resultHTML;
+      }
+    }
+  });
+}
+
+// Override appendMessage untuk mendeteksi form MLBB
+const originalAppend = appendMessage;
+appendMessage = function(role, html, options = {}) {
+  const result = originalAppend.call(this, role, html, options);
+  
+  if(role === 'ai' && html.includes('mlbb-form')) {
+    setTimeout(attachMLBBFormEvents, 100);
+  }
+  
+  if(role === 'ai' && html.includes('learnConfirmBtn')) {
+    setTimeout(attachLearnEvents, 100);
+  }
+  
+  return result;
+};
+
 async function handleSend(){
   const text = inputEl.value.trim();
   if(!text) return;
+  
+  // Cek apakah ada mode belajar yang aktif
+  const learnQuestion = getLearnQuestion();
+  if(learnQuestion) {
+    const lowerText = text.toLowerCase().trim();
+    
+    // Handle perintah khusus dalam mode belajar
+    if(lowerText === 'simpan' && getLearnAnswer()) {
+      appendMessage("user", esc(text));
+      inputEl.value = "";
+      inputEl.style.height = "auto";
+      sendBtn.disabled = true;
+      statusDot.textContent = "● menyimpan...";
+      showTyping();
+      
+      const answer = await confirmLearnAndSave();
+      hideTyping();
+      appendMessage("ai", answer);
+      sendBtn.disabled = false;
+      statusDot.textContent = "● siap";
+      inputEl.focus();
+      return;
+    }
+    
+    if(lowerText === 'batal') {
+      appendMessage("user", esc(text));
+      inputEl.value = "";
+      inputEl.style.height = "auto";
+      sendBtn.disabled = true;
+      statusDot.textContent = "● membatalkan...";
+      showTyping();
+      
+      clearLearnQuestion();
+      clearLearnAnswer();
+      const answer = `❌ Pembelajaran dibatalkan. Ada yang bisa saya bantu lainnya? 😊`;
+      hideTyping();
+      appendMessage("ai", answer);
+      sendBtn.disabled = false;
+      statusDot.textContent = "● siap";
+      inputEl.focus();
+      return;
+    }
+    
+    // Jika user mengetik jawaban baru (bukan perintah khusus)
+    if(text.length > 3 && text.length < 500) {
+      appendMessage("user", esc(text));
+      inputEl.value = "";
+      inputEl.style.height = "auto";
+      sendBtn.disabled = true;
+      statusDot.textContent = "● memproses...";
+      showTyping();
+      
+      const answer = await processLearnAnswer(text);
+      hideTyping();
+      appendMessage("ai", answer);
+      sendBtn.disabled = false;
+      statusDot.textContent = "● siap";
+      inputEl.focus();
+      return;
+    }
+  }
+  
+  // Normal flow
   appendMessage("user", esc(text));
   inputEl.value = "";
   inputEl.style.height = "auto";
@@ -1300,10 +1819,9 @@ const SUGGESTIONS = [
   "Ceritakan lelucon!",
   "Cuaca di Indonesia",
   "Bandingkan Indonesia dan Malaysia",
+  "MLBB",
   "Informasi tentang Amerika Serikat",
-  "Apa ibu kota Jepang?",
-  "Populasi Brasil",
-  "Berita dari penulis John Doe"
+  "Apa ibu kota Jepang?"
 ];
 
 suggestBtn.addEventListener("click", () => {
@@ -1330,6 +1848,8 @@ clearBtn.addEventListener("click", ()=>{
   chatEl.innerHTML = "";
   chatMemory = [];
   clearChatHistory();
+  clearLearnQuestion();
+  clearLearnAnswer();
   showWelcome();
 });
 
@@ -1343,10 +1863,10 @@ themeToggle.addEventListener("click", ()=>{
 function showWelcome(){
   const name = getUserName();
   const sapaan = name ? `Selamat datang kembali, <strong>${esc(name)}</strong>! 👋` : `Selamat datang di <strong>UFN AI Assistant</strong> 👋`;
-  appendMessage("ai", `${sapaan}<br><br>Saya menjawab berdasarkan data resmi UFN dan bisa diajak ngobrol santai.<br><br>📌 <strong>Ketik "bantuan"</strong> untuk melihat semua yang bisa saya lakukan!<br><br>💡 <strong>Tips:</strong> Klik tombol <strong>❓</strong> untuk saran pertanyaan acak, atau gunakan tombol cepat di bawah.<br><br>🌤️ <strong>Coba tanyakan:</strong> "Cuaca di Indonesia" atau "Berita terbaru"${name ? '' : '<br><br><span class="hint">Kenalkan diri dengan ketik "Nama saya ..." agar saya ingat Anda 😊</span>'}`, { animate:false });
+  appendMessage("ai", `${sapaan}<br><br>Saya bisa menjawab pertanyaan seputar UFN dan <strong>belajar hal baru</strong> dari Anda!<br><br>🧠 <strong>Coba tanyakan sesuatu yang saya belum tahu</strong>, nanti saya akan belajar dan <strong>meminta konfirmasi</strong> sebelum menyimpan.<br><br>📌 <strong>Ketik "bantuan"</strong> untuk melihat semua yang bisa saya lakukan!<br><br>🎮 <strong>Coba ketik "MLBB"</strong> untuk membuka form Penghitung akun mlbb!<br><br>💡 <strong>Tips:</strong> Klik tombol <strong>❓</strong> untuk saran pertanyaan acak.${name ? '' : '<br><br><span class="hint">Kenalkan diri dengan ketik "Nama saya ..." agar saya ingat Anda 😊</span>'}`, { animate:false });
 }
 
-/* Inisialisasi: pulihkan riwayat chat dari localStorage jika ada, atau tampilkan sambutan */
+/* Inisialisasi */
 updateHeaderSub();
 const savedHistory = loadChatHistory();
 if(savedHistory.length){
@@ -1356,13 +1876,12 @@ if(savedHistory.length){
   showWelcome();
 }
 
-// Aktifkan listener Custom Commands (lapisan tambahan, tidak mengganggu sistem AI lama)
 if(firebaseReady){
   initCustomCommandsListener();
 }
 
 if(!firebaseReady){
-  appendMessage("ai", `⚠️ Konfigurasi Database belum terhubung. Periksa koneksi internet Anda.<br><br>${handleHelp()}`, { animate:false });
+  appendMessage("ai", `⚠️ Konfigurasi Database belum terhubung. Fitur belajar tidak akan tersimpan permanen.<br><br>${handleHelp()}`, { animate:false });
 }
 </script>
 </body>
