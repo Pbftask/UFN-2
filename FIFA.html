@@ -143,8 +143,9 @@ input,select,textarea{font-size:16px !important;} /* prevent zoom on iOS */
 .btn-blue{background:linear-gradient(135deg,var(--blue),var(--blue-deep)); color:#fff; box-shadow:0 6px 16px rgba(47,111,237,.28);}
 .btn-ghost{background:rgba(14,27,22,0.06); color:var(--ink);}
 .btn-danger{background:#fde3e3; color:var(--red);}
+.btn-danger-solid{background:var(--red); color:#fff; box-shadow:0 6px 16px rgba(214,69,69,.3);}
 .btn-block{width:100%;}
-.btn-sm{padding:6px 10px; font-size:.65rem; border-radius:8px;}
+.btn-sm{padding:6px 10px; font-size:.65rem; border-radius:8px; width:auto;}
 input,select,textarea{
   width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:rgba(255,255,255,0.7);
   font-family:inherit; font-size:.85rem; color:var(--ink);
@@ -213,6 +214,8 @@ label{font-size:.65rem; font-weight:700; color:#3f4d47; margin-bottom:4px; displ
 .tourn-info h3{font-size:.8rem; margin-bottom:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .tourn-info .meta{font-size:.6rem; color:#7d8b84;}
 .status-dot{width:6px; height:6px; border-radius:50%; display:inline-block; margin-right:3px;}
+.tourn-actions{display:flex; gap:4px; flex-shrink:0;}
+.tourn-actions .btn-sm{padding:4px 8px; font-size:.6rem; width:auto;}
 
 /* ---------- Match list item (full page) ---------- */
 .match-full{padding:10px 12px; margin-bottom:8px;}
@@ -278,9 +281,9 @@ label{font-size:.65rem; font-weight:700; color:#3f4d47; margin-bottom:4px; displ
 }
 .tumbal{
   background: transparent;
-  position: relative;
-  padding:15px;
   color:transparent;
+  position: relative;
+  padding:20px;
 }
 </style>
 </head>
@@ -442,7 +445,7 @@ label{font-size:.65rem; font-weight:700; color:#3f4d47; margin-bottom:4px; displ
 
 </div>
 
-<div class="fab" id="fabAdd" style="display:none;"><i class="fa-solid fa-circle-check"></i></div>
+<div class="fab" id="fabAdd" style="display:none;"><i class="fa-solid fa-plus"></i></div>
 
 <div class="bottomnav">
   <div class="nav-item active" data-nav="home"><i class="fa-solid fa-house"></i>Home</div>
@@ -748,12 +751,18 @@ const App = {
   },
   tournamentRow(t){
     const dotColor = t.status==='ongoing' ? '#1e9e5a' : t.status==='upcoming' ? '#2f6fed' : '#9aa6a0';
+    const adminActions = this.isAdmin ? `
+      <div class="tourn-actions">
+        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); App.deleteTournament('${t.id}')"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    ` : '';
     return `<div class="tourn-card" style="cursor:pointer;" onclick="App.goTo('tourndetail','${t.id}')">
       <div class="tourn-logo">${t.logoUrl?`<img src="${t.logoUrl}">`:'<i class="fa-solid fa-trophy"></i>'}</div>
       <div class="tourn-info">
         <h3>${t.name}</h3>
         <div class="meta"><span class="status-dot" style="background:${dotColor}"></span>${t.host||'-'} · ${t.year||''} · ${(t.participants||[]).length} tim</div>
       </div>
+      ${adminActions}
       <i class="fa-solid fa-chevron-right" style="color:#b7c2bc;"></i>
     </div>`;
   },
@@ -961,6 +970,70 @@ const App = {
     }catch(e){ this.toast('Gagal membuat turnamen.','err'); }
   },
 
+  /* ================= HAPUS TURNAMEN ================= */
+  async deleteTournament(tournamentId){
+    if(!this.isAdmin){ this.toast('Khusus admin.','err'); return; }
+    
+    const t = this.tournaments.find(x=>x.id===tournamentId);
+    if(!t){ this.toast('Turnamen tidak ditemukan.','err'); return; }
+
+    // Konfirmasi dengan modal
+    this.openModal(`
+      <div class="modal-head"><h2><i class="fa-solid fa-triangle-exclamation" style="color:var(--red);"></i> Hapus Turnamen</h2><div class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></div></div>
+      <div style="padding:8px 0 16px;">
+        <p style="font-size:.85rem; font-weight:600; color:var(--red);">⚠️ Peringatan!</p>
+        <p style="font-size:.78rem; color:#5c6b64; margin-top:4px;">Anda akan menghapus turnamen <strong>"${t.name}"</strong> beserta <strong>SEMUA PERTANDINGAN</strong> yang terkait dengan turnamen ini.</p>
+        <p style="font-size:.78rem; color:#5c6b64; margin-top:8px;">Tindakan ini <strong style="color:var(--red);">tidak dapat dibatalkan</strong>.</p>
+        <div style="margin-top:16px; display:flex; gap:8px;">
+          <button class="btn btn-ghost" onclick="App.closeModal()"><i class="fa-solid fa-ban"></i> Batal</button>
+          <button class="btn btn-danger-solid" onclick="App.confirmDeleteTournament('${tournamentId}')"><i class="fa-solid fa-trash-can"></i> Ya, Hapus</button>
+        </div>
+      </div>
+    `);
+  },
+
+  async confirmDeleteTournament(tournamentId){
+    try{
+      // Hapus semua pertandingan yang terkait dengan turnamen ini
+      const matchesToDelete = this.matches.filter(m => m.tournamentId === tournamentId);
+      if(matchesToDelete.length > 0){
+        const batch = db.batch();
+        matchesToDelete.forEach(m => {
+          const ref = db.collection('ufn_matches').doc(m.id);
+          batch.delete(ref);
+        });
+        await batch.commit();
+        console.log(`🗑️ ${matchesToDelete.length} pertandingan dihapus.`);
+      }
+
+      // Hapus document turnamen
+      await db.collection('ufn_tournaments').doc(tournamentId).delete();
+      
+      // Hapus drawing terkait jika ada
+      const drawingsToDelete = this.drawings.filter(d => d.tournamentId === tournamentId);
+      if(drawingsToDelete.length > 0){
+        const batch = db.batch();
+        drawingsToDelete.forEach(d => {
+          const ref = db.collection('ufn_drawings').doc(d.id);
+          batch.delete(ref);
+        });
+        await batch.commit();
+      }
+
+      this.toast(`Turnamen berhasil dihapus beserta ${matchesToDelete.length} pertandingan.`, 'ok');
+      this.closeModal();
+      
+      // Jika sedang di halaman detail turnamen yang dihapus, kembali ke daftar turnamen
+      if(this.currentTournamentId === tournamentId){
+        this.currentTournamentId = null;
+        this.goTo('tournaments');
+      }
+    }catch(e){
+      console.error('Error deleting tournament:', e);
+      this.toast('Gagal menghapus turnamen.','err');
+    }
+  },
+
   openTournamentDetail(tId){
     this.currentTournamentId = tId;
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -980,15 +1053,27 @@ const App = {
   renderTournamentDetailHeader(){
     const t = this.tournaments.find(x=>x.id===this.currentTournamentId);
     if(!t){ document.getElementById('tdHeader').innerHTML = `<div class="empty"><p>Turnamen tidak ditemukan.</p></div>`; return; }
+    
+    const adminDeleteBtn = this.isAdmin ? `
+      <button class="btn btn-sm btn-danger" onclick="App.deleteTournament('${t.id}')" style="margin-top:8px; width:auto; padding:4px 12px;">
+        <i class="fa-solid fa-trash-can"></i> Hapus Turnamen
+      </button>
+    ` : '';
+
     document.getElementById('tdHeader').innerHTML = `
       <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px; cursor:pointer;" onclick="App.goTo('tournaments')">
         <i class="fa-solid fa-arrow-left"></i><span style="font-size:.75rem; font-weight:600;">Kembali</span>
       </div>
       <div class="tourn-card card" style="margin-bottom:12px;">
         <div class="tourn-logo">${t.logoUrl?`<img src="${t.logoUrl}">`:'<i class="fa-solid fa-trophy"></i>'}</div>
-        <div class="tourn-info"><h3>${t.name}</h3><div class="meta">${t.host||'-'} · ${t.year||''} · ${(t.participants||[]).length} tim · ${STATUS_LABEL[t.status]||t.status}</div></div>
+        <div class="tourn-info">
+          <h3>${t.name}</h3>
+          <div class="meta">${t.host||'-'} · ${t.year||''} · ${(t.participants||[]).length} tim · ${STATUS_LABEL[t.status]||t.status}</div>
+          ${adminDeleteBtn}
+        </div>
       </div>`;
   },
+
   renderTournamentDetailBody(){
     const t = this.tournaments.find(x=>x.id===this.currentTournamentId);
     if(!t) return;
