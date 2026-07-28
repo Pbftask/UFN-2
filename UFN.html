@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>UFN · Dashboard</title>
-  <!-- Font Awesome 6 (gratis) -->
+  <title>UFN · Game Dashboard</title>
+  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <style>
     /* ----- reset & dasar ----- */
     * {
@@ -16,275 +17,315 @@
     }
 
     body {
-      background: #0b1120;
-      background-image: radial-gradient(circle at 10% 20%, rgba(30, 58, 138, 0.15) 0%, transparent 50%);
+      background: #0a0e1a;
+      background-image: radial-gradient(circle at 20% 30%, #1e2a4a 0%, #080c18 80%);
       min-height: 100vh;
-      color: #f1f5f9;
-      padding: 0 12px 90px 12px;
+      color: #f0f4ff;
+      padding: 0 14px 90px 14px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      position: relative;
+      padding-top: 82px; /* ruang untuk header fixed */
     }
 
-    /* ----- header modern ----- */
+    /* efek grid neon (background game) */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 30px 30px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .header, .menu-grid, .footer, .bottom-nav, .section-title {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ----- HEADER FIXED (gaya game neon) ----- */
     .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 8px 8px 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      position: relative;
+      padding: 14px 18px 12px 18px;
+      border-bottom: 2px solid rgba(0, 255, 255, 0.15);
       flex-wrap: wrap;
-      gap: 10px 0;
-    }
-
-    .header-left {
-      display: flex;
-      flex-direction: column;
+      gap: 6px 0;
+      background: rgba(8, 12, 24, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 200, 255, 0.03);
+      transition: 0.2s;
     }
 
     .header-left h1 {
-      font-size: 26px;
-      font-weight: 700;
+      font-size: 28px;
+      font-weight: 800;
       letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%);
+      background: linear-gradient(135deg, #00e5ff, #7c4dff, #00e5ff);
+      background-size: 200% 200%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      line-height: 1.2;
+      animation: gradShift 3s ease infinite;
+      text-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+      line-height: 1.1;
+    }
+    @keyframes gradShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     .header-left .subhead {
-      font-size: 13px;
-      color: #94a3b8;
-      letter-spacing: 0.3px;
-      margin-top: 2px;
+      font-size: 12px;
+      color: #8899cc;
+      letter-spacing: 0.6px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: -2px;
     }
-
     .header-left .subhead i {
-      font-size: 10px;
-      color: #38bdf8;
+      color: #00e5ff;
+      font-size: 11px;
+      filter: drop-shadow(0 0 6px #00e5ffaa);
     }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
 
-    /* ----- online counter (chip) ----- */
+    /* ----- online chip gaya game ----- */
     .online-chip {
       display: flex;
       align-items: center;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(2px);
-      padding: 6px 14px 6px 10px;
+      gap: 8px;
+      background: rgba(0, 255, 255, 0.06);
+      backdrop-filter: blur(8px);
+      padding: 5px 14px 5px 10px;
       border-radius: 40px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      font-size: 13px;
-      font-weight: 500;
-      color: #e2e8f0;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border: 1px solid rgba(0, 255, 255, 0.12);
+      font-size: 12px;
+      font-weight: 600;
+      color: #c8d8ff;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.03);
     }
-
     .online-dot {
       width: 10px;
       height: 10px;
-      background: #4ade80;
+      background: #00ff88;
       border-radius: 50%;
-      display: inline-block;
-      box-shadow: 0 0 8px #4ade80aa;
-      animation: pulse-dot 2s infinite;
+      box-shadow: 0 0 16px #00ff88aa;
+      animation: pulse-dot 1.6s infinite;
     }
-
     @keyframes pulse-dot {
-      0% { opacity: 0.7; transform: scale(0.95); }
-      50% { opacity: 1; transform: scale(1.1); }
-      100% { opacity: 0.7; transform: scale(0.95); }
+      0% { opacity: 0.5; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.5; transform: scale(0.9); }
     }
-
     .online-chip .count {
-      font-weight: 600;
+      font-weight: 700;
       min-width: 20px;
       text-align: center;
-      color: #f8fafc;
+      color: #ffffff;
+      font-feature-settings: "tnum";
+      text-shadow: 0 0 12px #00e5ff66;
+    }
+    .online-chip span:last-child {
+      color: #7c8db0;
     }
 
-    /* ----- inbox (tombol amplop) ----- */
+    /* ----- inbox (tombol game) ----- */
     .inbox-wrapper {
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
-
     .inbox-btn {
-      background: #1e293b;
+      background: rgba(0, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
       width: 44px;
       height: 44px;
       border-radius: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.2s ease;
-      color: #e2e8f0;
+      border: 1px solid rgba(0, 255, 255, 0.12);
+      transition: 0.25s;
+      color: #b0c8ff;
       font-size: 20px;
-      text-decoration: none;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      box-shadow: 0 0 20px rgba(0, 200, 255, 0.03);
     }
-
-    .inbox-btn:active {
-      transform: scale(0.92);
-      background: #2d3a52;
-    }
-
+    .inbox-btn:active { transform: scale(0.90); }
     .inbox-btn.has-new {
-      background: #7f1d1d;
-      border-color: #ef4444;
-      color: #fecaca;
-      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.5);
-      animation: pulse-inbox 1.4s infinite;
+      background: rgba(255, 50, 80, 0.2);
+      border-color: #ff3b6f;
+      color: #ff8aa8;
+      box-shadow: 0 0 30px rgba(255, 50, 80, 0.2);
+      animation: pulse-inbox 1.6s infinite;
     }
-
     @keyframes pulse-inbox {
-      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
-      70% { box-shadow: 0 0 0 9px rgba(239, 68, 68, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(255, 50, 80, 0.2); }
+      70% { box-shadow: 0 0 0 14px rgba(255, 50, 80, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 50, 80, 0); }
     }
-
-    .inbox-btn i {
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-    }
-
     .badge {
       position: absolute;
       top: -6px;
       right: -6px;
-      background: #ef4444;
-      color: white;
+      background: #ff3b6f;
+      color: #fff;
       font-size: 11px;
-      font-weight: 700;
-      min-width: 20px;
-      height: 20px;
+      font-weight: 800;
+      min-width: 22px;
+      height: 22px;
       border-radius: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 5px;
-      border: 2px solid #0b1120;
-      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.5);
-      letter-spacing: 0.3px;
+      border: 2px solid #0a0e1a;
+      box-shadow: 0 0 20px #ff3b6faa;
     }
+    .badge.hidden { display: none; }
 
-    .badge.hidden {
-      display: none;
-    }
-
-    /* ----- grid menu (lemari) ----- */
+    /* ----- menu grid gaya game (neon card) ----- */
     .menu-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
-      margin-top: 28px;
+      margin-top: 20px;
     }
 
     .menu-card {
-      background: #1a253b;
-      background: linear-gradient(145deg, #1a253b, #131d31);
-      border-radius: 20px;
-      padding: 18px 8px 12px;
+      background: rgba(12, 18, 34, 0.7);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      padding: 16px 6px 12px;
       text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
-      transition: all 0.15s ease;
-      backdrop-filter: blur(2px);
+      border: 1px solid rgba(0, 255, 255, 0.08);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+      transition: all 0.2s ease;
+      background: linear-gradient(145deg, rgba(20, 30, 60, 0.5), rgba(8, 12, 30, 0.7));
+      position: relative;
+      overflow: hidden;
+    }
+    /* efek glow border animasi */
+    .menu-card::after {
+      content: '';
+      position: absolute;
+      top: -2px; left: -2px; right: -2px; bottom: -2px;
+      border-radius: 30px;
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.1), rgba(124, 77, 255, 0.1), rgba(0, 229, 255, 0.1));
+      background-size: 300% 300%;
+      z-index: -1;
+      animation: borderGlow 4s ease infinite;
+      opacity: 0.4;
+    }
+    @keyframes borderGlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
     .menu-card:active {
-      transform: scale(0.94);
-      background: #1f2d49;
+      transform: scale(0.93);
+      background: rgba(20, 30, 70, 0.8);
+      border-color: rgba(0, 255, 255, 0.2);
     }
 
     .menu-card a {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       text-decoration: none;
-      color: #f1f5f9;
+      color: #e8eeff;
       width: 100%;
       height: 100%;
     }
 
     .menu-card .icon {
       font-size: 30px;
-      width: 56px;
-      height: 56px;
+      width: 60px;
+      height: 60px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 18px;
-      transition: 0.2s;
-      color: #b9c8f0;
+      background: rgba(0, 255, 255, 0.02);
+      border-radius: 24px;
+      transition: 0.3s;
+      color: #7c9cff;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      box-shadow: 0 0 20px rgba(0, 200, 255, 0.02);
     }
-
     .menu-card:hover .icon {
-      color: #a5b4fc;
-      transform: translateY(-2px);
+      color: #00e5ff;
+      transform: translateY(-4px) scale(1.02);
+      background: rgba(0, 255, 255, 0.04);
+      border-color: rgba(0, 255, 255, 0.1);
+      box-shadow: 0 0 30px rgba(0, 229, 255, 0.1);
     }
-
     .menu-card .label {
       font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.3px;
-      color: #cbd5e1;
-      margin-top: 2px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      color: #b8ccff;
       text-transform: capitalize;
+      margin-top: 4px;
     }
 
     /* ----- footer ----- */
     .footer {
-      margin-top: 36px;
+      margin-top: 38px;
       text-align: center;
       font-size: 13px;
-      color: #475569;
-      border-top: 1px solid rgba(255,255,255,0.04);
-      padding-top: 24px;
-      letter-spacing: 0.5px;
+      color: #3d4a6b;
+      border-top: 1px solid rgba(0, 255, 255, 0.04);
+      padding-top: 22px;
+      font-weight: 600;
+      letter-spacing: 1px;
     }
-
     .footer span {
-      background: rgba(255,255,255,0.02);
-      padding: 4px 14px;
+      background: rgba(0, 255, 255, 0.02);
+      padding: 4px 20px;
       border-radius: 40px;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(0, 255, 255, 0.02);
     }
 
-    /* ----- bottom navigation ----- */
-    .page {
-      display: none;
-    }
-    .page.active {
-      display: block;
+    /* ----- bottom navigation (gaya game) ----- */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn {
+      0% { opacity: 0.4; transform: translateY(12px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     .bottom-nav {
       position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      left: 0; right: 0; bottom: 0;
       z-index: 50;
       display: flex;
       justify-content: space-around;
       align-items: center;
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(8, 12, 26, 0.85);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-top: 1px solid rgba(0, 255, 255, 0.08);
       padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
-      box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6);
     }
 
     .nav-btn {
@@ -292,67 +333,75 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 2px;
       flex: 1;
       background: none;
       border: none;
-      color: #64748b;
+      color: #4d5f8a;
       font-family: inherit;
       padding: 6px 4px;
-      border-radius: 14px;
-      transition: all 0.2s ease;
+      border-radius: 16px;
+      transition: 0.25s;
       cursor: pointer;
+      font-weight: 600;
     }
-
     .nav-btn i {
-      font-size: 20px;
+      font-size: 22px;
+      transition: 0.2s;
     }
-
     .nav-btn span {
       font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.2px;
+      letter-spacing: 0.3px;
+      opacity: 0.7;
     }
-
     .nav-btn.active {
-      color: #a5b4fc;
+      color: #00e5ff;
+      text-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
     }
-
     .nav-btn.active i {
-      filter: drop-shadow(0 0 6px rgba(165, 180, 252, 0.6));
+      filter: drop-shadow(0 0 16px rgba(0, 229, 255, 0.3));
     }
-
     .nav-btn:active {
-      transform: scale(0.92);
-      background: rgba(255, 255, 255, 0.05);
+      transform: scale(0.90);
+      background: rgba(0, 255, 255, 0.02);
     }
 
     .section-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #94a3b8;
-      letter-spacing: 0.5px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #6b7fb0;
+      letter-spacing: 0.8px;
       text-transform: uppercase;
-      margin: 24px 4px 4px;
+      margin: 26px 4px 6px;
+      border-left: 3px solid #00e5ff;
+      padding-left: 12px;
+      text-shadow: 0 0 20px rgba(0, 229, 255, 0.05);
     }
 
-    /* ----- responsive kecil ----- */
+    /* responsive kecil */
     @media (max-width: 420px) {
-      .header-left h1 { font-size: 22px; }
+      body { padding-top: 74px; }
+      .header { padding: 10px 12px 10px 12px; }
+      .header-left h1 { font-size: 24px; }
+      .header-left .subhead { font-size: 10px; }
       .menu-grid { gap: 12px; }
-      .menu-card { padding: 14px 4px 10px; }
-      .menu-card .icon { font-size: 26px; width: 48px; height: 48px; }
+      .menu-card { padding: 14px 4px 10px; border-radius: 22px; }
+      .menu-card .icon { font-size: 26px; width: 52px; height: 52px; }
+      .menu-card .label { font-size: 11px; }
+      .online-chip { padding: 4px 10px; font-size: 11px; gap: 5px; }
+      .online-chip .count { min-width: 18px; }
+      .inbox-btn { width: 40px; height: 40px; font-size: 18px; }
+      .header-right { gap: 8px; }
     }
-
     @media (min-width: 600px) {
       .menu-grid { gap: 20px; }
-      .menu-card { padding: 24px 12px 16px; }
+      .menu-card { padding: 22px 10px 16px; }
     }
 
-    /* animasi masuk halus */
+    /* animasi masuk khas game */
     .menu-card {
       opacity: 0;
-      animation: fadeUp 0.4s ease forwards;
+      animation: cardPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
     .menu-card:nth-child(1) { animation-delay: 0.02s; }
     .menu-card:nth-child(2) { animation-delay: 0.06s; }
@@ -362,60 +411,60 @@
     .menu-card:nth-child(6) { animation-delay: 0.22s; }
     .menu-card:nth-child(7) { animation-delay: 0.26s; }
     .menu-card:nth-child(8) { animation-delay: 0.30s; }
-    .menu-card:nth-child(9) { animation-delay: 0.35s; }
-    .menu-card:nth-child(10) { animation-delay: 0.40s; }
-    .menu-card:nth-child(11) { animation-delay: 0.45s; }
+    .menu-card:nth-child(9) { animation-delay: 0.34s; }
+    .menu-card:nth-child(10) { animation-delay: 0.38s; }
+    .menu-card:nth-child(11) { animation-delay: 0.42s; }
 
-    @keyframes fadeUp {
-      0% { opacity: 0; transform: translateY(12px); }
-      100% { opacity: 1; transform: translateY(0); }
+    @keyframes cardPop {
+      0% { opacity: 0; transform: scale(0.85) translateY(20px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
     }
 
-a {
-    -webkit-tap-highlight-color: transparent;
-    tap-highlight-color: transparent;
-    text-decoration: none;
-    color: inherit;
-    outline: none;
-}
+    a, button { -webkit-tap-highlight-color: transparent; }
+    * { -webkit-tap-highlight-color: transparent; }
 
-      * {
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-      }
-    
-    .tag{
-      background: red;
-      position: absolute;
-      font-size: 10px;
-      padding:5px;
-      border-radius: 20px;
+    /* tambahan neon glitch */
+    .glow-pulse {
+      animation: glowPulse 3s infinite;
+    }
+    @keyframes glowPulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+
+    .border-fx{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+
+    mix-blend-mode:screen; /* atau lighten */
+    opacity:1;
+    pointer-events:none;
     }
   </style>
 </head>
 <body>
 
-  <!-- ===== HEADER ===== -->
+  <!-- ===== HEADER FIXED ===== -->
   <header class="header">
     <div class="header-left">
       <h1>UFN</h1>
       <div class="subhead">
-        <i class="fas fa-compass"></i> 
-        <span>Menu Utama</span>
+        <i class="fas fa-globe"></i> 
+        <span>By RIFQY</span>
       </div>
     </div>
-
     <div class="header-right">
-      <!-- online counter -->
       <div class="online-chip">
         <span class="online-dot"></span>
         <span class="count" id="onlineCount">0</span>
-        <span style="color:#94a3b8;font-weight:400;">Online</span>
+        <span>Online</span>
       </div>
-
-      <!-- inbox -->
       <div class="inbox-wrapper">
-        <a href="chat.html" class="inbox-btn" id="inboxBtn" aria-label="Inbox">
+        <a href="chat.html" class="inbox-btn" id="inboxBtn">
           <i class="fas fa-envelope"></i>
         </a>
         <span class="badge hidden" id="inboxBadge">0</span>
@@ -426,72 +475,18 @@ a {
   <!-- ===== HALAMAN: BERANDA ===== -->
   <div class="page active" id="page-beranda">
     <div class="menu-grid">
-      <!-- 1 -->
-      <div class="menu-card">
-        <a href="UNF-donwload.html">
-          <span class="icon"><i class="fas fa-clock"></i></span>
-          <span class="label">Waktu</span>
-        </a>
+      <div class="menu-card"><a href="UNF-donwload.html"><span class="icon"><i class="fas fa-clock"></i></span><span class="label">Waktu</span></a>
       </div>
-      <!-- 2 -->
-      <div class="menu-card">
-        <a href="cuaca.html">
-          <span class="icon"><i class="fas fa-sun"></i></span>
-          <span class="label">Cuaca</span>
-        </a>
-      </div>
-      <!-- 3 -->
-      <div class="menu-card">
-        <a href="berita.html">
-          <span class="icon"><i class="fas fa-newspaper"></i></span>
-          <span class="label">Berita</span>
-        </a>
-      </div>
-      <!-- 4 -->
-      <div class="menu-card">
-        <a href="maps.html">
-          <span class="icon"><i class="fas fa-map-marker-alt"></i></span>
-          <span class="label">Maps</span>
-        </a>
-      </div>
-      <!-- 5 -->
-      <div class="menu-card">
-        <a href="List.html">
-          <span class="icon"><i class="fas fa-list-ul"></i></span>
-          <span class="label">Daftar Negara</span>
-        </a>
-      </div>
-      <!-- 6 -->
-      <div class="menu-card">
-        <a href="matauang.html">
-          <span class="icon"><i class="fas fa-money-bill-wave"></i></span>
-          <span class="label">Mata uang</span>
-        </a>
-      </div>
-      <!-- 7 -->
-      <div class="menu-card">
-        <a href="tambang.html">
-          <span class="icon"><i class="fas fa-hard-hat"></i></span>
-          <span class="label">Tambang</span>
-        </a>
-      </div>
-      <div class="menu-card">
-      <a href="militer.html">
-        <span class="icon"><i class="fas fa-shield-alt"></i></span>
-        <span class="label">Militer</span>
-      </a>
+      <div class="menu-card"><a href="cuaca.html"><span class="icon"><i class="fas fa-sun"></i></span><span class="label">Cuaca</span></a></div>
+      <div class="menu-card"><a href="berita.html"><span class="icon"><i class="fas fa-newspaper"></i></span><span class="label">Berita</span></a></div>
+      <div class="menu-card"><a href="maps.html"><span class="icon"><i class="fas fa-map-marker-alt"></i></span><span class="label">Maps</span></a></div>
+      <div class="menu-card"><a href="List.html"><span class="icon"><i class="fas fa-list-ul"></i></span><span class="label">Daftar Negara</span></a></div>
+      <div class="menu-card"><a href="matauang.html"><span class="icon"><i class="fas fa-money-bill-wave"></i></span><span class="label">Mata uang</span></a></div>
+      <div class="menu-card"><a href="tambang.html"><span class="icon"><i class="fas fa-hard-hat"></i></span><span class="label">Tambang</span></a></div>
+      <div class="menu-card"><a href="militer.html"><span class="icon"><i class="fas fa-shield-alt"></i></span><span class="label">Militer</span></a></div>
+      <div class="menu-card"><a href="UFNAI.html"><span class="icon"><i class="fas fa-solid fa-robot"></i></span><span class="label">asisten AI</span></a></div>
+      <div class="menu-card"><a href="FIFA.html"><span class="icon"><i class="fas fa-solid fa-futbol"></i></span><span class="label">world cup</span></a></div>
     </div>
-    
-      
-      <div class="menu-card">
-      <a href="FIFA.html">
-        <span class="icon"><i class="fas fa-solid fa-futbol"></i></span>
-        <span class="label">world cup</span>
-      </a>
-    </div>
-    </div>
-
-    <!-- ===== FOOTER ===== -->
     <div class="footer">
       <span>UFN © 2026</span>
     </div>
@@ -499,109 +494,78 @@ a {
 
   <!-- ===== HALAMAN: GAME ===== -->
   <div class="page" id="page-game">
-    <div class="section-title">Game di luar fitur UFN</div>
+    <div class="section-title"><i class="fas fa-joystick" style="margin-right:8px;color:#00e5ff;"></i> Game Zone</div>
     <div class="menu-grid">
-      <!-- 1 -->
-      <div class="menu-card">
-        <a href="Whosthespy.html">
-          <span class="icon"><i class="fas fa-user-secret"></i></span>
-          <span class="label">Who's Spy</span>
-        </a>
+      <div class="menu-card"><a href="Whosthespy.html"><span class="icon"><i class="fas fa-user-secret"></i></span><span class="label">Who's Spy</span></a>
+            <div class="border">
+
+    <video class="border-fx" autoplay muted loop playsinline>
+        <source src="Border-1.mp4" type="video/mp4">
+       </video>
+            </div>
       </div>
     </div>
-
-    <!-- ===== FOOTER ===== -->
     <div class="footer">
       <span>UFN © 2026</span>
     </div>
   </div>
 
-  <!-- ===== BOTTOM NAVIGATION ===== -->
+  <!-- ===== BOTTOM NAV ===== -->
   <nav class="bottom-nav">
     <button class="nav-btn active" id="navBeranda" onclick="switchPage('beranda')">
-      <i class="fas fa-house"></i>
-      <span>Beranda</span>
+      <i class="fas fa-house"></i><span>Beranda</span>
     </button>
     <button class="nav-btn" id="navGame" onclick="switchPage('game')">
-      <i class="fas fa-gamepad"></i>
-      <span>Game</span>
+      <i class="fas fa-gamepad"></i><span>Game</span>
     </button>
   </nav>
 
-  <!-- ===== FIREBASE + LOGIC ===== -->
-  <!-- Firebase compat -->
+  <!-- ===== FIREBASE ===== -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
   <script>
-    // =====================================================
-    //  KONFIGURASI FIREBASE (sesuai milik Anda)
-    // =====================================================
-const firebaseConfig = {
-  apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
-  authDomain: "puki-678bf.firebaseapp.com",
-  databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
-  projectId: "puki-678bf",
-  storageBucket: "puki-678bf.firebasestorage.app",
-  messagingSenderId: "343647284151",
-  appId: "1:343647284151:web:c26e7f5f75235c187a1632"
-};
-
+    const firebaseConfig = {
+      apiKey: "AIzaSyA4HuTmEgiowYaBH3doN2INZD5chk9NG-U",
+      authDomain: "puki-678bf.firebaseapp.com",
+      databaseURL: "https://puki-678bf-default-rtdb.firebaseio.com",
+      projectId: "puki-678bf",
+      storageBucket: "puki-678bf.firebasestorage.app",
+      messagingSenderId: "343647284151",
+      appId: "1:343647284151:web:c26e7f5f75235c187a1632"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // =====================================================
-    //  USER ID (disimpan di localStorage)
-    // =====================================================
     let userId = localStorage.getItem("ufn_user_id");
     if (!userId) {
-      userId = crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+      userId = crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2,8);
       localStorage.setItem("ufn_user_id", userId);
     }
 
-    // =====================================================
-    //  ONLINE / PRESENCE
-    // =====================================================
     const userRef = db.ref("online/" + userId);
     userRef.set(true);
     userRef.onDisconnect().remove();
 
-    // =====================================================
-    //  HITUNG ONLINE (counter)
-    // =====================================================
-    db.ref("online").on("value", function(snapshot) {
-      const jumlah = snapshot.numChildren();
+    db.ref("online").on("value", function(snap) {
+      const jumlah = snap.numChildren();
       const el = document.getElementById("onlineCount");
       if (el) el.textContent = jumlah;
     });
 
-    // =====================================================
-    //  BADGE INBOX (pesan belum dibaca)
-    // =====================================================
     const lastRead = parseInt(localStorage.getItem("ufn_last_read") || "0");
-
-    db.ref("messages").orderByChild("time").startAfter(lastRead).on("value", function(snapshot) {
-      const jumlahBelumDibaca = snapshot.numChildren();
+    db.ref("messages").orderByChild("time").startAfter(lastRead).on("value", function(snap) {
+      const jumlah = snap.numChildren();
       const badge = document.getElementById("inboxBadge");
-      const inboxBtn = document.getElementById("inboxBtn");
+      const btn = document.getElementById("inboxBtn");
       if (badge) {
-        if (jumlahBelumDibaca > 0) {
-          badge.textContent = jumlahBelumDibaca > 99 ? "99+" : jumlahBelumDibaca;
+        if (jumlah > 0) {
+          badge.textContent = jumlah > 99 ? "99+" : jumlah;
           badge.classList.remove("hidden");
-        } else {
-          badge.classList.add("hidden");
-        }
+        } else { badge.classList.add("hidden"); }
       }
-      if (inboxBtn) {
-        inboxBtn.classList.toggle("has-new", jumlahBelumDibaca > 0);
-      }
+      if (btn) { btn.classList.toggle("has-new", jumlah > 0); }
     });
 
-    console.log("UFN dashboard siap ✅");
-
-    // =====================================================
-    //  NAVIGASI ANTAR HALAMAN (Beranda / Game)
-    // =====================================================
     function switchPage(page) {
       document.getElementById("page-beranda").classList.toggle("active", page === "beranda");
       document.getElementById("page-game").classList.toggle("active", page === "game");
@@ -609,10 +573,9 @@ const firebaseConfig = {
       document.getElementById("navGame").classList.toggle("active", page === "game");
       localStorage.setItem("ufn_last_page", page);
     }
-
-    // ingat halaman terakhir dibuka
     const lastPage = localStorage.getItem("ufn_last_page") || "beranda";
     switchPage(lastPage);
+    console.log("UFN game dashboard siap 🎮");
   </script>
 </body>
 </html>
