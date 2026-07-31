@@ -444,8 +444,58 @@
     opacity:1;
     pointer-events:none;
     }
+
+    #introScreen{
+  position:fixed;
+  inset:0;
+  background:#050914;
+  z-index:99999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.intro-content{
+  color:white;
+  padding:20px;
+}
+
+.intro-content h1{
+  font-size:48px;
+  color:#00e5ff;
+  margin-bottom:20px;
+}
+
+#loadingText{
+  font-size:18px;
+  animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+  0%,100%{opacity:.4;}
+  50%{opacity:1;}
+      }
   </style>
 </head>
+  <div id="introScreen">
+  <div class="intro-content">
+    <h1>UFN</h1>
+    <div id="loadingText">Loading...</div>
+
+    <div id="welcomeBox" style="display:none;">
+      <h2>Dear User</h2>
+      <p>surat terbuka pada seluruh user<br>
+        kami dari tim <strong>Luminux</strong> tidak bisa <br>
+        update aplikasi dari tanggal 23 agust 2026 sampai 3 tahun ke depan,<br>
+        Good bye untuk semua nya
+      </p>
+      <p style="margin-top:15px;font-size:14px;opacity:.8;">
+        Ketuk layar untuk melanjutkan
+      </p>
+    </div>
+  </div>
+  </div>
 <body>
 
   <!-- ===== HEADER FIXED ===== -->
@@ -577,6 +627,33 @@
     const lastPage = localStorage.getItem("ufn_last_page") || "beranda";
     switchPage(lastPage);
     console.log("UFN game dashboard siap 🎮");
+
+    
+document.addEventListener("DOMContentLoaded", () => {
+
+  setTimeout(() => {
+
+    document.getElementById("loadingText").style.display = "none";
+    document.getElementById("welcomeBox").style.display = "block";
+
+    const lanjut = () => {
+      document.getElementById("introScreen").style.opacity = "0";
+
+      setTimeout(() => {
+        document.getElementById("introScreen").remove();
+      }, 500);
+
+      document.removeEventListener("click", lanjut);
+      document.removeEventListener("touchstart", lanjut);
+    };
+
+    document.addEventListener("click", lanjut);
+    document.addEventListener("touchstart", lanjut);
+
+  }, 3000); // durasi loading 3 detik
+
+});
+
   </script>
 </body>
 </html>
